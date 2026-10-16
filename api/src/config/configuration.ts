@@ -19,6 +19,8 @@ export interface AppConfig {
   apiPrefix: string;
   logLevel: LogLevel;
   database: {
+    /** URL completa (`postgres://user:pass@host:5432/db`). La entregan los PaaS. */
+    url: string | null;
     host: string;
     port: number;
     name: string;
@@ -64,19 +66,28 @@ function envNumber(key: string, fallback: number): number {
   return parsed;
 }
 
-/** Construye la configuración a partir de process.env. */
+/**
+ * Construye la configuración a partir de process.env.
+ *
+ * La base se indica de dos formas: con `DATABASE_URL` (Render, Railway y otros
+ * PaaS la inyectan) o con las variables sueltas DATABASE_HOST/NAME/USER/PASSWORD
+ * (Docker Compose en un servidor propio). Si hay URL, manda la URL.
+ */
 export function buildConfig(): AppConfig {
+  const url = process.env.DATABASE_URL?.trim() || null;
+  const fromParts = (key: string): string => (url ? (process.env[key] ?? '') : requiredEnv(key));
   return {
     nodeEnv: process.env.NODE_ENV ?? 'development',
     port: envNumber('PORT', 3000),
     apiPrefix: process.env.API_PREFIX ?? 'api/v1',
     logLevel: (process.env.LOG_LEVEL ?? 'info') as LogLevel,
     database: {
+      url,
       host: process.env.DATABASE_HOST ?? 'localhost',
       port: envNumber('DATABASE_PORT', 5432),
-      name: requiredEnv('DATABASE_NAME'),
-      user: requiredEnv('DATABASE_USER'),
-      password: requiredEnv('DATABASE_PASSWORD'),
+      name: fromParts('DATABASE_NAME'),
+      user: fromParts('DATABASE_USER'),
+      password: fromParts('DATABASE_PASSWORD'),
       // `synchronize` solo puede ser true sobre una base desechable de pruebas.
       synchronize: envBool('DATABASE_SYNCHRONIZE', false),
       logging: envBool('DATABASE_LOGGING', false),
@@ -94,6 +105,12 @@ export function buildConfig(): AppConfig {
   };
 }
 
+const requiredWithoutUrl = Joi.string().when('DATABASE_URL', {
+  is: Joi.exist(),
+  then: Joi.optional(),
+  otherwise: Joi.required(),
+});
+
 /**
  * Esquema de validación que ejecuta @nestjs/config al arrancar.
  * Mensajes en español porque es el idioma del equipo y de la interfaz.
@@ -105,11 +122,13 @@ export const configValidationSchema = Joi.object({
   LOG_LEVEL: Joi.string()
     .valid(...LOG_LEVELS)
     .default('info'),
-  DATABASE_HOST: Joi.string().required(),
+  DATABASE_URL: Joi.string().uri({ scheme: ['postgres', 'postgresql'] }),
+  // Sin DATABASE_URL, las variables sueltas son obligatorias.
+  DATABASE_HOST: requiredWithoutUrl,
   DATABASE_PORT: Joi.number().port().default(5432),
-  DATABASE_NAME: Joi.string().required(),
-  DATABASE_USER: Joi.string().required(),
-  DATABASE_PASSWORD: Joi.string().required(),
+  DATABASE_NAME: requiredWithoutUrl,
+  DATABASE_USER: requiredWithoutUrl,
+  DATABASE_PASSWORD: requiredWithoutUrl,
   DATABASE_SYNCHRONIZE: Joi.boolean().default(false),
   DATABASE_LOGGING: Joi.boolean().default(false),
   DATABASE_SSL: Joi.boolean().default(false),

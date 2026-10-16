@@ -104,6 +104,56 @@ describe('buildConfig', () => {
   });
 });
 
+describe('DATABASE_URL (PaaS)', () => {
+  const URL_ENV = {
+    DATABASE_URL: 'postgres://aea:secreto@db.interno:5432/medios',
+    DATABASE_HOST: undefined,
+    DATABASE_NAME: undefined,
+    DATABASE_USER: undefined,
+    DATABASE_PASSWORD: undefined,
+    JWT_SECRET: 'a'.repeat(64),
+  };
+
+  it('con la URL no exige las variables sueltas', () => {
+    const previous = withEnv(URL_ENV);
+    try {
+      expect(buildConfig().database.url).toBe('postgres://aea:secreto@db.interno:5432/medios');
+    } finally {
+      process.env = previous;
+    }
+  });
+
+  it('sin URL vuelve a exigir DATABASE_NAME', () => {
+    const previous = withEnv({ ...URL_ENV, DATABASE_URL: undefined });
+    try {
+      expect(() => buildConfig()).toThrow(/DATABASE_NAME/);
+    } finally {
+      process.env = previous;
+    }
+  });
+
+  it('el esquema acepta solo la URL', () => {
+    const { error } = configValidationSchema.validate({
+      DATABASE_URL: 'postgresql://aea:secreto@db.interno:5432/medios',
+      JWT_SECRET: 'a'.repeat(64),
+    });
+    expect(error).toBeUndefined();
+  });
+
+  it('el esquema rechaza una URL que no es de PostgreSQL', () => {
+    const { error } = configValidationSchema.validate({
+      DATABASE_URL: 'mysql://aea:secreto@db:3306/medios',
+      JWT_SECRET: 'a'.repeat(64),
+    });
+    expect(error).toBeDefined();
+  });
+
+  it('el esquema exige las variables sueltas si no hay URL', () => {
+    const { error } = configValidationSchema.validate({ JWT_SECRET: 'a'.repeat(64) });
+    expect(error?.message).toMatch(/DATABASE_HOST/);
+  });
+});
+
 describe('configValidationSchema', () => {
   const base = { ...BASE_ENV };
 
