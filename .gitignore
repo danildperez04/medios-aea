@@ -78,3 +78,7 @@ mobile/android/
 mobile/ios/
 *.apk
 *.aab
+
+# Secretos de producción
+.env.production
+!.env.production.example

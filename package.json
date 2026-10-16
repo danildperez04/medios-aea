@@ -27,7 +27,13 @@
     "db:down": "docker compose down",
     "prepare": "husky",
     "db:migrate": "pnpm --filter @medios-aea/api build && pnpm --filter @medios-aea/api migration:run",
-    "db:seed": "pnpm --filter @medios-aea/api seed:run"
+    "db:seed": "pnpm --filter @medios-aea/api seed:run",
+    "prod:up": "./scripts/compose-prod.sh up -d --build",
+    "prod:down": "./scripts/compose-prod.sh down",
+    "prod:ps": "./scripts/compose-prod.sh ps",
+    "prod:logs": "./scripts/compose-prod.sh logs -f --tail=200",
+    "prod:admin": "./scripts/compose-prod.sh exec api node dist/database/scripts/create-admin.js",
+    "prod:backup": "./scripts/backup.sh"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
