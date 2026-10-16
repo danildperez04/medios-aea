@@ -38,7 +38,38 @@ activas solapadas del mismo vehículo o del mismo conductor, y acepta las contig
 - Validar el documento 01 con la coordinación logística.
 - PR y merge a `develop`.
 
-## Siguiente: Sprint 1 — Acceso y catálogos base
+## Sprint 1 — Acceso y catálogos base · EN CURSO
 
-HU-01 a HU-04: CRUD de usuarios y proyectos (API + web), cambio de contraseña,
-seeder con datos de ejemplo y script `create-admin`.
+Rama `feature/sprint-1-users-projects` (commits locales, sin push).
+
+### Hecho
+
+- **HU-02 Usuarios** — API `GET/POST/PATCH/DELETE /users`, `PATCH /users/:id/password`
+  (solo ADMIN). Correo único sin distinguir mayúsculas; desactivar en lugar de borrar;
+  el ADMIN no puede desactivarse ni quitarse el rol a sí mismo. Web: tabla con
+  búsqueda, filtros por rol y estado, alta/edición, restablecer contraseña.
+- **HU-03 Proyectos** — API `/projects`: el ADMIN gestiona; los demás roles solo ven
+  activos. Código normalizado a mayúsculas. Web: tabla, alta/edición, desactivar.
+- **HU-04 Cambio de contraseña** — diálogo en la barra superior del panel. Se corrigió
+  que una contraseña actual incorrecta (401) cerrara la sesión: ahora es 400.
+- **HU-01** — el login del panel admite solo ADMIN y explica a los demás que usen la app.
+- Seeder idempotente (`pnpm db:seed`) y script `user:create-admin` para producción.
+- `docs/09-matriz-trazabilidad.md`.
+
+### Verificación
+
+| Workspace | Lint | Typecheck | Pruebas               | Build |
+| --------- | ---- | --------- | --------------------- | ----- |
+| api       | ✓    | ✓         | 66 unitarias · 31 e2e | ✓     |
+| web       | ✓    | ✓         | 16                    | ✓     |
+| mobile    | ✓    | ✓         | —                     | —     |
+
+Recorrido manual en Chromium headless contra la API real: login de técnico rechazado
+en el panel, alta de usuario (validación débil, duplicado por mayúsculas → 409),
+búsqueda y desactivación, alta de proyecto con código normalizado, cambio de
+contraseña con la actual incorrecta sin perder la sesión.
+
+## Siguiente: Sprint 2 — Flota y disponibilidad
+
+HU-05 a HU-08: vehículos (`resource` + `vehicle` en una transacción), conductores con
+licencia, bloqueos por mantenimiento y endpoint de disponibilidad.

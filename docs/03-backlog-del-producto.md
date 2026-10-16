@@ -16,12 +16,12 @@ Estados: `PENDIENTE` · `EN CURSO` · `TERMINADO` (PR aprobado y merge a `develo
 
 ## Sprint 1 — Acceso y catálogos base
 
-| HU    | RF           | Historia                                                                 | Criterios de aceptación                                                                                         | Estado    |
-| ----- | ------------ | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | --------- |
-| HU-01 | RF-01, RF-02 | Como usuario, quiero iniciar sesión para acceder según mi rol            | Credenciales válidas devuelven token y perfil; inválidas → 401; 5 intentos/min por IP; rutas protegidas por rol | PENDIENTE |
-| HU-02 | RF-03        | Como ADMIN, quiero gestionar usuarios para dar acceso al personal        | Crear con rol; correo único (409); desactivar en lugar de borrar; listar con búsqueda                           | PENDIENTE |
-| HU-03 | RF-04        | Como ADMIN, quiero gestionar proyectos para cargar los viajes a cada uno | Código único; activar/desactivar; solo los activos aparecen al solicitar                                        | PENDIENTE |
-| HU-04 | RF-05        | Como usuario, quiero cambiar mi contraseña                               | Exige contraseña actual; mínimo 8 caracteres                                                                    | PENDIENTE |
+| HU    | RF           | Historia                                                                 | Criterios de aceptación                                                                                         | Estado   |
+| ----- | ------------ | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | -------- |
+| HU-01 | RF-01, RF-02 | Como usuario, quiero iniciar sesión para acceder según mi rol            | Credenciales válidas devuelven token y perfil; inválidas → 401; 5 intentos/min por IP; rutas protegidas por rol | EN CURSO |
+| HU-02 | RF-03        | Como ADMIN, quiero gestionar usuarios para dar acceso al personal        | Crear con rol; correo único (409); desactivar en lugar de borrar; listar con búsqueda                           | EN CURSO |
+| HU-03 | RF-04        | Como ADMIN, quiero gestionar proyectos para cargar los viajes a cada uno | Código único; activar/desactivar; solo los activos aparecen al solicitar                                        | EN CURSO |
+| HU-04 | RF-05        | Como usuario, quiero cambiar mi contraseña                               | Exige contraseña actual; mínimo 8 caracteres                                                                    | EN CURSO |
 
 ## Sprint 2 — Flota y disponibilidad
 

@@ -24,13 +24,25 @@ Requisitos: Node 22+, pnpm 12, Docker.
 pnpm install
 pnpm db:up                                   # PostgreSQL en el puerto 5433
 cp api/.env.example api/.env                 # y cambia JWT_SECRET
-pnpm --filter @medios-aea/api build
-pnpm --filter @medios-aea/api migration:run
+pnpm db:migrate                              # compila la API y aplica las migraciones
+pnpm db:seed                                 # datos de ejemplo (solo desarrollo)
 pnpm dev                                     # API http://localhost:3000/api/v1 · web http://localhost:5173
 pnpm dev:mobile                              # app móvil con Expo
 ```
 
 Documentación de la API (Swagger): http://localhost:3000/api/docs
+
+### Usuarios de ejemplo (`pnpm db:seed`)
+
+Todos con la contraseña `MediosAea2026`. Son ficticios, y el seeder se niega a correr
+con `NODE_ENV=production`. En producción el primer administrador se crea con
+`pnpm --filter @medios-aea/api user:create-admin`.
+
+| Correo                               | Rol               |
+| ------------------------------------ | ----------------- |
+| `admin@demo.medios-aea.org`          | ADMIN (web)       |
+| `ana.martinez@demo.medios-aea.org`   | REQUESTER (móvil) |
+| `jose.gutierrez@demo.medios-aea.org` | DRIVER (móvil)    |
 
 ## Pruebas
 
