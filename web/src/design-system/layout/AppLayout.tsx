@@ -22,6 +22,7 @@ import {
   ClipboardList,
   FolderKanban,
   IdCard,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -30,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useAuthStore } from '@/app/stores/auth.store';
+import { ChangePasswordDialog } from '@/features/auth/components/ChangePasswordDialog';
 
 /** Ancho del menu lateral, fijo para que las tablas no se recalculen. */
 const DRAWER_WIDTH = 248;
@@ -65,6 +67,7 @@ export interface AppLayoutProps {
  */
 export function AppLayout({ children }: AppLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const { user, clearSession } = useAuthStore();
   const navigate = useNavigate();
 
@@ -135,6 +138,11 @@ export function AppLayout({ children }: AppLayoutProps) {
           <Typography variant="body1" sx={{ fontWeight: 600, flexGrow: 1 }} noWrap>
             {user ? `Hola, ${user.fullName}` : 'Medios AeA'}
           </Typography>
+          <Tooltip title="Cambiar contraseña">
+            <IconButton onClick={() => setPasswordOpen(true)} aria-label="Cambiar contraseña">
+              <KeyRound size={18} />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Cerrar sesion">
             <Button color="inherit" startIcon={<LogOut size={18} />} onClick={handleLogout}>
               Salir
@@ -179,6 +187,8 @@ export function AppLayout({ children }: AppLayoutProps) {
       >
         {children ?? <Outlet />}
       </Box>
+
+      <ChangePasswordDialog open={passwordOpen} onClose={() => setPasswordOpen(false)} />
     </Box>
   );
 }

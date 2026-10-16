@@ -10,6 +10,8 @@ import { JwtAuthGuard, RolesGuard } from '#common/guards/jwt-auth.guard.js';
 import { LoggerInterceptor } from '#common/interceptors/logger.interceptor.js';
 import { AuthModule } from '#modules/auth/auth.module.js';
 import { HealthModule } from '#modules/health/health.module.js';
+import { ProjectsModule } from '#modules/projects/projects.module.js';
+import { UsersModule } from '#modules/users/users.module.js';
 
 /**
  * Módulo raíz de Medios AeA.
@@ -32,6 +34,8 @@ import { HealthModule } from '#modules/health/health.module.js';
     }),
     AuthModule,
     HealthModule,
+    UsersModule,
+    ProjectsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

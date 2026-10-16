@@ -1,4 +1,10 @@
-import { Inject, Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -92,7 +98,9 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('Sesión no válida.');
 
     const matches = await compare(currentPassword, user.passwordHash);
-    if (!matches) throw new UnauthorizedException('La contraseña actual no es correcta.');
+    // 400 y no 401: la sesión es válida, lo incorrecto es un dato del formulario.
+    // Con 401 el cliente creería que la sesión venció y la cerraría.
+    if (!matches) throw new BadRequestException('La contraseña actual no es correcta.');
 
     const passwordHash = await this.hash(newPassword);
     await this.users.update(userId, { passwordHash });

@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { User } from '#modules/users/entities/user.entity.js';
 import { UserRole } from '#common/enums/domain.enums.js';
@@ -189,7 +189,7 @@ describe('AuthService', () => {
 
       await expect(
         service.changePassword(ADMIN_ID, 'NoEsLaMia123', 'ClaveNueva456'),
-      ).rejects.toBeInstanceOf(UnauthorizedException);
+      ).rejects.toBeInstanceOf(BadRequestException);
       expect(update).not.toHaveBeenCalled();
     });
   });

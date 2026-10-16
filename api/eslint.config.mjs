@@ -60,6 +60,8 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'off',
       'no-console': 'off',
+      // Los repositorios simulados son async para imitar la firma real.
+      '@typescript-eslint/require-await': 'off',
     },
   },
   {

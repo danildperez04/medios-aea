@@ -5,7 +5,7 @@ import request from 'supertest';
 import { UserRole } from '#common/enums/domain.enums.js';
 import type { User } from '#modules/users/entities/user.entity.js';
 import { createE2eContext, destroyE2eContext, runMigrations } from './e2e-context.js';
-import { createUser, PASSWORD } from './fixtures.js';
+import { createUser, loginAs, PASSWORD } from './fixtures.js';
 
 /**
  * Pruebas de integracion de salud y autenticacion (RF-01, RNF-06).
@@ -98,6 +98,27 @@ describe('Autenticacion (integracion)', () => {
         .post(`${basePath}/auth/login`)
         .send({ email: 'no-es-correo', password: PASSWORD })
         .expect(400);
+    });
+  });
+
+  describe('RF-05 — cambio de contraseña', () => {
+    it('una contraseña actual incorrecta responde 400, no 401 (no cierra la sesion)', async () => {
+      await request(app.getHttpServer())
+        .patch(`${basePath}/auth/password`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ currentPassword: 'NoEsLaMia123', newPassword: 'ClaveNueva456' })
+        .expect(400);
+    });
+
+    it('con la contraseña actual correcta permite entrar con la nueva', async () => {
+      const user = await createUser(dataSource, UserRole.DRIVER);
+      const userToken = await loginAs(app, user);
+      await request(app.getHttpServer())
+        .patch(`${basePath}/auth/password`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ currentPassword: PASSWORD, newPassword: 'ClaveNueva456' })
+        .expect(200);
+      await loginAs(app, user, 'ClaveNueva456');
     });
   });
 

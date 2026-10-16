@@ -57,7 +57,7 @@ conductores registran cada viaje. Monorepo pnpm con tres workspaces:
 pnpm install
 pnpm db:up                  # PostgreSQL en localhost:5433 (+ base medios_aea_test)
 cp api/.env.example api/.env
-pnpm --filter @medios-aea/api build && pnpm --filter @medios-aea/api migration:run
+pnpm db:migrate && pnpm db:seed   # esquema + datos de ejemplo (contraseña MediosAea2026)
 pnpm dev                    # API :3000 + web :5173
 pnpm dev:mobile             # Expo (escanear QR con Expo Go o dev build)
 

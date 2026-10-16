@@ -4,6 +4,8 @@ import { LoginView } from '@/features/auth/views/LoginView';
 import { DashboardView } from '@/features/dashboard/views/DashboardView';
 import { NotFoundView } from './views/NotFoundView';
 import { ComingSoonView } from './views/ComingSoonView';
+import { ProjectsView } from '@/features/projects/views/ProjectsView';
+import { UsersView } from '@/features/users/views/UsersView';
 
 /**
  * Rutas del panel web. Todo el panel es exclusivo del ADMIN (RF-02).
@@ -26,8 +28,8 @@ export function AppRouter() {
             <Route path="viajes" element={<ComingSoonView title="Viajes" sprint={5} />} />
             <Route path="vehiculos" element={<ComingSoonView title="Vehículos" sprint={2} />} />
             <Route path="conductores" element={<ComingSoonView title="Conductores" sprint={2} />} />
-            <Route path="proyectos" element={<ComingSoonView title="Proyectos" sprint={1} />} />
-            <Route path="usuarios" element={<ComingSoonView title="Usuarios" sprint={1} />} />
+            <Route path="proyectos" element={<ProjectsView />} />
+            <Route path="usuarios" element={<UsersView />} />
             <Route path="reportes" element={<ComingSoonView title="Reportes" sprint={5} />} />
           </Route>
         </Route>

@@ -78,3 +78,19 @@ export async function createDriver(
     repo.create({ userId: user.id, licenseNumber: unique('LIC'), licenseExpiry, isActive: true }),
   );
 }
+
+/** Inicia sesion y devuelve el token. */
+export async function loginAs(
+  app: { getHttpServer: () => unknown },
+  user: { email: string },
+  password = PASSWORD,
+): Promise<string> {
+  const { default: request } = await import('supertest');
+  const response = await request(app.getHttpServer() as never)
+    .post('/api/v1/auth/login')
+    .send({ email: user.email, password });
+  if (response.status !== 200) {
+    throw new Error(`No se pudo iniciar sesion como ${user.email}: ${response.status}`);
+  }
+  return response.body.accessToken as string;
+}

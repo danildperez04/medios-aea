@@ -25,7 +25,9 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md,yml,yaml}\"",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:migrate": "pnpm --filter @medios-aea/api build && pnpm --filter @medios-aea/api migration:run",
+    "db:seed": "pnpm --filter @medios-aea/api seed:run"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
