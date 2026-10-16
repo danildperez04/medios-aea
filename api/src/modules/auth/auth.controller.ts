@@ -1,40 +1,12 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { IsEmail, IsString, Matches, MinLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
 import { Public } from '#common/decorators/public.decorator.js';
 import { CurrentUser } from '#common/decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from '#common/decorators/current-user.decorator.js';
 import { AuthService, type LoginResult } from './auth.service.js';
-
-/** Cuerpo de `POST /auth/login`. */
-export class LoginDto {
-  @ApiProperty({ example: 'logistica@ayudaenaccion.org', description: 'Correo del usuario' })
-  @IsEmail({}, { message: 'El correo no es válido' })
-  email: string;
-
-  @ApiProperty({ example: 'ClaveSegura123', minLength: 8 })
-  @IsString({ message: 'La contraseña es obligatoria' })
-  @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
-  password: string;
-}
-
-/** Cuerpo de `PATCH /auth/password`. */
-export class ChangePasswordDto {
-  @ApiProperty({ example: 'ClaveActual123' })
-  @IsString({ message: 'La contraseña actual es obligatoria' })
-  @MinLength(8, { message: 'La contraseña actual debe tener al menos 8 caracteres' })
-  currentPassword: string;
-
-  @ApiProperty({ example: 'ClaveNueva123', minLength: 8 })
-  @IsString({ message: 'La contraseña nueva es obligatoria' })
-  @MinLength(8, { message: 'La contraseña nueva debe tener al menos 8 caracteres' })
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/, {
-    message: 'La contraseña debe incluir una minúscula, una mayúscula y un número',
-  })
-  newPassword: string;
-}
+import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { LoginDto } from './dto/login.dto.js';
 
 @ApiTags('Autenticación')
 @Controller('auth')

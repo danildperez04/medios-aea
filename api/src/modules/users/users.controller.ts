@@ -16,7 +16,10 @@ import type { AuthenticatedUser } from '#common/decorators/current-user.decorato
 import { Roles } from '#common/decorators/roles.decorator.js';
 import type { PaginatedResponse } from '#common/dto/pagination.dto.js';
 import { UserRole } from '#common/enums/domain.enums.js';
-import { CreateUserDto, ResetPasswordDto, UpdateUserDto, UserFiltersDto } from './dto/user.dto.js';
+import { CreateUserDto } from './dto/create-user.dto.js';
+import { ResetPasswordDto } from './dto/reset-password.dto.js';
+import { UpdateUserDto } from './dto/update-user.dto.js';
+import { UserFiltersDto } from './dto/user-filters.dto.js';
 import type { User } from './entities/user.entity.js';
 import { UsersService } from './users.service.js';
 

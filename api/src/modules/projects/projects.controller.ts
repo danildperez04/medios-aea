@@ -16,7 +16,9 @@ import type { AuthenticatedUser } from '#common/decorators/current-user.decorato
 import { Roles } from '#common/decorators/roles.decorator.js';
 import type { PaginatedResponse } from '#common/dto/pagination.dto.js';
 import { UserRole } from '#common/enums/domain.enums.js';
-import { CreateProjectDto, ProjectFiltersDto, UpdateProjectDto } from './dto/project.dto.js';
+import { CreateProjectDto } from './dto/create-project.dto.js';
+import { ProjectFiltersDto } from './dto/project-filters.dto.js';
+import { UpdateProjectDto } from './dto/update-project.dto.js';
 import type { Project } from './entities/project.entity.js';
 import { ProjectsService } from './projects.service.js';
 

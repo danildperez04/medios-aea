@@ -10,7 +10,9 @@ import { Repository } from 'typeorm';
 import { PaginatedResponse } from '#common/dto/pagination.dto.js';
 import { UserRole } from '#common/enums/domain.enums.js';
 import { AuthService } from '#modules/auth/auth.service.js';
-import type { CreateUserDto, UpdateUserDto, UserFiltersDto } from './dto/user.dto.js';
+import type { CreateUserDto } from './dto/create-user.dto.js';
+import type { UpdateUserDto } from './dto/update-user.dto.js';
+import type { UserFiltersDto } from './dto/user-filters.dto.js';
 import { User } from './entities/user.entity.js';
 
 /**

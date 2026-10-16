@@ -2,7 +2,9 @@ import { ConflictException, Inject, Injectable, NotFoundException } from '@nestj
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaginatedResponse } from '#common/dto/pagination.dto.js';
-import type { CreateProjectDto, ProjectFiltersDto, UpdateProjectDto } from './dto/project.dto.js';
+import type { CreateProjectDto } from './dto/create-project.dto.js';
+import type { ProjectFiltersDto } from './dto/project-filters.dto.js';
+import type { UpdateProjectDto } from './dto/update-project.dto.js';
 import { Project } from './entities/project.entity.js';
 
 /**
