@@ -10,9 +10,9 @@
 | 05  | [Versionado, commits y ramas](05-versionado-commits-y-ramas.md) | SemVer, Conventional Commits, Git Flow                      |
 | 09  | [Matriz de trazabilidad](09-matriz-trazabilidad.md)             | Requisito → código → pruebas, y decisiones por sprint       |
 | 10  | [Esquema de base de datos](10-esquema-base-de-datos.md)         | Tablas y **restricción anti-choque**                        |
+| 11  | [Guía de despliegue](11-guia-despliegue.md)                     | Docker, servidor propio, PaaS, APK, respaldos               |
 | 12  | [Plan de pruebas](12-plan-pruebas.md)                           | Niveles de prueba y casos críticos                          |
 | 13  | [Glosario](13-glosario.md)                                      | Términos del dominio y su nombre en el código               |
 | 14  | [Arquitectura](14-arquitectura.md)                              | Componentes, capas, secuencia de aprobación                 |
 
-Pendientes por sprint: `11-guia-despliegue` (S6),
-`15-checklist-uat` (S6).
+Pendiente: `15-checklist-uat` (S6).
