@@ -6,3 +6,5 @@ export { StatCard, type StatCardProps } from './StatCard';
 export { PageHeader, type PageHeaderProps } from './PageHeader';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
 export { StatusBadge, type StatusBadgeProps, type RequestStatus } from './StatusBadge';
+export { DataTable, type DataTableColumn, type DataTableProps } from './DataTable';
+export { ConfirmDialog, type ConfirmDialogProps } from './ConfirmDialog';
