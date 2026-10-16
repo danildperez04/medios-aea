@@ -51,6 +51,17 @@ pnpm lint && pnpm typecheck && pnpm test     # los tres workspaces
 pnpm test:e2e                                # API contra PostgreSQL real (requiere pnpm db:up)
 ```
 
+## Despliegue
+
+Imágenes Docker para la API y el panel, listas para un servidor propio
+(`docker-compose.prod.yml`) o un PaaS, y APK de la app con EAS Build. Paso a paso en
+[`docs/11-guia-despliegue.md`](docs/11-guia-despliegue.md).
+
+```bash
+cp .env.production.example .env.production   # completar secretos
+pnpm prod:up && pnpm prod:admin               # levantar y crear el primer administrador
+```
+
 ## Documentación
 
 Toda la documentación del proyecto está en [`docs/`](docs/README.md): definición de

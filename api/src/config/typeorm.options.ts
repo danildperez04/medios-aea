@@ -8,16 +8,25 @@ import { migrations } from '#database/migrations/index.js';
  *
  * `synchronize` es false salvo que el entorno lo habilite explícitamente.
  * El esquema se cambia únicamente por migración: sincronizar en producción
- * puede borrar columnas sin avisar (ver docs/10-esquema-base-de-datos.md §0).
+ * puede borrar columnas sin avisar.
  */
-export function buildTypeOrmOptions(config: ConfigService): TypeOrmModuleOptions {
+function connectionFrom(config: ConfigService): Record<string, unknown> {
+  const url = config.get<string>('DATABASE_URL');
+  if (url) return { url };
   return {
-    type: 'postgres',
     host: config.get<string>('DATABASE_HOST', 'localhost'),
     port: config.get<number>('DATABASE_PORT', 5432),
     username: config.get<string>('DATABASE_USER'),
     password: config.get<string>('DATABASE_PASSWORD'),
     database: config.get<string>('DATABASE_NAME'),
+  };
+}
+
+export function buildTypeOrmOptions(config: ConfigService): TypeOrmModuleOptions {
+  return {
+    type: 'postgres',
+    // Con DATABASE_URL (PaaS) TypeORM toma de ahí host, puerto, usuario y base.
+    ...connectionFrom(config),
     entities,
     migrations,
     synchronize: config.get<boolean>('DATABASE_SYNCHRONIZE', false),

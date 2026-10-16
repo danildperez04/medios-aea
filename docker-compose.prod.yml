@@ -1,0 +1,72 @@
+name: medios-aea-prod
+
+# Producción en un servidor propio (opción A de docs/11-guia-despliegue.md).
+#   cp .env.production.example .env.production   # y completar los secretos
+#   pnpm prod:up
+#
+# Solo `web` publica un puerto. La API y PostgreSQL viven en la red interna y no
+# son alcanzables desde fuera del servidor.
+
+x-env: &env
+  env_file: .env.production
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    <<: *env
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:?Falta DATABASE_USER en .env.production}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?Falta DATABASE_PASSWORD en .env.production}
+      POSTGRES_DB: ${DATABASE_NAME:?Falta DATABASE_NAME en .env.production}
+      TZ: America/Managua
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks: [internal]
+
+  api:
+    image: medios-aea-api:${APP_VERSION:-latest}
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    <<: *env
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [internal]
+
+  web:
+    image: medios-aea-web:${APP_VERSION:-latest}
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: 80
+      API_UPSTREAM: http://api:3000
+    ports:
+      - '${WEB_PORT:-80}:80'
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [internal]
+
+volumes:
+  pgdata:
+    name: medios_aea_prod_pgdata
+
+networks:
+  internal:
+    name: medios_aea_prod

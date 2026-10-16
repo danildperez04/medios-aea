@@ -69,6 +69,22 @@ en el panel, alta de usuario (validación débil, duplicado por mayúsculas → 
 búsqueda y desactivación, alta de proyecto con código normalizado, cambio de
 contraseña con la actual incorrecta sin perder la sesión.
 
+## Despliegue (contenedores) · EN CURSO
+
+Rama `feature/deployment-containers` (sobre la del Sprint 1).
+
+- Imágenes `api` (Node 24 alpine, usuario `node`, migra al arrancar) y `web` (nginx
+  con plantilla `PORT` / `API_UPSTREAM`). Mismas imágenes para servidor propio y PaaS.
+- La API acepta `DATABASE_URL` (PaaS) o las variables sueltas (Compose).
+- `docker-compose.prod.yml` + `scripts/compose-prod.sh`, `backup.sh`, `restore.sh`,
+  scripts `pnpm prod:*`. App móvil: `app.config.ts` + `eas.json` para APK.
+- Guía `docs/11-guia-despliegue.md`. Job de CI que construye ambas imágenes.
+- Corregido: `create-admin` terminaba en silencio sin crear nada con stdin redirigido;
+  cabeceras de seguridad de nginx perdidas en rutas con `add_header` propio.
+
+**Pendiente:** reconstruir la imagen `api` con el `create-admin` corregido; el disco del
+equipo de desarrollo se llenó durante las pruebas (ver informe de la sesión).
+
 ## Siguiente: Sprint 2 — Flota y disponibilidad
 
 HU-05 a HU-08: vehículos (`resource` + `vehicle` en una transacción), conductores con
