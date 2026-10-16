@@ -66,6 +66,8 @@ async function bootstrap(): Promise<void> {
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' })
     .addTag('Autenticación', 'Inicio de sesión y cambio de contraseña')
     .addTag('Salud', 'Estado del servicio')
+    .addTag('Usuarios', 'Personal con acceso al sistema (solo ADMIN)')
+    .addTag('Proyectos', 'Proyectos a los que se cargan los viajes')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document, {
