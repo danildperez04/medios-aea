@@ -138,6 +138,36 @@ describe('Usuarios y proyectos (integracion)', () => {
       await loginAs(app, user, 'Restablecida1');
     });
 
+    it('responde 400 (no 500) cuando se envia null en un campo obligatorio', async () => {
+      const user = await createUser(dataSource, UserRole.REQUESTER);
+      for (const body of [{ fullName: null }, { email: null }, { isActive: null }]) {
+        await request(app.getHttpServer())
+          .patch(`${api}/users/${user.id}`)
+          .set(asAdmin())
+          .send(body)
+          .expect(400);
+      }
+    });
+
+    it('phone null borra el telefono', async () => {
+      const user = await createUser(dataSource, UserRole.REQUESTER, { phone: '+505 8888 0000' });
+      const response = await request(app.getHttpServer())
+        .patch(`${api}/users/${user.id}`)
+        .set(asAdmin())
+        .send({ phone: null })
+        .expect(200);
+      expect(response.body.phone).toBeNull();
+    });
+
+    it('no permite cambiar la contraseña con PATCH /users/:id (400)', async () => {
+      const user = await createUser(dataSource, UserRole.REQUESTER);
+      await request(app.getHttpServer())
+        .patch(`${api}/users/${user.id}`)
+        .set(asAdmin())
+        .send({ password: 'OtraClave123' })
+        .expect(400);
+    });
+
     it('responde 400 a un id que no es uuid y 404 a uno inexistente', async () => {
       await request(app.getHttpServer()).get(`${api}/users/123`).set(asAdmin()).expect(400);
       await request(app.getHttpServer())
@@ -209,6 +239,21 @@ describe('Usuarios y proyectos (integracion)', () => {
         .expect(200);
       expect(response.body.data.every((p: { isActive: boolean }) => !p.isActive)).toBe(true);
       expect(response.body.total).toBeGreaterThanOrEqual(1);
+    });
+
+    it('responde 400 (no 500) a null en el nombre o el estado del proyecto', async () => {
+      const created = await request(app.getHttpServer())
+        .post(`${api}/projects`)
+        .set(asAdmin())
+        .send({ code: unique('NUL'), name: 'Proyecto nulo' })
+        .expect(201);
+      for (const body of [{ name: null }, { isActive: null }]) {
+        await request(app.getHttpServer())
+          .patch(`${api}/projects/${created.body.id}`)
+          .set(asAdmin())
+          .send(body)
+          .expect(400);
+      }
     });
 
     it('rechaza un codigo con caracteres no permitidos (400)', async () => {

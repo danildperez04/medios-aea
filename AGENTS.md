@@ -51,7 +51,23 @@ conductores registran cada viaje. Monorepo pnpm con tres workspaces:
    la app no es seguridad.
 7. **Mensajes de error en español y accionables**; nunca SQL ni trazas al cliente.
 
-## 4. Comandos
+## 4. DTO (API)
+
+Siguen la documentación de NestJS (_Validation_ y _Mapped types_):
+
+- **Un DTO por archivo** en `modules/<módulo>/dto/`: `create-x.dto.ts`, `update-x.dto.ts`,
+  `x-filters.dto.ts`. Nunca definidos dentro del controlador.
+- **El update deriva del create** con los mapped types de `@nestjs/swagger` (conservan la
+  documentación de Swagger): `PartialType(CreateXDto, { skipNullProperties: false })`,
+  `OmitType`, `PickType`. `skipNullProperties: false` es obligatorio: sin él `null` salta
+  la validación y una columna NOT NULL termina en 500.
+- Campos opcionales que no admiten `null`: `@IsOptionalNonNull()` (`common/validation/optional.ts`),
+  no `@IsOptional()`.
+- Reglas compartidas: `@IsStrongPassword()` (`common/validation/password.policy.ts`),
+  `@Trim()` / `@TrimUpperCase()` (`common/transformers/string.transformers.ts`).
+- Cada DTO nuevo con reglas propias se agrega a `common/validation/dto-contracts.spec.ts`.
+
+## 5. Comandos
 
 ```bash
 pnpm install
@@ -65,7 +81,7 @@ pnpm lint && pnpm typecheck && pnpm test   # antes de dar algo por terminado
 pnpm test:e2e                              # requiere pnpm db:up
 ```
 
-## 5. Git
+## 6. Git
 
 Conventional Commits con los alcances de `commitlint.config.mjs`. Ramas
 `feature/hu-XX-<slug>` desde `develop`.
