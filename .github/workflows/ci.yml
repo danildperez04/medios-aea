@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24'
+
+jobs:
+  api:
+    name: API (lint · typecheck · test · e2e · build)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: medios_aea
+          POSTGRES_PASSWORD: medios_aea
+          POSTGRES_DB: medios_aea_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U medios_aea"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Preparar .env de pruebas
+        run: |
+          cp api/.env.example api/.env
+          sed -i 's/^JWT_SECRET=.*/JWT_SECRET=ci-secret-for-tests-only-not-for-production-use/' api/.env
+      - run: pnpm --filter @medios-aea/api lint
+      - run: pnpm --filter @medios-aea/api typecheck
+      - run: pnpm --filter @medios-aea/api test
+      - run: pnpm --filter @medios-aea/api test:e2e
+      - run: pnpm --filter @medios-aea/api build
+
+  web:
+    name: Web (lint · typecheck · test · build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @medios-aea/web lint
+      - run: pnpm --filter @medios-aea/web typecheck
+      - run: pnpm --filter @medios-aea/web test
+      - run: pnpm --filter @medios-aea/web build
+
+  mobile:
+    name: Móvil (lint · typecheck)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @medios-aea/mobile lint
+      - run: pnpm --filter @medios-aea/mobile typecheck

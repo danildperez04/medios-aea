@@ -1,0 +1,30 @@
+name: medios-aea
+
+# Entorno de desarrollo: solo PostgreSQL. La API, la web y la app corren en local.
+# El script de init crea además la base de pruebas e2e (medios_aea_test).
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: medios-aea-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-medios_aea}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-medios_aea}
+      POSTGRES_DB: ${DATABASE_NAME:-medios_aea}
+      TZ: America/Managua
+    ports:
+      - '${DATABASE_PORT:-5433}:5432'
+    volumes:
+      - medios_aea_pgdata:/var/lib/postgresql/data
+      - ./scripts/init-test-db.sql:/docker-entrypoint-initdb.d/10-init-test-db.sql:ro
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'pg_isready -U ${DATABASE_USER:-medios_aea} -d ${DATABASE_NAME:-medios_aea}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  medios_aea_pgdata:
+    name: medios_aea_pgdata

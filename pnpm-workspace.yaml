@@ -1,0 +1,17 @@
+packages:
+  - 'api'
+  - 'web'
+  - 'mobile'
+
+# pnpm 12 exige declarar qué dependencias pueden ejecutar scripts de build.
+# Sin esto, bcrypt y @swc/core no compilan su binario nativo.
+allowBuilds:
+  '@parcel/watcher': true
+  '@scarf/scarf': true
+  '@swc/core': true
+  bcrypt: true
+  esbuild: true
+  unrs-resolver: true
+
+minimumReleaseAge: 0
+minimumReleaseAgeStrict: false

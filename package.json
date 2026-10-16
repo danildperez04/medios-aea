@@ -1,0 +1,45 @@
+{
+  "name": "medios-aea",
+  "version": "0.1.0",
+  "description": "Gestión de medios (vehículos) de la Fundación Ayuda en Acción: solicitudes, aprobación sin choques de horario, bitácora de viajes y reportes",
+  "private": true,
+  "license": "UNLICENSED",
+  "author": "Danild Pérez <danildperez04>",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=12.0.0"
+  },
+  "packageManager": "pnpm@12.6.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @medios-aea/api --filter @medios-aea/web dev",
+    "dev:api": "pnpm --filter @medios-aea/api dev",
+    "dev:web": "pnpm --filter @medios-aea/web dev",
+    "dev:mobile": "pnpm --filter @medios-aea/mobile start",
+    "build": "pnpm --filter @medios-aea/api build && pnpm --filter @medios-aea/web build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:e2e": "pnpm --filter @medios-aea/api test:e2e",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md,yml,yaml}\"",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write"
+    ],
+    "*.{json,css,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.10"
+  }
+}
