@@ -65,7 +65,8 @@ Para generar los secretos: `openssl rand -base64 24` (contraseña de la BD) y
 ### A.2 Levantar
 
 ```bash
-pnpm prod:up       # sin pnpm: ./scripts/compose-prod.sh up -d --build
+pnpm prod:up       # descarga de GHCR la versión APP_VERSION y la levanta
+#                    alternativa sin GHCR: pnpm prod:build (compila en el servidor)
 pnpm prod:ps       # los tres servicios deben quedar "healthy"
 curl http://localhost/api/v1/health      # {"status":"ok","database":"connected",...}
 ```
@@ -86,10 +87,21 @@ Abrir `http://IP-DEL-SERVIDOR` (o `:WEB_PORT`) desde un navegador de la red.
 ```bash
 cd /opt/medios-aea
 ./scripts/backup.sh               # siempre antes de actualizar
-git pull
-pnpm prod:up                      # reconstruye; la API aplica las migraciones nuevas al arrancar
+git pull                          # trae compose y scripts de la versión nueva
+nano .env.production              # APP_VERSION=X.Y.Z (ver Releases en GitHub)
+pnpm prod:up                      # descarga esa versión; la API aplica las migraciones al arrancar
 pnpm prod:logs                    # verificar "Aplicada: ..." y "API escuchando"
 ```
+
+**Volver a la versión anterior:** poner el `APP_VERSION` anterior y `pnpm prod:up`. Si
+la versión nueva traía migraciones, restaurar antes el respaldo previo (§A.6): una
+versión vieja no conoce el esquema nuevo.
+
+**Imágenes en GHCR:** GitHub crea los paquetes como **privados** la primera vez, aunque
+el repositorio sea público. Para que el servidor descargue sin credenciales, en
+_GitHub → Packages → medios-aea-api/-web → Package settings_ cambiar la visibilidad a
+pública (una vez). Si deben ser privados, el servidor necesita
+`docker login ghcr.io` con un token de solo lectura (`read:packages`).
 
 ### A.5 Operación
 
