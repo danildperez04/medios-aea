@@ -12,6 +12,27 @@
 Los tres workspaces (`api`, `web`, `mobile`) y la raíz comparten versión. La API se
 publica bajo `/api/v1`; un cambio incompatible de contrato exige `/api/v2`.
 
+### 1.1 Cómo sale una versión (automatizado)
+
+Las versiones las calcula **release-please** a partir de los Conventional Commits; nadie
+edita versiones ni el `CHANGELOG.md` a mano.
+
+1. Al cerrar el sprint se mergea `develop → main` (§3.5).
+2. El workflow `Release` (`.github/workflows/release.yml`) abre o actualiza el PR
+   `chore(repo): release X.Y.Z` con la versión siguiente en los cuatro `package.json`,
+   en `mobile/app.config.ts` y el `CHANGELOG.md` (secciones en español).
+3. Se revisa ese PR (¿el CHANGELOG cuenta bien el sprint?) y se mergea.
+4. release-please crea la etiqueta `vX.Y.Z` y el GitHub Release, y el mismo workflow
+   construye, escanea con Trivy y publica `ghcr.io/danildperez04/medios-aea-api` y
+   `-web` con las etiquetas `X.Y.Z`, `X.Y` y `latest`, con procedencia y SBOM.
+
+Antes de la `1.0.0`, un `feat` sube MINOR y un cambio incompatible (`feat!:` o
+`BREAKING CHANGE:`) también sube MINOR (`bump-minor-pre-major`). Configuración:
+`release-please-config.json` y `.release-please-manifest.json`.
+
+Las versiones `0.1.0` a `0.3.0` se etiquetaron de forma retroactiva en los commits de
+cierre de cada sprint al adoptar release-please.
+
 ## 2. Commits
 
 **Conventional Commits 1.0.0**, validados con commitlint en tres puntos:

@@ -2,7 +2,8 @@ name: medios-aea-prod
 
 # Producción en un servidor propio (opción A de docs/11-guia-despliegue.md).
 #   cp .env.production.example .env.production   # y completar los secretos
-#   pnpm prod:up
+#   pnpm prod:up       # descarga de GHCR la versión APP_VERSION y la levanta
+#   pnpm prod:build    # alternativa: compila las imágenes en el servidor (~5 GB libres)
 #
 # Solo `web` publica un puerto. La API y PostgreSQL viven en la red interna y no
 # son alcanzables desde fuera del servidor.
@@ -31,7 +32,7 @@ services:
     networks: [internal]
 
   api:
-    image: medios-aea-api:${APP_VERSION:-latest}
+    image: ghcr.io/danildperez04/medios-aea-api:${APP_VERSION:-latest}
     build:
       context: .
       dockerfile: api/Dockerfile
@@ -48,7 +49,7 @@ services:
     networks: [internal]
 
   web:
-    image: medios-aea-web:${APP_VERSION:-latest}
+    image: ghcr.io/danildperez04/medios-aea-web:${APP_VERSION:-latest}
     build:
       context: .
       dockerfile: web/Dockerfile
