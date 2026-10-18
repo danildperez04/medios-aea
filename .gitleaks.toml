@@ -1,0 +1,12 @@
+# Configuración de gitleaks (búsqueda de secretos). Usa las reglas por defecto y
+# excluye solo falsos positivos conocidos. Ver SECURITY.md §3.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Plantillas de variables de entorno: solo traen valores de ejemplo (CAMBIAR_…)"
+paths = ['''(^|/)\.env(\.production)?\.example$''']
+
+[[allowlists]]
+description = "Pruebas: contraseñas y secretos ficticios creados para cada caso"
+paths = ['''\.(spec|e2e-spec|test)\.tsx?$''', '''(^|/)api/test/''']

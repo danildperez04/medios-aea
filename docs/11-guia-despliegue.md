@@ -38,7 +38,7 @@ La app móvil se distribuye como **APK** generado con EAS Build (§5).
 | api    | `JWT_SECRET`                                                                  | **Obligatoria**, ≥ 32 caracteres. `openssl rand -hex 32`     |
 | api    | `PORT`                                                                        | Puerto interno (3000 por defecto; los PaaS lo imponen)       |
 | api    | `CORS_ORIGIN`, `JWT_EXPIRES_IN`, `BCRYPT_ROUNDS`, `LOG_LEVEL`, `DATABASE_SSL` | Ver `.env.production.example`                                |
-| web    | `PORT`                                                                        | Puerto de nginx (80 por defecto)                             |
+| web    | `PORT`                                                                        | Puerto de nginx (8080 por defecto: corre sin privilegios)    |
 | web    | `API_UPSTREAM`                                                                | Dónde está la API (`http://api:3000` por defecto)            |
 
 ## 2. Requisitos
@@ -130,7 +130,7 @@ que obtiene y renueva el certificado de Let's Encrypt solo:
 2. Crear `Caddyfile`:
    ```
    medios.ayudaenaccion.org {
-       reverse_proxy web:80
+       reverse_proxy web:8080
    }
    ```
 3. Agregar el servicio al compose (o en un `docker-compose.override.yml`):
