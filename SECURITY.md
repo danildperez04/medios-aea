@@ -46,7 +46,10 @@ no bloquean (`--audit-level high`) y desaparecen al actualizar Expo.
   minúscula y número.
 - JWT firmado con `JWT_SECRET` de 32+ caracteres (la API no arranca sin él).
 - Límite de intentos de inicio de sesión (10 por minuto e IP) y límite global.
-- `helmet` en la API; cabeceras de seguridad en nginx; CORS restringido a la web.
+- `helmet` en la API; CORS restringido a la web.
+- Panel con Content-Security-Policy (`web/nginx/security-headers.conf`): solo scripts y
+  conexiones del propio origen, sin `<object>`, sin ser embebido en otros sitios.
+  Verificada navegando el panel completo sin violaciones.
 - Validación estricta de entrada (`whitelist` + `forbidNonWhitelisted`): campos no
   declarados se rechazan.
 - El rol se valida en el servidor en cada endpoint.
