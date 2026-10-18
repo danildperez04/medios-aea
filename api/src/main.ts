@@ -56,28 +56,32 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Medios AeA API')
-    .setDescription(
-      'API de gestión de medios de la Fundación Ayuda en Acción: flota, solicitudes de ' +
-        'vehículo, aprobación sin choques de horario, bitácora de viajes y reportes.',
-    )
-    .setVersion('0.1.0')
-    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' })
-    .addTag('Autenticación', 'Inicio de sesión y cambio de contraseña')
-    .addTag('Salud', 'Estado del servicio')
-    .addTag('Usuarios', 'Personal con acceso al sistema (solo ADMIN)')
-    .addTag('Proyectos', 'Proyectos a los que se cargan los viajes')
-    .addTag('Vehículos', 'Vehículos de la flota (medios de tipo VEHICLE)')
-    .addTag('Conductores', 'Conductores y vencimiento de licencias')
-    .addTag('Bloqueos', 'Periodos en que un medio no se puede usar')
-    .addTag('Disponibilidad', 'Medios y conductores libres; agenda')
-    .addTag('Solicitudes', 'Solicitudes de medios y su ciclo de vida')
-    .build();
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document, {
-    swaggerOptions: { persistAuthorization: true },
-  });
+  // Swagger solo donde se pide (SWAGGER_ENABLED; por defecto apagado en producción).
+  const swaggerEnabled = config.get<boolean>('SWAGGER_ENABLED', false);
+  if (swaggerEnabled) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Medios AeA API')
+      .setDescription(
+        'API de gestión de medios de la Fundación Ayuda en Acción: flota, solicitudes de ' +
+          'vehículo, aprobación sin choques de horario, bitácora de viajes y reportes.',
+      )
+      .setVersion('0.1.0')
+      .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' })
+      .addTag('Autenticación', 'Inicio de sesión y cambio de contraseña')
+      .addTag('Salud', 'Estado del servicio')
+      .addTag('Usuarios', 'Personal con acceso al sistema (solo ADMIN)')
+      .addTag('Proyectos', 'Proyectos a los que se cargan los viajes')
+      .addTag('Vehículos', 'Vehículos de la flota (medios de tipo VEHICLE)')
+      .addTag('Conductores', 'Conductores y vencimiento de licencias')
+      .addTag('Bloqueos', 'Periodos en que un medio no se puede usar')
+      .addTag('Disponibilidad', 'Medios y conductores libres; agenda')
+      .addTag('Solicitudes', 'Solicitudes de medios y su ciclo de vida')
+      .build();
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, document, {
+      swaggerOptions: { persistAuthorization: true },
+    });
+  }
 
   app.enableShutdownHooks();
 
@@ -85,7 +89,7 @@ async function bootstrap(): Promise<void> {
   await app.listen(port, '0.0.0.0');
 
   logger.log(`API escuchando en http://localhost:${port}/${config.get('API_PREFIX', 'api/v1')}`);
-  logger.log(`Documentación en http://localhost:${port}/api/docs`);
+  if (swaggerEnabled) logger.log(`Documentación en http://localhost:${port}/api/docs`);
   logger.log(`Entorno: ${config.get('NODE_ENV', 'development')}`);
 }
 

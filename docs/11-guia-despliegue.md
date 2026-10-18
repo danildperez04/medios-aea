@@ -37,6 +37,7 @@ La app móvil se distribuye como **APK** generado con EAS Build (§5).
 | api    | `DATABASE_HOST/PORT/NAME/USER/PASSWORD`                                       | Alternativa a la URL (la usa Docker Compose)                 |
 | api    | `JWT_SECRET`                                                                  | **Obligatoria**, ≥ 32 caracteres. `openssl rand -hex 32`     |
 | api    | `PORT`                                                                        | Puerto interno (3000 por defecto; los PaaS lo imponen)       |
+| api    | `SWAGGER_ENABLED`                                                             | `/api/docs`. Por defecto apagado en producción               |
 | api    | `CORS_ORIGIN`, `JWT_EXPIRES_IN`, `BCRYPT_ROUNDS`, `LOG_LEVEL`, `DATABASE_SSL` | Ver `.env.production.example`                                |
 | web    | `PORT`                                                                        | Puerto de nginx (8080 por defecto: corre sin privilegios)    |
 | web    | `API_UPSTREAM`                                                                | Dónde está la API (`http://api:3000` por defecto)            |
