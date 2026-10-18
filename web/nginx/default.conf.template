@@ -36,6 +36,14 @@ server {
         access_log off;
     }
 
+    # Fuentes y archivos de marca opcionales: si faltan, 404. Sin esto, la regla
+    # de la SPA devolvería index.html y el navegador intentaría leerlo como fuente.
+    location ~ ^/(fonts|brand)/ {
+        try_files $uri =404;
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "public, max-age=86400";
+    }
+
     # Rutas de la SPA (React Router): todo lo que no es archivo va a index.html.
     location / {
         try_files $uri $uri/ /index.html;

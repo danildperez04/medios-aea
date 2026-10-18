@@ -49,7 +49,27 @@ texto general de la interfaz debe asumir que un medio es un vehículo.
 - Las fuentes se empaquetan con la app (`@fontsource` en web, `@expo-google-fonts` en
   móvil): no dependen de la conexión en campo.
 - **Para usar Bogart:** copiar `Bogart-Regular.woff2` y `Bogart-Medium.woff2` en
-  `web/public/fonts/`; el `@font-face` de `web/src/index.css` ya la pone primero.
+  `web/public/fonts/` y agregar al inicio de `web/src/index.css`:
+
+  ```css
+  @font-face {
+    font-family: 'Bogart';
+    src: url('/fonts/Bogart-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Bogart';
+    src: url('/fonts/Bogart-Medium.woff2') format('woff2');
+    font-weight: 500 700;
+    font-display: swap;
+  }
+  ```
+
+  La familia ya está primera en `--font-serif` y en el tema de MUI. No declarar el
+  `@font-face` sin los archivos: el servidor respondería con la página de la app y el
+  navegador la rechazaría como fuente en cada carga.
+
 - Escala web 1.25 sobre 15 px; en móvil texto base de 17 px (lectura con sol directo).
 - Sin MAYÚSCULAS en etiquetas ni rótulos sobre los títulos.
 

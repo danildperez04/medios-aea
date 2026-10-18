@@ -4,26 +4,13 @@
 @import '@fontsource/dm-mono/500.css';
 
 /*
- * Tipografía de marca (Manual de marca de Ayuda en Acción, §Nuestra tipografía).
+ * Tipografía de marca (manual de Ayuda en Acción, §Nuestra tipografía).
  *
- * La principal es Bogart (ZetaFonts, de pago). Si la fundación comparte su licencia
- * web, basta con copiar Bogart-Regular.woff2 y Bogart-Medium.woff2 en public/fonts/:
- * este @font-face la toma primero. Mientras no estén, el navegador cae en Fraunces
- * (libre), una serif suave de proporciones parecidas.
+ * La principal es Bogart (ZetaFonts, de pago). No se declara su @font-face hasta
+ * tener los archivos: pedir una fuente inexistente devuelve el index.html de la
+ * SPA y el navegador lo rechaza en cada página. Para activarla, ver
+ * docs/16-sistema-de-diseno.md §3. Mientras tanto se usa Fraunces (libre).
  */
-@font-face {
-  font-family: 'Bogart';
-  src: url('/fonts/Bogart-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Bogart';
-  src: url('/fonts/Bogart-Medium.woff2') format('woff2');
-  font-weight: 500 700;
-  font-display: swap;
-}
-
 @theme {
   /*
    * Paleta del manual de marca. Regla de contraste (verificada, WCAG AA):
