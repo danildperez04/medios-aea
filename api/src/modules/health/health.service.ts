@@ -1,6 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { DataSource } from 'typeorm';
+import { readFileSync } from 'node:fs';
+
+/**
+ * Versión de la API, leída de su package.json (la que mantiene release-please).
+ * `npm_package_version` solo existe al arrancar con pnpm/npm; en el contenedor se
+ * arranca con `node dist/main.js` y el health check informaba siempre 0.1.0.
+ * La ruta es relativa a este módulo: igual en src/ (pruebas) y en dist/ (producción).
+ */
+export const API_VERSION: string = (
+  JSON.parse(readFileSync(new URL('../../../package.json', import.meta.url), 'utf8')) as {
+    version: string;
+  }
+).version;
 
 export type HealthStatus = 'ok' | 'degraded';
 
@@ -48,7 +61,7 @@ export class HealthService {
       database,
       uptime: Math.round(process.uptime() * 10) / 10,
       timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version ?? '0.1.0',
+      version: API_VERSION,
     };
   }
 }
