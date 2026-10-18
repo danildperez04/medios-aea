@@ -1,6 +1,6 @@
 {
   "name": "@medios-aea/api",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "API REST de Medios AeA — NestJS + TypeORM + PostgreSQL",
   "type": "module",
   "private": true,
@@ -18,7 +18,7 @@
     "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:cov": "vitest run --coverage",
+    "test:cov": "vitest run --config vitest.coverage.config.ts --coverage",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "migration:run": "node dist/database/run-migrations.js",
     "seed:run": "node dist/database/seeders/seeders.cli.js",
@@ -72,5 +72,14 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.2",
     "vitest": "^5.0.5"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   }
 }

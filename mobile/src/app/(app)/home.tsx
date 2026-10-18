@@ -1,21 +1,23 @@
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { colors, spacing } from '@/lib/theme';
+import { BrandLockup } from '@/components/BrandLockup';
+import { colors, fonts, spacing, touchTarget, type } from '@/lib/theme';
 import { useSession } from '@/store/session';
 
 const ROLE_LABEL = {
-  ADMIN: 'Coordinación logística',
+  ADMIN: 'Coordinación',
   REQUESTER: 'Técnico/a de proyecto',
   DRIVER: 'Conductor/a',
 } as const;
 
 /**
- * Inicio. En el Sprint 4 se convierte en "Mis solicitudes" para el técnico y
- * en el Sprint 5 en "Mis viajes" para el conductor.
+ * Inicio. Para el técnico será "Mis solicitudes"; para el conductor, "Mis viajes".
+ * Mientras esas pantallas no existan, se explica qué aparecerá aquí.
  */
 export default function HomeScreen() {
   const { user, clearSession } = useSession();
+  const isDriver = user?.role === 'DRIVER';
 
   const logout = async () => {
     await clearSession();
@@ -24,18 +26,21 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <View style={styles.header}>
+        <BrandLockup />
+      </View>
       <View style={styles.container}>
-        <Text style={styles.greeting}>Hola, {user?.fullName}</Text>
+        <Text style={styles.greeting}>Hola, {user?.fullName.split(' ')[0]}</Text>
         <Text style={styles.role}>{user ? ROLE_LABEL[user.role] : ''}</Text>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>
-            {user?.role === 'DRIVER' ? 'Mis viajes' : 'Mis solicitudes'}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle} accessibilityRole="header">
+            {isDriver ? 'Mis viajes' : 'Mis solicitudes'}
           </Text>
-          <Text style={styles.cardBody}>
-            {user?.role === 'DRIVER'
-              ? 'Aquí verás los viajes que tienes asignados (Sprint 5).'
-              : 'Aquí podrás solicitar un vehículo y seguir tus solicitudes (Sprint 4).'}
+          <Text style={styles.sectionBody}>
+            {isDriver
+              ? 'Aquí aparecerán los viajes que tengas asignados, con la hora de salida y el destino.'
+              : 'Aquí aparecerán los medios que pidas y si la coordinación los aprobó.'}
           </Text>
         </View>
 
@@ -48,20 +53,40 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  container: { flex: 1, padding: spacing.lg },
-  greeting: { fontSize: 24, fontWeight: '700', color: colors.text },
-  role: { fontSize: 14, color: colors.textMuted, marginTop: spacing.xs },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: spacing.lg,
-    marginTop: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+  safe: { flex: 1, backgroundColor: colors.blanco },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.linea,
   },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-  cardBody: { fontSize: 15, color: colors.textMuted, marginTop: spacing.sm },
-  logout: { marginTop: 'auto', alignItems: 'center', padding: spacing.md },
-  logoutText: { color: colors.error, fontWeight: '600', fontSize: 16 },
+  container: { flex: 1, padding: spacing.lg },
+  greeting: { fontFamily: fonts.medium, fontSize: type.display, color: colors.negroLavado },
+  role: {
+    fontFamily: fonts.regular,
+    fontSize: type.small,
+    color: colors.tintaSuave,
+    marginTop: spacing.xs,
+  },
+  section: {
+    marginTop: spacing.lg,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.negroLavado,
+  },
+  sectionTitle: { fontFamily: fonts.semibold, fontSize: 20, color: colors.negroLavado },
+  sectionBody: {
+    fontFamily: fonts.regular,
+    fontSize: type.body,
+    lineHeight: 25,
+    color: colors.tintaSuave,
+    marginTop: spacing.sm,
+  },
+  logout: {
+    marginTop: 'auto',
+    minHeight: touchTarget,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoutText: { fontFamily: fonts.semibold, color: colors.turquesaFuerte, fontSize: type.body },
 });

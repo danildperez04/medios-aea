@@ -1,0 +1,234 @@
+{
+  "repository": "danildperez04/medios-aea",
+  "labels": [
+    {
+      "name": "tipo:historia",
+      "color": "F87C56",
+      "description": "Historia de usuario del backlog"
+    },
+    {
+      "name": "tipo:bug",
+      "color": "E5554F",
+      "description": "Algo no funciona como debería"
+    },
+    {
+      "name": "tipo:tarea",
+      "color": "006975",
+      "description": "Trabajo técnico sin historia"
+    },
+    {
+      "name": "tipo:deuda",
+      "color": "6E625F",
+      "description": "Deuda técnica o mantenimiento"
+    },
+    {
+      "name": "tipo:seguridad",
+      "color": "382E2C",
+      "description": "Riesgo o mejora de seguridad"
+    },
+    {
+      "name": "área:api",
+      "color": "71B790",
+      "description": "API (NestJS)"
+    },
+    {
+      "name": "área:web",
+      "color": "71B790",
+      "description": "Panel web (React)"
+    },
+    {
+      "name": "área:móvil",
+      "color": "71B790",
+      "description": "App móvil (Expo)"
+    },
+    {
+      "name": "área:infra",
+      "color": "71B790",
+      "description": "CI/CD, Docker, despliegue"
+    },
+    {
+      "name": "área:docs",
+      "color": "71B790",
+      "description": "Documentación"
+    },
+    {
+      "name": "prioridad:must",
+      "color": "FFC658",
+      "description": "Imprescindible para el MVP"
+    },
+    {
+      "name": "prioridad:should",
+      "color": "FEAD77",
+      "description": "Importante, no bloquea el MVP"
+    },
+    {
+      "name": "prioridad:could",
+      "color": "FDF0D5",
+      "description": "Deseable si hay tiempo"
+    }
+  ],
+  "milestones": [
+    {
+      "title": "Sprint 3",
+      "due_on": "2026-12-10",
+      "description": "Solicitudes y aprobación sin choques + calendario (0.4.0)"
+    },
+    {
+      "title": "Sprint 4",
+      "due_on": "2026-12-24",
+      "description": "App móvil del solicitante + notificaciones (0.5.0)"
+    },
+    {
+      "title": "Sprint 5",
+      "due_on": "2027-01-21",
+      "description": "Bitácora del conductor + reportes + dashboard (0.6.0)"
+    },
+    {
+      "title": "Sprint 6",
+      "due_on": "2027-02-04",
+      "description": "Despliegue, APK y UAT (1.0.0)"
+    }
+  ],
+  "issues": [
+    {
+      "key": "HU-10",
+      "title": "HU-10: Como técnico, quiero cancelar mi solicitud",
+      "body": "**Historia:** Como técnico, quiero cancelar mi solicitud.\n\n## Criterios de aceptación\n\n- [ ] Solo el dueño o ADMIN\n- [ ] no si el viaje inició\n- [ ] libera la asignación\n\n**Requisitos:** RF-11 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 3). Rama: `feature/hu-10-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:api", "área:web"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "HU-11",
+      "title": "HU-11: Como ADMIN, quiero aprobar asignando vehículo y conductor sin choques",
+      "body": "**Historia:** Como ADMIN, quiero aprobar asignando vehículo y conductor sin choques.\n\n## Criterios de aceptación\n\n- [ ] Sugiere vehículos/conductores libres\n- [ ] dos aprobaciones concurrentes del mismo vehículo/horario → una OK y otra 409\n\n**Requisitos:** RF-12, RF-14 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 3). Rama: `feature/hu-11-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:api", "área:web"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "HU-12",
+      "title": "HU-12: Como ADMIN, quiero rechazar con motivo",
+      "body": "**Historia:** Como ADMIN, quiero rechazar con motivo.\n\n## Criterios de aceptación\n\n- [ ] Motivo obligatorio\n- [ ] notifica al solicitante\n\n**Requisitos:** RF-13 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 3). Rama: `feature/hu-12-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:api", "área:web"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "HU-13",
+      "title": "HU-13: Como ADMIN, quiero reasignar vehículo o conductor",
+      "body": "**Historia:** Como ADMIN, quiero reasignar vehículo o conductor.\n\n## Criterios de aceptación\n\n- [ ] Desactiva la asignación previa y crea otra en una transacción\n- [ ] notifica\n\n**Requisitos:** RF-15 · **Prioridad:** Should\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 3). Rama: `feature/hu-13-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:should", "área:api", "área:web"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "HU-14",
+      "title": "HU-14: Como ADMIN, quiero ver el calendario de la flota",
+      "body": "**Historia:** Como ADMIN, quiero ver el calendario de la flota.\n\n## Criterios de aceptación\n\n- [ ] Filas = vehículos\n- [ ] vista día/semana\n- [ ] colores por estado\n- [ ] bloqueos visibles\n\n**Requisitos:** RF-16 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 3). Rama: `feature/hu-14-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:web", "área:api"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "HU-15",
+      "title": "HU-15: Como ADMIN, quiero saber quién aprobó o rechazó cada solicitud",
+      "body": "**Historia:** Como ADMIN, quiero saber quién aprobó o rechazó cada solicitud.\n\n## Criterios de aceptación\n\n- [ ] Registro en `audit_log` con usuario, acción y fecha\n\n**Requisitos:** RF-17 · **Prioridad:** Should\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 3). Rama: `feature/hu-15-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:should", "área:api", "área:web"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "HU-16",
+      "title": "HU-16: Como técnico, quiero iniciar sesión en la app",
+      "body": "**Historia:** Como técnico, quiero iniciar sesión en la app.\n\n## Criterios de aceptación\n\n- [ ] Token en `expo-secure-store`\n- [ ] sesión persiste\n- [ ] logout limpia\n\n**Requisitos:** RF-18 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 4). Rama: `feature/hu-16-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:móvil"],
+      "milestone": "Sprint 4"
+    },
+    {
+      "key": "HU-17",
+      "title": "HU-17: Como técnico, quiero solicitar desde el celular viendo disponibilidad",
+      "body": "**Historia:** Como técnico, quiero solicitar desde el celular viendo disponibilidad.\n\n## Criterios de aceptación\n\n- [ ] Formulario con fecha/hora\n- [ ] indicador de vehículos libres antes de enviar\n\n**Requisitos:** RF-18, RF-09 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 4). Rama: `feature/hu-17-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:móvil", "área:api"],
+      "milestone": "Sprint 4"
+    },
+    {
+      "key": "HU-18",
+      "title": "HU-18: Como técnico, quiero ver y cancelar mis solicitudes",
+      "body": "**Historia:** Como técnico, quiero ver y cancelar mis solicitudes.\n\n## Criterios de aceptación\n\n- [ ] Lista por estado\n- [ ] detalle con vehículo y conductor asignado\n\n**Requisitos:** RF-18 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 4). Rama: `feature/hu-18-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:móvil"],
+      "milestone": "Sprint 4"
+    },
+    {
+      "key": "HU-19",
+      "title": "HU-19: Como técnico, quiero recibir notificaciones",
+      "body": "**Historia:** Como técnico, quiero recibir notificaciones.\n\n## Criterios de aceptación\n\n- [ ] Push al aprobar/rechazar/reasignar\n- [ ] bandeja in-app con leídas/no leídas\n\n**Requisitos:** RF-19, RF-20 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 4). Rama: `feature/hu-19-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:api", "área:móvil"],
+      "milestone": "Sprint 4"
+    },
+    {
+      "key": "HU-20",
+      "title": "HU-20: Como conductor, quiero ver mis viajes de hoy y próximos",
+      "body": "**Historia:** Como conductor, quiero ver mis viajes de hoy y próximos.\n\n## Criterios de aceptación\n\n- [ ] Solo asignaciones activas propias\n\n**Requisitos:** RF-21 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 5). Rama: `feature/hu-20-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:móvil", "área:api"],
+      "milestone": "Sprint 5"
+    },
+    {
+      "key": "HU-21",
+      "title": "HU-21: Como conductor, quiero registrar salida y llegada",
+      "body": "**Historia:** Como conductor, quiero registrar salida y llegada.\n\n## Criterios de aceptación\n\n- [ ] km llegada ≥ km salida\n- [ ] actualiza km del vehículo\n- [ ] solicitud → `COMPLETED`\n\n**Requisitos:** RF-22, RF-23 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 5). Rama: `feature/hu-21-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:móvil", "área:api"],
+      "milestone": "Sprint 5"
+    },
+    {
+      "key": "HU-22",
+      "title": "HU-22: Como ADMIN, quiero reportes de uso por proyecto y vehículo",
+      "body": "**Historia:** Como ADMIN, quiero reportes de uso por proyecto y vehículo.\n\n## Criterios de aceptación\n\n- [ ] Filtro por rango\n- [ ] km, horas, viajes, cancelaciones\n- [ ] exporta CSV\n\n**Requisitos:** RF-24, RF-25 · **Prioridad:** Should\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 5). Rama: `feature/hu-22-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:should", "área:web", "área:api"],
+      "milestone": "Sprint 5"
+    },
+    {
+      "key": "HU-23",
+      "title": "HU-23: Como ADMIN, quiero un dashboard",
+      "body": "**Historia:** Como ADMIN, quiero un dashboard.\n\n## Criterios de aceptación\n\n- [ ] Pendientes, viajes de hoy, vehículos en mantenimiento, licencias que vencen en 30 días\n\n**Requisitos:** RF-26 · **Prioridad:** Should\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 5). Rama: `feature/hu-23-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:should", "área:web", "área:api"],
+      "milestone": "Sprint 5"
+    },
+    {
+      "key": "HU-24",
+      "title": "HU-24: Como fundación, quiero el sistema desplegado y la app instalable (APK/EAS)",
+      "body": "**Historia:** Como fundación, quiero el sistema desplegado y la app instalable (APK/EAS).\n\n## Criterios de aceptación\n\n- [ ] Por definir en la planificación del sprint\n\n**Requisitos:** — · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 6). Rama: `feature/hu-24-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:infra"],
+      "milestone": "Sprint 6"
+    },
+    {
+      "key": "HU-25",
+      "title": "HU-25: Como fundación, quiero validar el sistema con usuarios reales (UAT)",
+      "body": "**Historia:** Como fundación, quiero validar el sistema con usuarios reales (UAT).\n\n## Criterios de aceptación\n\n- [ ] Por definir en la planificación del sprint\n\n**Requisitos:** — · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 6). Rama: `feature/hu-25-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:docs"],
+      "milestone": "Sprint 6"
+    },
+    {
+      "key": "T-ADR-0003",
+      "title": "Tarea: decidir y aplicar dónde guarda el panel el token de sesión (ADR 0003)",
+      "body": "**Por qué:** el panel guarda el JWT en `localStorage`; un XSS podría robarlo. La CSP reduce el riesgo, no lo elimina.\n\n**Qué hacer:** decidir el ADR 0003 (`docs/adr/`) y, si se acepta la cookie `HttpOnly`, cambiar login/logout, el guard y el panel, con pruebas de CSRF y de convivencia con el encabezado `Authorization` de la app.\n\n## Hecha cuando\n\n- [ ] ADR 0003 en estado Aceptada o Rechazada\n- [ ] Cambio aplicado y probado (si se acepta)\n- [ ] `SECURITY.md` §5 actualizado",
+      "labels": ["tipo:seguridad", "área:api", "área:web", "prioridad:should"],
+      "milestone": "Sprint 6"
+    },
+    {
+      "key": "T-WEB-COV",
+      "title": "Tarea: subir la cobertura de pruebas del panel web (hoy ~21 %)",
+      "body": "**Por qué:** la API está en ~90 % (unitarias + e2e) y la web en ~21 %; los formularios y la bandeja tienen reglas que hoy solo se prueban a mano.\n\n**Qué hacer:** pruebas de componentes para formularios de vehículos, conductores, usuarios y proyectos; subir los umbrales de `web/vite.config.ts` en cada PR que mejore la cobertura.\n\n## Hecha cuando\n\n- [ ] Cobertura de sentencias del panel ≥ 50 %\n- [ ] Umbrales actualizados en `web/vite.config.ts` y `docs/12` §4",
+      "labels": ["tipo:deuda", "área:web", "prioridad:should"],
+      "milestone": "Sprint 5"
+    },
+    {
+      "key": "T-AUDIT-EXPO",
+      "title": "Tarea: revisar las excepciones de auditoría de Expo (node-forge, braces)",
+      "body": "**Por qué:** dos avisos altos sin parche entran por las herramientas de compilación de Expo y están ignorados en `pnpm-workspace.yaml` con fecha de revisión.\n\n**Qué hacer:** al actualizar el SDK de Expo (o antes del 18/01/2027), comprobar si siguen apareciendo; quitar las excepciones que ya no apliquen.\n\n## Hecha cuando\n\n- [ ] `pnpm audit --prod` revisado tras actualizar Expo\n- [ ] `SECURITY.md` §4 y `auditConfig.ignoreGhsas` al día",
+      "labels": ["tipo:seguridad", "área:móvil", "prioridad:could"],
+      "milestone": "Sprint 6"
+    },
+    {
+      "key": "T-GHCR",
+      "title": "Tarea: hacer públicos los paquetes de GHCR tras el primer release",
+      "body": "**Por qué:** GitHub crea los paquetes `medios-aea-api` y `medios-aea-web` como privados aunque el repositorio sea público; el servidor no podría descargarlos sin credenciales.\n\n**Qué hacer:** tras el primer release publicado (0.4.0), cambiar su visibilidad en Packages → Package settings (`docs/11` §A.4).\n\n## Hecha cuando\n\n- [ ] `docker pull ghcr.io/danildperez04/medios-aea-api:0.4.0` funciona sin `docker login`",
+      "labels": ["tipo:tarea", "área:infra", "prioridad:must"],
+      "milestone": "Sprint 3"
+    }
+  ]
+}

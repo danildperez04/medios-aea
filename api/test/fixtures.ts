@@ -78,3 +78,33 @@ export async function createDriver(
     repo.create({ userId: user.id, licenseNumber: unique('LIC'), licenseExpiry, isActive: true }),
   );
 }
+
+/** Inicia sesion y devuelve el token. */
+export async function loginAs(
+  app: { getHttpServer: () => unknown },
+  user: { email: string },
+  password = PASSWORD,
+): Promise<string> {
+  const { default: request } = await import('supertest');
+  const response = await request(app.getHttpServer() as never)
+    .post('/api/v1/auth/login')
+    .send({ email: user.email, password });
+  if (response.status !== 200) {
+    throw new Error(`No se pudo iniciar sesion como ${user.email}: ${response.status}`);
+  }
+  return response.body.accessToken as string;
+}
+
+/**
+ * Token firmado directamente, sin pasar por POST /auth/login. Para pruebas que no
+ * prueban el login: así no consumen el límite de 10 intentos por minuto.
+ */
+export async function signToken(
+  app: { get: <T>(token: new (...args: never[]) => T) => T },
+  user: Pick<User, 'id' | 'email' | 'fullName' | 'role'>,
+): Promise<string> {
+  const { JwtService } = await import('@nestjs/jwt');
+  return app
+    .get(JwtService)
+    .signAsync({ sub: user.id, email: user.email, fullName: user.fullName, role: user.role });
+}

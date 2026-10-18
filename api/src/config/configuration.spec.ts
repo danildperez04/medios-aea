@@ -104,6 +104,74 @@ describe('buildConfig', () => {
   });
 });
 
+describe('DATABASE_URL (PaaS)', () => {
+  const URL_ENV = {
+    DATABASE_URL: 'postgres://aea:secreto@db.interno:5432/medios',
+    DATABASE_HOST: undefined,
+    DATABASE_NAME: undefined,
+    DATABASE_USER: undefined,
+    DATABASE_PASSWORD: undefined,
+    JWT_SECRET: 'a'.repeat(64),
+  };
+
+  it('con la URL no exige las variables sueltas', () => {
+    const previous = withEnv(URL_ENV);
+    try {
+      expect(buildConfig().database.url).toBe('postgres://aea:secreto@db.interno:5432/medios');
+    } finally {
+      process.env = previous;
+    }
+  });
+
+  it('sin URL vuelve a exigir DATABASE_NAME', () => {
+    const previous = withEnv({ ...URL_ENV, DATABASE_URL: undefined });
+    try {
+      expect(() => buildConfig()).toThrow(/DATABASE_NAME/);
+    } finally {
+      process.env = previous;
+    }
+  });
+
+  it('el esquema acepta solo la URL', () => {
+    const { error } = configValidationSchema.validate({
+      DATABASE_URL: 'postgresql://aea:secreto@db.interno:5432/medios',
+      JWT_SECRET: 'a'.repeat(64),
+    });
+    expect(error).toBeUndefined();
+  });
+
+  it('el esquema rechaza una URL que no es de PostgreSQL', () => {
+    const { error } = configValidationSchema.validate({
+      DATABASE_URL: 'mysql://aea:secreto@db:3306/medios',
+      JWT_SECRET: 'a'.repeat(64),
+    });
+    expect(error).toBeDefined();
+  });
+
+  it('el esquema exige las variables sueltas si no hay URL', () => {
+    const { error } = configValidationSchema.validate({ JWT_SECRET: 'a'.repeat(64) });
+    expect(error?.message).toMatch(/DATABASE_HOST/);
+  });
+});
+
+describe('SWAGGER_ENABLED', () => {
+  const swagger = (env: Record<string, string>) =>
+    configValidationSchema.validate({ ...BASE_ENV, ...env }).value.SWAGGER_ENABLED as boolean;
+
+  it('esta activo por defecto en desarrollo y pruebas', () => {
+    expect(swagger({ NODE_ENV: 'development' })).toBe(true);
+    expect(swagger({ NODE_ENV: 'test' })).toBe(true);
+  });
+
+  it('esta apagado por defecto en produccion', () => {
+    expect(swagger({ NODE_ENV: 'production' })).toBe(false);
+  });
+
+  it('se puede activar a proposito en produccion', () => {
+    expect(swagger({ NODE_ENV: 'production', SWAGGER_ENABLED: 'true' })).toBe(true);
+  });
+});
+
 describe('configValidationSchema', () => {
   const base = { ...BASE_ENV };
 

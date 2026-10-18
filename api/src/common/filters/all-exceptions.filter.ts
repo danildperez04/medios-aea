@@ -81,7 +81,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
             ? rawMessage
             : exception.message,
         error: typeof record.error === 'string' ? record.error : exception.name,
-        details: Array.isArray(rawMessage) ? rawMessage : undefined,
+        // Detalles explícitos (p. ej. con qué choca un bloqueo) o la lista de errores de validación.
+        details: record.details ?? (Array.isArray(rawMessage) ? rawMessage : undefined),
       };
     }
 

@@ -1,0 +1,88 @@
+# Dependabot abre PR para mantener al día dependencias, acciones e imágenes base.
+# Los PR llegan agrupados para no inundar la bandeja; las actualizaciones de
+# seguridad llegan aparte y en cuanto se publican.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: America/Managua
+    target-branch: develop
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+      prefix-development: build
+      include: scope
+    labels: ['tipo:deuda', 'área:infra']
+    groups:
+      api:
+        patterns:
+          ['@nestjs/*', 'typeorm', 'pg', 'class-*', 'passport*', 'bcrypt', 'helmet', 'joi', 'rxjs']
+        update-types: [minor, patch]
+      web:
+        patterns:
+          [
+            '@mui/*',
+            'react*',
+            '@tanstack/*',
+            'vite',
+            '@vitejs/*',
+            'zod',
+            '@hookform/*',
+            'axios',
+            'zustand',
+          ]
+        update-types: [minor, patch]
+      tooling:
+        patterns:
+          [
+            'eslint*',
+            '@eslint/*',
+            'typescript*',
+            'prettier',
+            'vitest',
+            '@vitest/*',
+            '@commitlint/*',
+            'husky',
+            'lint-staged',
+            '@types/*',
+          ]
+        update-types: [minor, patch]
+    ignore:
+      # El SDK de Expo fija versiones compatibles entre sí: se actualiza con
+      # `pnpm exec expo install --fix` al cambiar de SDK, no paquete por paquete.
+      - dependency-name: 'expo*'
+      - dependency-name: '@expo/*'
+      - dependency-name: '@expo-google-fonts/*'
+      - dependency-name: 'react-native*'
+      - dependency-name: '@react-native-community/*'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Managua
+    target-branch: develop
+    commit-message:
+      prefix: ci
+      include: scope
+    labels: ['tipo:deuda', 'área:infra']
+    groups:
+      actions:
+        patterns: ['*']
+
+  - package-ecosystem: docker
+    directories: ['/api', '/web']
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Managua
+    target-branch: develop
+    commit-message:
+      prefix: build
+      include: scope
+    labels: ['tipo:deuda', 'área:infra']

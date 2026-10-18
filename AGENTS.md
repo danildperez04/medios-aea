@@ -27,12 +27,14 @@ conductores registran cada viaje. Monorepo pnpm con tres workspaces:
 
 ## 2. Documentos obligatorios
 
-| Voy a trabajar en…          | Debo leer                                                         |
-| --------------------------- | ----------------------------------------------------------------- |
-| Cualquier cosa              | `docs/14-arquitectura.md` y `docs/12-plan-pruebas.md`             |
-| Base de datos o migraciones | `docs/10-esquema-base-de-datos.md`                                |
-| Reservas, disponibilidad    | `docs/02-prd-mvp-moscow.md` §2 (reglas de negocio) y `docs/10` §4 |
-| Commits o ramas             | `docs/05-versionado-commits-y-ramas.md`                           |
+| Voy a trabajar en…           | Debo leer                                                         |
+| ---------------------------- | ----------------------------------------------------------------- |
+| Cualquier cosa               | `docs/14-arquitectura.md` y `docs/12-plan-pruebas.md`             |
+| Base de datos o migraciones  | `docs/10-esquema-base-de-datos.md`                                |
+| Reservas, disponibilidad     | `docs/02-prd-mvp-moscow.md` §2 (reglas de negocio) y `docs/10` §4 |
+| Commits o ramas              | `docs/05-versionado-commits-y-ramas.md`                           |
+| Abrir o revisar un PR        | `CONTRIBUTING.md` y `docs/17-revision-de-codigo.md`               |
+| Una decisión de arquitectura | `docs/adr/` (registrar un ADR antes de implementarla)             |
 
 ## 3. Reglas innegociables
 
@@ -51,21 +53,54 @@ conductores registran cada viaje. Monorepo pnpm con tres workspaces:
    la app no es seguridad.
 7. **Mensajes de error en español y accionables**; nunca SQL ni trazas al cliente.
 
-## 4. Comandos
+## 4. DTO (API)
+
+Siguen la documentación de NestJS (_Validation_ y _Mapped types_):
+
+- **Un DTO por archivo** en `modules/<módulo>/dto/`: `create-x.dto.ts`, `update-x.dto.ts`,
+  `x-filters.dto.ts`. Nunca definidos dentro del controlador.
+- **El update deriva del create** con los mapped types de `@nestjs/swagger` (conservan la
+  documentación de Swagger): `PartialType(CreateXDto, { skipNullProperties: false })`,
+  `OmitType`, `PickType`. `skipNullProperties: false` es obligatorio: sin él `null` salta
+  la validación y una columna NOT NULL termina en 500.
+- Campos opcionales que no admiten `null`: `@IsOptionalNonNull()` (`common/validation/optional.ts`),
+  no `@IsOptional()`.
+- Reglas compartidas: `@IsStrongPassword()` (`common/validation/password.policy.ts`),
+  `@Trim()` / `@TrimUpperCase()` (`common/transformers/string.transformers.ts`).
+- Cada DTO nuevo con reglas propias se agrega a `common/validation/dto-contracts.spec.ts`.
+
+## 5. Interfaz (web y móvil)
+
+Antes de tocar pantallas, leer `docs/16-sistema-de-diseno.md` (sale del manual de marca
+de Ayuda en Acción). En corto: texto negro lavado sobre los colores cálidos, nunca
+blanco; DM Mono solo para datos técnicos; nada de "vehículo" en textos generales (el
+sistema es de **medios**); sin tarjetas de indicadores ni íconos decorativos; ninguna
+pantalla con scroll horizontal a 390 px.
+
+## 6. Comandos
 
 ```bash
 pnpm install
 pnpm db:up                  # PostgreSQL en localhost:5433 (+ base medios_aea_test)
 cp api/.env.example api/.env
-pnpm --filter @medios-aea/api build && pnpm --filter @medios-aea/api migration:run
+pnpm db:migrate && pnpm db:seed   # esquema + datos de ejemplo (contraseña MediosAea2026)
 pnpm dev                    # API :3000 + web :5173
 pnpm dev:mobile             # Expo (escanear QR con Expo Go o dev build)
 
 pnpm lint && pnpm typecheck && pnpm test   # antes de dar algo por terminado
 pnpm test:e2e                              # requiere pnpm db:up
+pnpm --filter @medios-aea/api test:cov    # unitarias + e2e con umbrales (lo que exige CI)
 ```
 
-## 5. Git
+## 7. Git
 
-Conventional Commits con los alcances de `commitlint.config.mjs`. Ramas
-`feature/hu-XX-<slug>` desde `develop`.
+Flujo completo en `docs/05-versionado-commits-y-ramas.md` §3. En corto:
+
+- **Una rama corta por historia** (`feature/hu-XX-<slug>`), creada desde `develop`
+  actualizado. Nunca una rama por sprint.
+- **No apilar ramas:** si la historia depende de otra que todavía no está mergeada,
+  avisa y espera el merge en lugar de crear la rama encima.
+- Conventional Commits con los alcances de `commitlint.config.mjs`.
+- **Commits locales sí; `git push` y PR no:** los hace la persona responsable.
+- Antes de dar la historia por terminada: `pnpm lint && pnpm typecheck && pnpm test`
+  (y `pnpm test:e2e` si toca la API).

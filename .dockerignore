@@ -1,0 +1,15 @@
+# Lo que nunca entra al contexto de build de Docker.
+**/node_modules
+**/dist
+**/coverage
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.github
+.husky
+mobile
+docs
+diagrams
+backups
+*.log

@@ -15,3 +15,11 @@ allowBuilds:
 
 minimumReleaseAge: 0
 minimumReleaseAgeStrict: false
+
+# Excepciones de auditoría (pnpm audit). Cada una con motivo y fecha de revisión en
+# SECURITY.md §4. Solo vulnerabilidades de herramientas de compilación del móvil sin
+# versión corregida; se reevalúan al actualizar el SDK de Expo.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-86w9-cpqp-85rv # node-forge — vía herramientas de Expo, sin parche
+    - GHSA-vfj7-8cjw-p6xm # braces — vía herramientas de Expo, sin parche

@@ -1,0 +1,33 @@
+name: Tarea técnica o deuda
+description: Trabajo sin historia de usuario (infraestructura, refactor, dependencias, deuda).
+title: 'Tarea: '
+labels: ['tipo:tarea']
+body:
+  - type: textarea
+    id: why
+    attributes:
+      label: Por qué
+      description: Qué problema resuelve o qué riesgo reduce. Sin esto, no se prioriza.
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: Qué hay que hacer
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Cómo sabremos que está hecha
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Tipo
+      options: [Deuda técnica, Infraestructura / CI, Seguridad, Documentación, Dependencias]
+    validations:
+      required: true

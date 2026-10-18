@@ -10,13 +10,49 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Mínimo privilegio: los jobs solo leen el repositorio.
+permissions:
+  contents: read
+
 env:
   NODE_VERSION: '24'
 
+# Las acciones van fijadas a un SHA (con su versión en el comentario): una etiqueta
+# como v5 puede moverse. Dependabot las mantiene al día (.github/dependabot.yml).
 jobs:
-  api:
-    name: API (lint · typecheck · test · e2e · build)
+  quality:
+    name: Calidad (formato · commits · título del PR)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Formato (Prettier)
+        run: pnpm format:check
+      - name: Título del PR (será el commit tras el squash)
+        if: github.event_name == 'pull_request'
+        env:
+          # Por variable de entorno, nunca interpolado en el script: el título lo escribe quien abre el PR.
+          TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$TITLE" | pnpm exec commitlint --verbose
+      - name: Commits del PR
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: pnpm exec commitlint --from "$BASE" --to "$HEAD" --verbose
+
+  api:
+    name: API (lint · typecheck · pruebas + cobertura · build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16-alpine
@@ -32,9 +68,9 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -45,36 +81,82 @@ jobs:
           sed -i 's/^JWT_SECRET=.*/JWT_SECRET=ci-secret-for-tests-only-not-for-production-use/' api/.env
       - run: pnpm --filter @medios-aea/api lint
       - run: pnpm --filter @medios-aea/api typecheck
-      - run: pnpm --filter @medios-aea/api test
-      - run: pnpm --filter @medios-aea/api test:e2e
+      - name: Pruebas unitarias + integración con umbrales de cobertura
+        run: pnpm --filter @medios-aea/api test:cov
+      - name: Resumen de cobertura
+        if: always()
+        run: node scripts/ci/coverage-summary.mjs API api/coverage/coverage-summary.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: coverage-api
+          path: api/coverage/
+          retention-days: 14
       - run: pnpm --filter @medios-aea/api build
 
   web:
-    name: Web (lint · typecheck · test · build)
+    name: Web (lint · typecheck · pruebas + cobertura · build)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @medios-aea/web lint
       - run: pnpm --filter @medios-aea/web typecheck
-      - run: pnpm --filter @medios-aea/web test
+      - run: pnpm --filter @medios-aea/web test:cov
+      - name: Resumen de cobertura
+        if: always()
+        run: node scripts/ci/coverage-summary.mjs Web web/coverage/coverage-summary.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: coverage-web
+          path: web/coverage/
+          retention-days: 14
       - run: pnpm --filter @medios-aea/web build
 
   mobile:
-    name: Móvil (lint · typecheck)
+    name: Móvil (lint · typecheck · pruebas)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @medios-aea/mobile lint
       - run: pnpm --filter @medios-aea/mobile typecheck
+      - run: pnpm --filter @medios-aea/mobile test
+
+  docker:
+    name: Imágenes Docker (build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [api, web]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Imagen de la API
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: api/Dockerfile
+          push: false
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+      - name: Imagen del panel web
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: web/Dockerfile
+          push: false
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/v17.11.2/schemas/config.json",
+  "release-type": "node",
+  "include-component-in-tag": false,
+  "include-v-in-tag": true,
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": false,
+  "pull-request-title-pattern": "chore(repo): release ${version}",
+  "pull-request-header": "Release preparado por release-please a partir de los Conventional Commits. Al mergearlo se crea la etiqueta, el GitHub Release y se publican las imágenes en GHCR.",
+  "changelog-sections": [
+    { "type": "feat", "section": "Funcionalidades" },
+    { "type": "fix", "section": "Correcciones" },
+    { "type": "perf", "section": "Rendimiento" },
+    { "type": "refactor", "section": "Cambios internos" },
+    { "type": "docs", "section": "Documentación" },
+    { "type": "build", "section": "Infraestructura", "hidden": true },
+    { "type": "ci", "section": "Integración continua", "hidden": true },
+    { "type": "test", "section": "Pruebas", "hidden": true },
+    { "type": "chore", "section": "Mantenimiento", "hidden": true },
+    { "type": "style", "section": "Estilo", "hidden": true }
+  ],
+  "packages": {
+    ".": {
+      "package-name": "medios-aea",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        { "type": "json", "path": "api/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "web/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "mobile/package.json", "jsonpath": "$.version" },
+        { "type": "generic", "path": "mobile/app.config.ts" }
+      ]
+    }
+  }
+}
