@@ -1,61 +1,39 @@
-import { Grid, Stack, Typography } from '@mui/material';
-import { AlertTriangle, CalendarClock, ClipboardList, Wrench } from 'lucide-react';
-import { PageHeader, StatCard } from '@/design-system/ui';
+import { Box, Typography } from '@mui/material';
+import { AgendaBoard } from '@/design-system/ui';
+import { formatLongDate } from '@/shared/lib/format';
 
 /**
- * Dashboard de la coordinación logística (RF-26).
+ * "Hoy": la agenda del día de todos los medios (RF-16, RF-26).
  *
- * Los indicadores reales llegan en el Sprint 5. Mientras tanto la vista muestra
- * la estructura sin valores, para no presentar como dato lo que aún no existe.
+ * Las filas llegan cuando existan medios registrados y asignaciones (vehículos en
+ * el Sprint 2, solicitudes en el 3). Mientras tanto el tablero se muestra vacío y
+ * explica qué va a aparecer, sin datos de ejemplo que parezcan reales.
  */
 export function DashboardView() {
+  const today = new Date();
+
   return (
     <>
-      <PageHeader title="Inicio" description="Resumen de la flota y de las solicitudes" />
-
-      <Stack spacing={3}>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard
-              label="Solicitudes pendientes"
-              value="—"
-              hint="Disponible en el Sprint 3"
-              icon={ClipboardList}
-              tone="warning"
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard
-              label="Viajes de hoy"
-              value="—"
-              hint="Disponible en el Sprint 3"
-              icon={CalendarClock}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard
-              label="Vehículos en mantenimiento"
-              value="—"
-              hint="Disponible en el Sprint 2"
-              icon={Wrench}
-              tone="neutral"
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard
-              label="Licencias por vencer (30 días)"
-              value="—"
-              hint="Disponible en el Sprint 2"
-              icon={AlertTriangle}
-              tone="error"
-            />
-          </Grid>
-        </Grid>
-
-        <Typography variant="body2" color="text.secondary">
-          Los indicadores se activan por sprint. Consulta <code>docs/04-plan-scrum.md</code>.
+      <Box component="header" sx={{ mb: 3 }}>
+        <Typography variant="h1">{formatLongDate(today)}</Typography>
+        <Typography color="text.secondary" sx={{ mt: 0.5, maxWidth: '62ch' }}>
+          Qué medio está ocupado, por quién y hasta qué hora.
         </Typography>
-      </Stack>
+      </Box>
+
+      <AgendaBoard
+        rows={[]}
+        now={today}
+        empty={
+          <Box sx={{ maxWidth: '48ch' }}>
+            <Typography sx={{ fontWeight: 600 }}>Todavía no hay medios registrados</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Cuando registres el primer vehículo, aquí verás cada día sus viajes aprobados, las
+              solicitudes por decidir y los bloqueos por mantenimiento.
+            </Typography>
+          </Box>
+        }
+      />
     </>
   );
 }

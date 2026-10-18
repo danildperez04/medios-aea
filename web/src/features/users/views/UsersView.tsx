@@ -1,9 +1,10 @@
-import { Button, Chip, IconButton, MenuItem, Stack, Tooltip } from '@mui/material';
+import { Button, IconButton, MenuItem, Stack, Tooltip } from '@mui/material';
 import { KeyRound, Pencil, Plus, UserCheck, UserX, Users } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '@/app/services/api';
 import { useAuthStore, type UserRole } from '@/app/stores/auth.store';
 import {
+  ActiveBadge,
   ConfirmDialog,
   DataTable,
   EmptyState,
@@ -61,18 +62,13 @@ export function UsersView() {
   };
 
   const columns: DataTableColumn<User>[] = [
-    { key: 'name', header: 'Nombre', render: (u) => u.fullName },
+    { key: 'name', header: 'Nombre', render: (u) => u.fullName, primary: true },
     { key: 'email', header: 'Correo', render: (u) => u.email },
     { key: 'role', header: 'Rol', render: (u) => ROLE_LABELS[u.role] },
     {
       key: 'status',
       header: 'Estado',
-      render: (u) =>
-        u.isActive ? (
-          <Chip size="small" color="success" label="Activo" />
-        ) : (
-          <Chip size="small" variant="outlined" label="Inactivo" />
-        ),
+      render: (u) => <ActiveBadge active={u.isActive} />,
     },
     { key: 'lastLogin', header: 'Último acceso', render: (u) => formatDateTime(u.lastLoginAt) },
     {

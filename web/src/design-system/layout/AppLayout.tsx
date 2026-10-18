@@ -3,68 +3,64 @@ import {
   AppBar,
   Box,
   Button,
-  Divider,
   Drawer,
   IconButton,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Stack,
   Toolbar,
   Tooltip,
   Typography,
 } from '@mui/material';
-import {
-  BarChart3,
-  CalendarDays,
-  Car,
-  ClipboardList,
-  FolderKanban,
-  IdCard,
-  KeyRound,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Route,
-  Users,
-} from 'lucide-react';
+import { KeyRound, LogOut, Menu } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useAuthStore } from '@/app/stores/auth.store';
+import { BrandLockup } from '@/design-system/ui';
+import { brand } from '@/design-system/theme/theme';
 import { ChangePasswordDialog } from '@/features/auth/components/ChangePasswordDialog';
 
-/** Ancho del menu lateral, fijo para que las tablas no se recalculen. */
-const DRAWER_WIDTH = 248;
+/** Ancho del menú lateral, fijo para que las tablas no se recalculen. */
+const DRAWER_WIDTH = 240;
 
-interface NavItem {
+interface NavGroup {
   label: string;
-  to: string;
-  icon: typeof LayoutDashboard;
+  items: { label: string; to: string }[];
 }
 
 /**
- * Menu del panel. Todo el panel es de la coordinacion (ADMIN); el server
- * valida el rol en cada endpoint, ocultar opciones no es seguridad.
+ * Menú agrupado por tarea, no por entidad. "Medios" agrupa todo lo que se presta
+ * (hoy vehículos; mañana equipos), así que el menú crece sin reorganizarse.
+ * Sin íconos: el manual de marca los reserva para cuando aportan contexto.
  */
-const NAV_ITEMS: NavItem[] = [
-  { label: 'Inicio', to: '/', icon: LayoutDashboard },
-  { label: 'Solicitudes', to: '/solicitudes', icon: ClipboardList },
-  { label: 'Calendario', to: '/calendario', icon: CalendarDays },
-  { label: 'Viajes', to: '/viajes', icon: Route },
-  { label: 'Vehículos', to: '/vehiculos', icon: Car },
-  { label: 'Conductores', to: '/conductores', icon: IdCard },
-  { label: 'Proyectos', to: '/proyectos', icon: FolderKanban },
-  { label: 'Usuarios', to: '/usuarios', icon: Users },
-  { label: 'Reportes', to: '/reportes', icon: BarChart3 },
+const NAV: NavGroup[] = [
+  {
+    label: 'Operación',
+    items: [
+      { label: 'Hoy', to: '/' },
+      { label: 'Solicitudes', to: '/solicitudes' },
+      { label: 'Agenda', to: '/agenda' },
+      { label: 'Viajes', to: '/viajes' },
+    ],
+  },
+  {
+    label: 'Medios',
+    items: [
+      { label: 'Vehículos', to: '/vehiculos' },
+      { label: 'Conductores', to: '/conductores' },
+    ],
+  },
+  {
+    label: 'Administración',
+    items: [
+      { label: 'Proyectos', to: '/proyectos' },
+      { label: 'Usuarios', to: '/usuarios' },
+      { label: 'Reportes', to: '/reportes' },
+    ],
+  },
 ];
 
 export interface AppLayoutProps {
   children?: ReactNode;
 }
 
-/**
- * Layout principal con menu lateral, plegable en pantallas angostas.
- */
+/** Layout del panel: menú lateral (plegable en pantallas angostas) y barra superior. */
 export function AppLayout({ children }: AppLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -77,38 +73,53 @@ export function AppLayout({ children }: AppLayoutProps) {
   };
 
   const navigation = (
-    <Box sx={{ overflowY: 'auto' }}>
-      <Stack direction="row" spacing={1.5} sx={{ px: 2, py: 2, alignItems: 'center' }}>
-        <Car size={26} style={{ color: '#1f5f7a' }} />
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>
-          Medios AeA
-        </Typography>
-      </Stack>
-      <Divider />
-      <List sx={{ py: 1 }}>
-        {NAV_ITEMS.map((item) => (
-          <ListItemButton
-            key={item.to}
-            component={NavLink}
-            to={item.to}
-            end={item.to === '/'}
-            onClick={() => setMobileOpen(false)}
-            sx={{
-              mx: 1,
-              borderRadius: 1.5,
-              '&.active': { bgcolor: 'primary.main', color: 'primary.contrastText' },
-            }}
+    <Box component="nav" aria-label="Secciones" sx={{ overflowY: 'auto', pb: 3 }}>
+      <Box sx={{ px: 2.5, pt: 2.5, pb: 3 }}>
+        <BrandLockup />
+      </Box>
+      {NAV.map((group) => (
+        <Box key={group.label} sx={{ mb: 2.5 }}>
+          <Typography
+            component="h2"
+            sx={{ px: 2.5, mb: 0.5, fontSize: '0.8rem', color: 'text.secondary', fontWeight: 400 }}
           >
-            <ListItemIcon sx={{ minWidth: 38, color: 'inherit' }}>
-              <item.icon size={19} />
-            </ListItemIcon>
-            <ListItemText
-              primary={item.label}
-              slotProps={{ primary: { sx: { fontWeight: 600 } } }}
-            />
-          </ListItemButton>
-        ))}
-      </List>
+            {group.label}
+          </Typography>
+          <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0 }}>
+            {group.items.map((item) => (
+              <li key={item.to}>
+                <Box
+                  component={NavLink}
+                  to={item.to}
+                  end={item.to === '/'}
+                  onClick={() => setMobileOpen(false)}
+                  sx={{
+                    display: 'block',
+                    px: 2.5,
+                    py: 0.875,
+                    color: 'text.primary',
+                    textDecoration: 'none',
+                    fontSize: '0.975rem',
+                    borderLeft: '4px solid transparent',
+                    '&:hover': { bgcolor: brand.crema },
+                    '&:focus-visible': {
+                      outline: `3px solid ${brand.turquesaFuerte}`,
+                      outlineOffset: -3,
+                    },
+                    '&.active': {
+                      borderLeftColor: brand.naranja,
+                      bgcolor: brand.crema,
+                      fontWeight: 600,
+                    },
+                  }}
+                >
+                  {item.label}
+                </Box>
+              </li>
+            ))}
+          </Box>
+        </Box>
+      ))}
     </Box>
   );
 
@@ -131,27 +142,25 @@ export function AppLayout({ children }: AppLayoutProps) {
             edge="start"
             onClick={() => setMobileOpen(true)}
             sx={{ display: { md: 'none' } }}
-            aria-label="Abrir menu"
+            aria-label="Abrir menú"
           >
             <Menu size={22} />
           </IconButton>
-          <Typography variant="body1" sx={{ fontWeight: 600, flexGrow: 1 }} noWrap>
-            {user ? `Hola, ${user.fullName}` : 'Medios AeA'}
+          <Typography sx={{ flexGrow: 1, minWidth: 0 }} noWrap>
+            {user?.fullName}
           </Typography>
           <Tooltip title="Cambiar contraseña">
             <IconButton onClick={() => setPasswordOpen(true)} aria-label="Cambiar contraseña">
               <KeyRound size={18} />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Cerrar sesion">
-            <Button color="inherit" startIcon={<LogOut size={18} />} onClick={handleLogout}>
-              Salir
-            </Button>
-          </Tooltip>
+          <Button startIcon={<LogOut size={18} />} onClick={handleLogout}>
+            Salir
+          </Button>
         </Toolbar>
       </AppBar>
 
-      <Box component="nav" sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}>
+      <Box sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}>
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -169,7 +178,11 @@ export function AppLayout({ children }: AppLayoutProps) {
           open
           sx={{
             display: { xs: 'none', md: 'block' },
-            '& .MuiDrawer-paper': { width: DRAWER_WIDTH, boxSizing: 'border-box' },
+            '& .MuiDrawer-paper': {
+              width: DRAWER_WIDTH,
+              boxSizing: 'border-box',
+              borderRightColor: 'divider',
+            },
           }}
         >
           {navigation}
@@ -180,12 +193,14 @@ export function AppLayout({ children }: AppLayoutProps) {
         component="main"
         sx={{
           flexGrow: 1,
+          minWidth: 0,
           width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-          p: { xs: 2, md: 3 },
-          pt: { xs: 10, md: 11 },
+          px: { xs: 2, md: 4 },
+          pb: 6,
+          pt: { xs: 10, md: 12 },
         }}
       >
-        {children ?? <Outlet />}
+        <Box sx={{ maxWidth: 1180 }}>{children ?? <Outlet />}</Box>
       </Box>
 
       <ChangePasswordDialog open={passwordOpen} onClose={() => setPasswordOpen(false)} />

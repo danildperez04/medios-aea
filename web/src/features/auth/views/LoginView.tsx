@@ -2,19 +2,19 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
-import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
-import { TextField } from '@/design-system/ui/TextField';
-import { Button } from '@/design-system/ui/Button';
-import { FormError } from '@/design-system/ui/FormError';
+import { Box, Stack, Typography } from '@mui/material';
+import { BrandLockup, FormError, LoadingButton, TextField } from '@/design-system/ui';
+import { brand } from '@/design-system/theme/theme';
 import { useLogin } from '../services/auth.service';
 import { loginSchema, type LoginInput } from '../schemas/auth.schema';
 import { ApiError } from '@/app/services/api';
 
 /**
- * Pantalla de inicio de sesion (RF-01).
+ * Inicio de sesión del panel (RF-01).
  *
- * El panel web es de la coordinacion logistica (ADMIN). Los tecnicos y
- * conductores usan la app movil; si entran aqui se les indica.
+ * El panel naranja con la marca en negro lavado es la aplicación de color por
+ * defecto del manual de Ayuda en Acción. El panel web es de la coordinación;
+ * técnicos y conductores reciben la indicación de usar la app.
  */
 export function LoginView() {
   const navigate = useNavigate();
@@ -36,7 +36,7 @@ export function LoginView() {
       const session = await login.mutateAsync(values);
       if (session.user.role !== 'ADMIN') {
         setFormError(
-          'El panel web es para la coordinación logística. Usa la app móvil para solicitar vehículos o registrar viajes.',
+          'Este panel es para la coordinación logística. Para pedir un medio o registrar un viaje, usa la app en tu teléfono.',
         );
         return;
       }
@@ -53,59 +53,75 @@ export function LoginView() {
       sx={{
         minHeight: '100vh',
         display: 'grid',
-        placeItems: 'center',
-        bgcolor: 'primary.dark',
-        p: 2,
+        gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 5fr) minmax(0, 6fr)' },
+        gridTemplateRows: { xs: 'auto 1fr', md: '1fr' },
       }}
     >
-      <Card sx={{ width: '100%', maxWidth: 400 }}>
-        <CardContent>
-          <Stack spacing={3}>
-            <Stack spacing={0.5} sx={{ alignItems: 'center' }}>
-              <Typography variant="h4" component="h1">
-                Medios AeA
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Gestión de vehículos y medios
-              </Typography>
-            </Stack>
+      <Box
+        sx={{
+          bgcolor: brand.naranja,
+          color: brand.negroLavado,
+          px: { xs: 3, md: 6 },
+          py: { xs: 4, md: 6 },
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: { xs: 'flex-start', md: 'space-between' },
+          gap: 3,
+        }}
+      >
+        <BrandLockup size="lg" />
+        <Typography
+          sx={{ fontSize: { xs: '1rem', md: '1.2rem' }, maxWidth: '30ch', lineHeight: 1.45 }}
+        >
+          Solicitudes, agenda y viajes de los medios que el equipo usa en las comunidades.
+        </Typography>
+      </Box>
 
-            <Box component="form" onSubmit={onSubmit} noValidate>
-              <Stack spacing={2}>
-                <TextField
-                  {...register('email')}
-                  label="Correo"
-                  type="email"
-                  autoFocus
-                  autoComplete="username"
-                  error={Boolean(errors.email)}
-                  helperText={errors.email?.message}
-                />
-                <TextField
-                  {...register('password')}
-                  label="Contraseña"
-                  type="password"
-                  autoComplete="current-password"
-                  error={Boolean(errors.password)}
-                  helperText={errors.password?.message}
-                />
+      <Box
+        sx={{
+          display: 'grid',
+          placeItems: { xs: 'start center', md: 'center' },
+          px: 3,
+          py: { xs: 4, md: 6 },
+        }}
+      >
+        <Box component="form" onSubmit={onSubmit} noValidate sx={{ width: '100%', maxWidth: 380 }}>
+          <Stack spacing={2.5}>
+            <Typography variant="h4" component="h1">
+              Iniciar sesión
+            </Typography>
+            <TextField
+              {...register('email')}
+              label="Correo"
+              type="email"
+              autoFocus
+              autoComplete="username"
+              error={Boolean(errors.email)}
+              helperText={errors.email?.message}
+            />
+            <TextField
+              {...register('password')}
+              label="Contraseña"
+              type="password"
+              autoComplete="current-password"
+              error={Boolean(errors.password)}
+              helperText={errors.password?.message}
+            />
 
-                <FormError message={formError} />
+            <FormError message={formError} />
 
-                <Button
-                  type="submit"
-                  variant="contained"
-                  size="large"
-                  fullWidth
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Entrando…' : 'Entrar'}
-                </Button>
-              </Stack>
-            </Box>
+            <LoadingButton
+              type="submit"
+              variant="contained"
+              size="large"
+              fullWidth
+              loading={isSubmitting}
+            >
+              Entrar
+            </LoadingButton>
           </Stack>
-        </CardContent>
-      </Card>
+        </Box>
+      </Box>
     </Box>
   );
 }

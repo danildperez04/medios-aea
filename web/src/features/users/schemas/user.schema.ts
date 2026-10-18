@@ -27,7 +27,7 @@ export type CreateUserForm = z.infer<typeof createUserSchema>;
 export type UpdateUserForm = z.infer<typeof updateUserSchema>;
 
 export const ROLE_LABELS = {
-  ADMIN: 'Coordinación (admin)',
+  ADMIN: 'Coordinación',
   REQUESTER: 'Técnico/a',
   DRIVER: 'Conductor/a',
 } as const;

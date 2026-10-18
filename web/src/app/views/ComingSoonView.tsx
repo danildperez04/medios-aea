@@ -1,21 +1,21 @@
-import { Construction } from 'lucide-react';
-import { EmptyState, PageHeader } from '@/design-system/ui';
+import { Typography } from '@mui/material';
+import { PageHeader } from '@/design-system/ui';
 
 export interface ComingSoonViewProps {
   title: string;
-  sprint: number;
+  /** Qué podrá hacerse aquí, dicho para quien usa el panel. */
+  description: string;
 }
 
-/** Marcador de una sección que aún no se implementa (ver docs/04-plan-scrum.md). */
-export function ComingSoonView({ title, sprint }: ComingSoonViewProps) {
+/** Sección que todavía no está disponible. Explica qué tendrá, sin hablar de sprints. */
+export function ComingSoonView({ title, description }: ComingSoonViewProps) {
   return (
     <>
       <PageHeader title={title} />
-      <EmptyState
-        icon={Construction}
-        title="Sección en construcción"
-        description={`Esta sección llega en el Sprint ${sprint}.`}
-      />
+      <Typography sx={{ maxWidth: '60ch' }}>{description}</Typography>
+      <Typography color="text.secondary" sx={{ mt: 1 }}>
+        Esta sección todavía no está disponible.
+      </Typography>
     </>
   );
 }
