@@ -51,6 +51,24 @@ tablas entre pruebas.
 - Cobertura ≥ 80% en `availability` y `reservations`.
 - `pnpm lint && pnpm typecheck && pnpm test` limpios.
 
+## 4. Cobertura (la exige CI)
+
+| Workspace | Cómo se mide                                                                                                                           | Umbral (sentencias · ramas · funciones · líneas) | Medido el 18/10/2026      |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------- |
+| api       | `pnpm --filter @medios-aea/api test:cov`: unitarias **y** e2e en una sola corrida (`vitest.coverage.config.ts`; requiere `pnpm db:up`) | 88 · 72 · 90 · 90                                | 90.2 · 75.4 · 93.6 · 93.2 |
+| web       | `pnpm --filter @medios-aea/web test:cov`                                                                                               | 21 · 17 · 18 · 21                                | 21.4 · 17.0 · 18.8 · 21.4 |
+| mobile    | `pnpm --filter @medios-aea/mobile test` (jest-expo)                                                                                    | — (8 pruebas: cliente HTTP, sesión, login)       | —                         |
+
+Reglas:
+
+- Los umbrales son el valor medido **redondeado hacia abajo**: solo pueden subir. Quien
+  sube la cobertura de forma estable actualiza el umbral en el mismo PR.
+- La API se mide con unitarias + e2e porque la mayoría de sus reglas se prueban contra
+  PostgreSQL real; medir solo unitarias daba ~33 % y no reflejaba lo cubierto.
+- La web está baja (deuda registrada): cada pantalla nueva entra con sus pruebas.
+- CI publica el resumen en la pestaña del job y deja el reporte HTML como artefacto
+  (`coverage-api`, `coverage-web`, 14 días).
+
 ## Historial
 
 | Versión | Fecha       | Autor        | Cambio                         |

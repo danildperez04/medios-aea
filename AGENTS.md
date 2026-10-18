@@ -87,6 +87,7 @@ pnpm dev:mobile             # Expo (escanear QR con Expo Go o dev build)
 
 pnpm lint && pnpm typecheck && pnpm test   # antes de dar algo por terminado
 pnpm test:e2e                              # requiere pnpm db:up
+pnpm --filter @medios-aea/api test:cov    # unitarias + e2e con umbrales (lo que exige CI)
 ```
 
 ## 7. Git
