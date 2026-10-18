@@ -6,37 +6,41 @@
 
 Estados: `PENDIENTE` · `EN CURSO` · `TERMINADO` (PR aprobado y merge a `develop`).
 
+Cada historia tiene su issue en GitHub (`HU-XX: …`, etiqueta `tipo:historia`), donde se
+sigue el trabajo del día a día (`04-plan-scrum.md` §2.1). Este documento es la
+referencia de producto: qué se construye y con qué criterios.
+
 ---
 
 ## Sprint 0 — Fundamentos
 
-| HU    | Historia                                                                                | Estado   |
-| ----- | --------------------------------------------------------------------------------------- | -------- |
-| HU-00 | Como equipo, quiero documentación base y el monorepo andamiado para empezar a construir | EN CURSO |
+| HU    | Historia                                                                                | Estado    |
+| ----- | --------------------------------------------------------------------------------------- | --------- |
+| HU-00 | Como equipo, quiero documentación base y el monorepo andamiado para empezar a construir | TERMINADO |
 
 ## Sprint 1 — Acceso y catálogos base
 
-| HU    | RF           | Historia                                                                 | Criterios de aceptación                                                                                         | Estado   |
-| ----- | ------------ | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | -------- |
-| HU-01 | RF-01, RF-02 | Como usuario, quiero iniciar sesión para acceder según mi rol            | Credenciales válidas devuelven token y perfil; inválidas → 401; 5 intentos/min por IP; rutas protegidas por rol | EN CURSO |
-| HU-02 | RF-03        | Como ADMIN, quiero gestionar usuarios para dar acceso al personal        | Crear con rol; correo único (409); desactivar en lugar de borrar; listar con búsqueda                           | EN CURSO |
-| HU-03 | RF-04        | Como ADMIN, quiero gestionar proyectos para cargar los viajes a cada uno | Código único; activar/desactivar; solo los activos aparecen al solicitar                                        | EN CURSO |
-| HU-04 | RF-05        | Como usuario, quiero cambiar mi contraseña                               | Exige contraseña actual; mínimo 8 caracteres                                                                    | EN CURSO |
+| HU    | RF           | Historia                                                                 | Criterios de aceptación                                                                                         | Estado    |
+| ----- | ------------ | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | --------- |
+| HU-01 | RF-01, RF-02 | Como usuario, quiero iniciar sesión para acceder según mi rol            | Credenciales válidas devuelven token y perfil; inválidas → 401; 5 intentos/min por IP; rutas protegidas por rol | TERMINADO |
+| HU-02 | RF-03        | Como ADMIN, quiero gestionar usuarios para dar acceso al personal        | Crear con rol; correo único (409); desactivar en lugar de borrar; listar con búsqueda                           | TERMINADO |
+| HU-03 | RF-04        | Como ADMIN, quiero gestionar proyectos para cargar los viajes a cada uno | Código único; activar/desactivar; solo los activos aparecen al solicitar                                        | TERMINADO |
+| HU-04 | RF-05        | Como usuario, quiero cambiar mi contraseña                               | Exige contraseña actual; mínimo 8 caracteres                                                                    | TERMINADO |
 
 ## Sprint 2 — Flota y disponibilidad
 
-| HU    | RF    | Historia                                                          | Criterios de aceptación                                                                                                | Estado   |
-| ----- | ----- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------- |
-| HU-05 | RF-06 | Como ADMIN, quiero registrar los vehículos con placa y capacidad  | Placa única; capacidad > 0; estado `AVAILABLE/MAINTENANCE/INACTIVE`; se crea `resource` + `vehicle` en una transacción | EN CURSO |
-| HU-06 | RF-07 | Como ADMIN, quiero registrar conductores con su licencia          | Vinculado a un usuario `DRIVER`; vencimiento de licencia obligatorio                                                   | EN CURSO |
-| HU-07 | RF-08 | Como ADMIN, quiero bloquear un vehículo por mantenimiento         | Bloqueo con rango y motivo; no se permite si choca con una asignación activa (409 indicando cuál)                      | EN CURSO |
-| HU-08 | RF-09 | Como técnico, quiero ver qué vehículos están libres en un horario | Excluye ocupados, bloqueados, inactivos y sin capacidad; muestra la ocupación del día                                  | EN CURSO |
+| HU    | RF    | Historia                                                          | Criterios de aceptación                                                                                                | Estado    |
+| ----- | ----- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | --------- |
+| HU-05 | RF-06 | Como ADMIN, quiero registrar los vehículos con placa y capacidad  | Placa única; capacidad > 0; estado `AVAILABLE/MAINTENANCE/INACTIVE`; se crea `resource` + `vehicle` en una transacción | TERMINADO |
+| HU-06 | RF-07 | Como ADMIN, quiero registrar conductores con su licencia          | Vinculado a un usuario `DRIVER`; vencimiento de licencia obligatorio                                                   | TERMINADO |
+| HU-07 | RF-08 | Como ADMIN, quiero bloquear un vehículo por mantenimiento         | Bloqueo con rango y motivo; no se permite si choca con una asignación activa (409 indicando cuál)                      | TERMINADO |
+| HU-08 | RF-09 | Como técnico, quiero ver qué vehículos están libres en un horario | Excluye ocupados, bloqueados, inactivos y sin capacidad; muestra la ocupación del día                                  | TERMINADO |
 
 ## Sprint 3 — Solicitudes y aprobación (núcleo)
 
 | HU    | RF           | Historia                                                              | Criterios de aceptación                                                                                            | Estado    |
 | ----- | ------------ | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------- |
-| HU-09 | RF-10        | Como técnico, quiero solicitar un vehículo para una actividad         | Proyecto activo, destino, propósito, pasajeros, rango futuro válido; queda `PENDING`; notifica a ADMIN             | EN CURSO  |
+| HU-09 | RF-10        | Como técnico, quiero solicitar un vehículo para una actividad         | Proyecto activo, destino, propósito, pasajeros, rango futuro válido; queda `PENDING`; notifica a ADMIN             | TERMINADO |
 | HU-10 | RF-11        | Como técnico, quiero cancelar mi solicitud                            | Solo el dueño o ADMIN; no si el viaje inició; libera la asignación                                                 | PENDIENTE |
 | HU-11 | RF-12, RF-14 | Como ADMIN, quiero aprobar asignando vehículo y conductor sin choques | Sugiere vehículos/conductores libres; dos aprobaciones concurrentes del mismo vehículo/horario → una OK y otra 409 | PENDIENTE |
 | HU-12 | RF-13        | Como ADMIN, quiero rechazar con motivo                                | Motivo obligatorio; notifica al solicitante                                                                        | PENDIENTE |

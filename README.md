@@ -68,6 +68,12 @@ Toda la documentación del proyecto está en [`docs/`](docs/README.md): definici
 la solución, requisitos y reglas de negocio, backlog, plan Scrum, esquema de base de
 datos, arquitectura y plan de pruebas.
 
+## Cómo contribuir
+
+[`CONTRIBUTING.md`](CONTRIBUTING.md): del issue al merge. Seguridad y cómo reportar
+vulnerabilidades: [`SECURITY.md`](SECURITY.md). Cambios por versión:
+[`CHANGELOG.md`](CHANGELOG.md).
+
 ## Estado
 
 Ver [`docs/00-estado-del-proyecto.md`](docs/00-estado-del-proyecto.md).

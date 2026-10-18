@@ -15,5 +15,7 @@
 | 13  | [Glosario](13-glosario.md)                                      | Términos del dominio y su nombre en el código               |
 | 14  | [Arquitectura](14-arquitectura.md)                              | Componentes, capas, secuencia de aprobación                 |
 | 16  | [Sistema de diseño](16-sistema-de-diseno.md)                    | Marca AeA aplicada: color, tipografía, componentes          |
+| 17  | [Revisión de código](17-revision-de-codigo.md)                  | Qué revisar, cómo comentar, código generado con IA          |
+| —   | [Decisiones de arquitectura (ADR)](adr/README.md)               | Por qué se decidió cada cosa importante                     |
 
 Pendiente: `15-checklist-uat` (S6).

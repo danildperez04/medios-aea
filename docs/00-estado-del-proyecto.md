@@ -1,11 +1,21 @@
 # Estado del Proyecto — Medios AeA
 
-**Última actualización:** 16 de octubre de 2026
-**Versión:** `0.1.0` (Sprint 0)
+**Última actualización:** 18 de octubre de 2026
+**Versión publicada:** `0.3.0` (etiqueta `v0.3.0`; ver `CHANGELOG.md`)
+
+## Resumen
+
+| Bloque                                                        | Estado                     | Versión           |
+| ------------------------------------------------------------- | -------------------------- | ----------------- |
+| Sprint 0 — Documentación y andamiaje                          | TERMINADO                  | `v0.1.0`          |
+| Sprint 1 — Acceso y catálogos base                            | TERMINADO                  | `v0.2.0`          |
+| Sprint 2 — Flota y disponibilidad (+ despliegue, DTO, diseño) | TERMINADO                  | `v0.3.0`          |
+| Sprint 3 — Solicitudes y aprobación                           | EN CURSO (HU-09 terminada) | `0.4.0` al cerrar |
+| Revisión de DevOps, calidad, seguridad y proceso              | EN REVISIÓN (5 PR)         | —                 |
 
 ---
 
-## Sprint 0 — Documentación y andamiaje · EN CURSO
+## Sprint 0 — Documentación y andamiaje · TERMINADO
 
 ### Hecho
 
@@ -38,7 +48,7 @@ activas solapadas del mismo vehículo o del mismo conductor, y acepta las contig
 - Validar el documento 01 con la coordinación logística.
 - PR y merge a `develop`.
 
-## Sprint 1 — Acceso y catálogos base · EN CURSO
+## Sprint 1 — Acceso y catálogos base · TERMINADO
 
 Rama `feature/sprint-1-users-projects` (commits locales, sin push).
 
@@ -69,7 +79,7 @@ en el panel, alta de usuario (validación débil, duplicado por mayúsculas → 
 búsqueda y desactivación, alta de proyecto con código normalizado, cambio de
 contraseña con la actual incorrecta sin perder la sesión.
 
-## Despliegue (contenedores) · EN CURSO
+## Despliegue (contenedores) · TERMINADO
 
 Rama `feature/deployment-containers` (sobre la del Sprint 1).
 
@@ -82,10 +92,9 @@ Rama `feature/deployment-containers` (sobre la del Sprint 1).
 - Corregido: `create-admin` terminaba en silencio sin crear nada con stdin redirigido;
   cabeceras de seguridad de nginx perdidas en rutas con `add_header` propio.
 
-**Pendiente:** reconstruir la imagen `api` con el `create-admin` corregido; el disco del
-equipo de desarrollo se llenó durante las pruebas (ver informe de la sesión).
+**Resuelto:** las imágenes ya no se construyen en el servidor: se publican en GHCR con cada release.
 
-## Sistema de diseño con la marca AeA · EN CURSO
+## Sistema de diseño con la marca AeA · TERMINADO
 
 Rama `feature/brand-design-system`. Aplicado a partir del manual de marca de Ayuda en
 Acción (`docs/16-sistema-de-diseno.md`).
@@ -99,7 +108,7 @@ Acción (`docs/16-sistema-de-diseno.md`).
 
 **Pendiente con comunicación:** archivo oficial del logo y licencia de Bogart.
 
-## Sprint 2 — Flota y disponibilidad · EN CURSO
+## Sprint 2 — Flota y disponibilidad · TERMINADO
 
 Rama `feature/sprint-2-fleet` (sobre la del sistema de diseño).
 
@@ -135,13 +144,26 @@ Primera historia con el flujo de una rama por historia (`docs/05` §3).
 
 | Historia                            | Rama                           | Estado                                      |
 | ----------------------------------- | ------------------------------ | ------------------------------------------- |
-| HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request` | Lista para PR                               |
+| HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request` | TERMINADO (PR #7)                           |
 | HU-10 a HU-15                       | —                              | Pendientes; HU-10 a HU-13 dependen de HU-09 |
 
 HU-09: `POST /reservations` (queda PENDING, código `SOL-AAAA-NNNNN`, aviso interno a la
 coordinación, RN-06 y RN-14), `GET /reservations` (cada técnico solo las suyas),
 bandeja de solicitudes en la web con contador en el menú. Verificación: 113 unitarias,
 69 e2e y 30 web en verde; revisada en el navegador a 1366 y 390 px.
+
+## Revisión de DevOps, calidad, seguridad y proceso · EN REVISIÓN
+
+Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`:
+
+| PR  | Rama                       | Qué cambia                                                                                                                                                                                                                  |
+| --- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `ci/pipeline-hardening`    | Job de calidad (formato, commits y título del PR), cobertura con umbrales reales (la API medía 33 % por error: es 90 % con e2e), acciones fijadas a SHA, ESLint en el pre-commit, pruebas del móvil (jest-expo), CODEOWNERS |
+| 2   | `chore/security-baseline`  | gitleaks, `pnpm audit`, Trivy, CodeQL, Dependabot, `SECURITY.md`, panel sin root, CSP                                                                                                                                       |
+| 2b  | `fix/security-hardening`   | Cuenta desactivada o rol cambiado: efecto inmediato (antes, hasta 8 h); Swagger apagado en producción                                                                                                                       |
+| 3   | `build/release-automation` | release-please, versiones a `0.3.0`, `CHANGELOG.md`, etiquetas `v0.1.0`–`v0.3.0`, imágenes publicadas en GHCR                                                                                                               |
+| 4   | `docs/process-and-review`  | Plantillas de issues, `CONTRIBUTING.md`, guía de revisión, ADR, proceso con GitHub Issues/Projects                                                                                                                          |
+| 5   | `chore/github-setup`       | Script de configuración de GitHub (etiquetas, milestones, issues, protección de ramas, tablero)                                                                                                                             |
 
 ## Siguiente en el Sprint 3
 
