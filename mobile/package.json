@@ -55,6 +55,9 @@
     "*.{ts,tsx,js}": [
       "eslint --fix",
       "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
     ]
   },
   "jest": {
@@ -67,6 +70,7 @@
     },
     "testMatch": [
       "<rootDir>/src/**/*.test.{ts,tsx}"
-    ]
+    ],
+    "testTimeout": 30000
   }
 }
