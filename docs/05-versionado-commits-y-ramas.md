@@ -14,7 +14,16 @@ publica bajo `/api/v1`; un cambio incompatible de contrato exige `/api/v2`.
 
 ## 2. Commits
 
-**Conventional Commits 1.0.0**, validados con commitlint:
+**Conventional Commits 1.0.0**, validados con commitlint en tres puntos:
+
+- **Hook `commit-msg`** (husky): cada commit local.
+- **Hook `pre-commit`**: lint-staged corre `eslint --fix` y Prettier sobre los archivos
+  preparados de cada app (configuración en el `package.json` de `api/`, `web/` y
+  `mobile/`); un error de ESLint bloquea el commit.
+- **CI, job `quality`**: los commits del PR y el **título del PR**, que es el mensaje
+  del commit que queda en `develop` tras el _squash merge_.
+
+El alcance es obligatorio:
 
 ```
 <tipo>(<alcance>): <descripción en inglés, minúsculas, imperativo>

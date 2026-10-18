@@ -57,9 +57,12 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov', 'html'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/**/*.d.ts', 'src/test/**', 'src/main.tsx', 'src/vite-env.d.ts'],
+      reporter: ['text-summary', 'json-summary', 'lcov', 'html'],
+      // Valor medido el 18/10/2026 redondeado hacia abajo: es bajo y solo puede
+      // subir. Cada pantalla nueva entra con sus pruebas (docs/12-plan-pruebas.md).
+      thresholds: { statements: 21, branches: 17, functions: 18, lines: 21 },
     },
   },
 });
