@@ -3,7 +3,7 @@
 #   docker build -f api/Dockerfile -t medios-aea-api .
 
 # ---------- Build ----------
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /repo
 RUN corepack enable
 # Primero solo los manifiestos: la capa de dependencias se reutiliza mientras no cambien.
@@ -18,7 +18,7 @@ RUN pnpm --filter @medios-aea/api deploy --prod --legacy /out \
  && cp -r api/dist /out/dist
 
 # ---------- Producción ----------
-FROM node:24-alpine AS production
+FROM node:26-alpine AS production
 RUN apk add --no-cache dumb-init
 ENV NODE_ENV=production \
     PORT=3000
