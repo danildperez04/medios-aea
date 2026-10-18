@@ -129,7 +129,21 @@ vencer; sin scroll horizontal a 1366 px ni a 390 px. Se corrigieron en el camino
 texto oculto con `width: 1` (100% en MUI) que desbordaba la página, bloques de varios
 días mal ubicados en la agenda, y la petición fallida de la fuente Bogart.
 
-## Siguiente: Sprint 3 — Solicitudes y aprobación sin choques
+## Sprint 3 — Solicitudes y aprobación sin choques · EN CURSO
+
+Primera historia con el flujo de una rama por historia (`docs/05` §3).
+
+| Historia                            | Rama                           | Estado                                      |
+| ----------------------------------- | ------------------------------ | ------------------------------------------- |
+| HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request` | Lista para PR                               |
+| HU-10 a HU-15                       | —                              | Pendientes; HU-10 a HU-13 dependen de HU-09 |
+
+HU-09: `POST /reservations` (queda PENDING, código `SOL-AAAA-NNNNN`, aviso interno a la
+coordinación, RN-06 y RN-14), `GET /reservations` (cada técnico solo las suyas),
+bandeja de solicitudes en la web con contador en el menú. Verificación: 113 unitarias,
+69 e2e y 30 web en verde; revisada en el navegador a 1366 y 390 px.
+
+## Siguiente en el Sprint 3
 
 HU-09 a HU-15: crear y cancelar solicitudes, aprobar asignando medio y conductor con la
 disponibilidad de este sprint (mismo candado que los bloqueos), rechazo con motivo,

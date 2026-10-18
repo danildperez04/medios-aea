@@ -36,7 +36,7 @@ Estados: `PENDIENTE` · `EN CURSO` · `TERMINADO` (PR aprobado y merge a `develo
 
 | HU    | RF           | Historia                                                              | Criterios de aceptación                                                                                            | Estado    |
 | ----- | ------------ | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------- |
-| HU-09 | RF-10        | Como técnico, quiero solicitar un vehículo para una actividad         | Proyecto activo, destino, propósito, pasajeros, rango futuro válido; queda `PENDING`; notifica a ADMIN             | PENDIENTE |
+| HU-09 | RF-10        | Como técnico, quiero solicitar un vehículo para una actividad         | Proyecto activo, destino, propósito, pasajeros, rango futuro válido; queda `PENDING`; notifica a ADMIN             | EN CURSO  |
 | HU-10 | RF-11        | Como técnico, quiero cancelar mi solicitud                            | Solo el dueño o ADMIN; no si el viaje inició; libera la asignación                                                 | PENDIENTE |
 | HU-11 | RF-12, RF-14 | Como ADMIN, quiero aprobar asignando vehículo y conductor sin choques | Sugiere vehículos/conductores libres; dos aprobaciones concurrentes del mismo vehículo/horario → una OK y otra 409 | PENDIENTE |
 | HU-12 | RF-13        | Como ADMIN, quiero rechazar con motivo                                | Motivo obligatorio; notifica al solicitante                                                                        | PENDIENTE |
