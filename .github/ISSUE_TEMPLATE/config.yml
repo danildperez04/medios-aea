@@ -1,0 +1,6 @@
+# Sin issues en blanco: cada issue entra por una plantilla con lo necesario para trabajarlo.
+blank_issues_enabled: false
+contact_links:
+  - name: Reportar una vulnerabilidad
+    url: https://github.com/danildperez04/medios-aea/security/advisories/new
+    about: Por el canal privado, nunca en un issue público (ver SECURITY.md).

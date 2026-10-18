@@ -27,12 +27,14 @@ conductores registran cada viaje. Monorepo pnpm con tres workspaces:
 
 ## 2. Documentos obligatorios
 
-| Voy a trabajar en…          | Debo leer                                                         |
-| --------------------------- | ----------------------------------------------------------------- |
-| Cualquier cosa              | `docs/14-arquitectura.md` y `docs/12-plan-pruebas.md`             |
-| Base de datos o migraciones | `docs/10-esquema-base-de-datos.md`                                |
-| Reservas, disponibilidad    | `docs/02-prd-mvp-moscow.md` §2 (reglas de negocio) y `docs/10` §4 |
-| Commits o ramas             | `docs/05-versionado-commits-y-ramas.md`                           |
+| Voy a trabajar en…           | Debo leer                                                         |
+| ---------------------------- | ----------------------------------------------------------------- |
+| Cualquier cosa               | `docs/14-arquitectura.md` y `docs/12-plan-pruebas.md`             |
+| Base de datos o migraciones  | `docs/10-esquema-base-de-datos.md`                                |
+| Reservas, disponibilidad     | `docs/02-prd-mvp-moscow.md` §2 (reglas de negocio) y `docs/10` §4 |
+| Commits o ramas              | `docs/05-versionado-commits-y-ramas.md`                           |
+| Abrir o revisar un PR        | `CONTRIBUTING.md` y `docs/17-revision-de-codigo.md`               |
+| Una decisión de arquitectura | `docs/adr/` (registrar un ADR antes de implementarla)             |
 
 ## 3. Reglas innegociables
 

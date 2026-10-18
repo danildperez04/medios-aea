@@ -18,8 +18,35 @@
 - Sprints de **2 semanas**.
 - Planificación al inicio, revisión con la coordinación al final (demo en el celular
   y en el panel), retrospectiva breve.
-- El backlog vive en `03-backlog-del-producto.md`; el estado general en
+- El backlog de producto vive en `03-backlog-del-producto.md`; el estado general en
   `00-estado-del-proyecto.md`.
+
+### 2.1 Gestión de tareas en GitHub
+
+El trabajo del día a día se gestiona en GitHub; `docs/03` sigue siendo la referencia de
+producto (qué y por qué), los issues son la unidad de trabajo (quién y cuándo).
+
+| Elemento                 | Uso                                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Issue**                | Una historia (`HU-XX: …`), un error o una tarea técnica, con su plantilla                                                      |
+| **Etiquetas**            | `tipo:` (historia, bug, tarea, deuda, seguridad) · `área:` (api, web, móvil, infra, docs) · `prioridad:` (must, should, could) |
+| **Milestone**            | Un sprint (`Sprint 3`…), con su fecha de cierre                                                                                |
+| **Project "Medios AeA"** | Tablero: Backlog → Sprint → En curso → En revisión → Hecho                                                                     |
+| **PR**                   | Una rama por issue; `Closes #N` en la descripción cierra el issue al mergear                                                   |
+
+Ritual del sprint:
+
+1. **Planificación:** se mueven al milestone del sprint los issues que caben, empezando
+   por los `prioridad:must`; cada uno con criterios de aceptación claros.
+2. **Durante el sprint:** el tablero refleja el estado real (un issue "En curso" por
+   persona a la vez).
+3. **Revisión:** demo de lo que está en "Hecho"; lo no terminado vuelve a Backlog o pasa
+   al siguiente milestone, nunca queda a medias en `develop`.
+4. **Cierre:** `develop → main`, PR de release (`docs/05` §1.1) y actualización de
+   `docs/00`, `docs/03` y `docs/09`.
+
+Los errores encontrados en revisión o UAT se registran como issue `tipo:bug` antes de
+corregirlos, para que quede constancia en el historial.
 
 ## 3. Calendario
 
@@ -41,9 +68,13 @@ Una historia está `TERMINADO` cuando:
 
 1. Cumple todos sus criterios de aceptación.
 2. Tiene pruebas (unitarias para reglas de negocio, e2e para endpoints).
-3. `pnpm lint`, `pnpm typecheck` y `pnpm test` pasan en los workspaces afectados.
+3. CI en verde: calidad (formato, commits, título), lint, tipos, pruebas con umbrales
+   de cobertura, Docker y seguridad.
 4. La documentación afectada está actualizada (esquema, backlog, matriz).
-5. Tiene PR revisado y merge a `develop`.
+5. Tiene PR revisado según `17-revision-de-codigo.md` y _squash merge_ a `develop`, con
+   su issue cerrado.
+
+La plantilla de PR (`.github/pull_request_template.md`) repite esta lista.
 
 ## Historial
 
