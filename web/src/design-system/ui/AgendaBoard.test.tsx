@@ -48,6 +48,33 @@ describe('AgendaBoard', () => {
     expect(block.style.width || getComputedStyle(block).width).toMatch(/^41\.6/);
   });
 
+  it('recorta al borde un bloque que dura todo el dia o varios dias', () => {
+    const allDay: AgendaRow[] = [
+      {
+        ...rows[0],
+        blocks: [
+          // De medianoche a medianoche: debe cubrir toda la franja visible.
+          { id: 'm', start: at(0), end: at(24), state: 'UNAVAILABLE', label: 'En mantenimiento' },
+        ],
+      },
+    ];
+    render(<AgendaBoard rows={allDay} day={at(12)} fromHour={6} toHour={18} />);
+    const block = screen.getByLabelText(/En mantenimiento/);
+    expect(block.style.left || getComputedStyle(block).left).toMatch(/^0(%|px)?$/);
+    expect(block.style.width || getComputedStyle(block).width).toMatch(/^100/);
+  });
+
+  it('no dibuja bloques de otro dia', () => {
+    const yesterday: AgendaRow[] = [
+      {
+        ...rows[0],
+        blocks: [{ id: 'y', start: at(-14), end: at(-10), state: 'ASSIGNED', label: 'Ayer' }],
+      },
+    ];
+    render(<AgendaBoard rows={yesterday} day={at(12)} />);
+    expect(screen.queryByLabelText(/Ayer/)).not.toBeInTheDocument();
+  });
+
   it('muestra el estado vacio dentro del tablero cuando no hay medios', () => {
     render(<AgendaBoard rows={[]} empty={<p>Todavía no hay medios registrados</p>} />);
     expect(screen.getByText('Todavía no hay medios registrados')).toBeInTheDocument();

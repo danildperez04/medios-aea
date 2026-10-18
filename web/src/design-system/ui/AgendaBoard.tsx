@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 import type { ReactNode } from 'react';
 import { brand } from '@/design-system/theme/theme';
-import { formatTime, hourOfDay } from '@/shared/lib/format';
+import { formatTime, managuaMidnight } from '@/shared/lib/format';
 import { ResourceTag, type ResourceKind } from './ResourceTag';
 
 /**
@@ -35,7 +35,13 @@ export interface AgendaBoardProps {
   /** Primera y última hora visibles (hora de Managua). */
   fromHour?: number;
   toHour?: number;
-  /** Hora actual para la línea de "ahora"; se omite si el día mostrado no es hoy. */
+  /**
+   * Día que se muestra (cualquier instante de ese día en Managua). Las posiciones
+   * se calculan desde su medianoche, así que un bloque de varios días o que empieza
+   * antes de `fromHour` se recorta al borde del tablero en lugar de deformarse.
+   */
+  day?: Date;
+  /** Hora actual para la línea de "ahora"; solo se dibuja si cae dentro del día. */
   now?: Date | null;
   /** Qué mostrar dentro del tablero cuando no hay filas. */
   empty?: ReactNode;
@@ -78,14 +84,18 @@ export function AgendaBoard({
   rows,
   fromHour = 6,
   toHour = 19,
+  day,
   now = null,
   empty,
 }: AgendaBoardProps) {
+  const midnight = managuaMidnight(day ?? now ?? new Date()).getTime();
+  /** Horas desde la medianoche del día mostrado: puede ser < 0 o > 24. */
+  const hourOf = (value: string | Date) => (new Date(value).getTime() - midnight) / 3_600_000;
   const span = toHour - fromHour;
   const hours = Array.from({ length: span + 1 }, (_, i) => fromHour + i);
   const toPercent = (hour: number) =>
     ((Math.min(Math.max(hour, fromHour), toHour) - fromHour) / span) * 100;
-  const nowHour = now ? hourOfDay(now) : Number.NaN;
+  const nowHour = now ? hourOf(now) : Number.NaN;
   const showNow = nowHour >= fromHour && nowHour <= toHour;
 
   return (
@@ -184,48 +194,54 @@ export function AgendaBoard({
                     ...gridLines(hours, toPercent),
                   }}
                 >
-                  {row.blocks.map((block) => {
-                    const start = hourOfDay(block.start);
-                    const end = hourOfDay(block.end);
-                    const left = toPercent(start);
-                    const width = Math.max(toPercent(end) - left, 1.5);
-                    const range = `${formatTime(block.start)}–${formatTime(block.end)}`;
-                    return (
-                      <Box
-                        component="li"
-                        key={block.id}
-                        aria-label={`${row.name} ${row.identifier}, ${range}, ${block.label}, ${STATE_LABEL[block.state]}`}
-                        title={`${range} · ${block.label}`}
-                        sx={{
-                          position: 'absolute',
-                          top: 8,
-                          bottom: 8,
-                          left: `${left}%`,
-                          width: `${width}%`,
-                          borderRadius: '3px',
-                          px: 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1,
-                          overflow: 'hidden',
-                          whiteSpace: 'nowrap',
-                          fontSize: '0.825rem',
-                          color: brand.negroLavado,
-                          ...STATE_STYLE[block.state],
-                        }}
-                      >
-                        <Box component="span" className="tabular" sx={{ fontSize: '0.75rem' }}>
-                          {formatTime(block.start)}
-                        </Box>
+                  {row.blocks
+                    // Lo que no toca la franja visible no se dibuja (ni como rayita en el borde).
+                    .filter((block) => hourOf(block.end) > fromHour && hourOf(block.start) < toHour)
+                    .map((block) => {
+                      const start = hourOf(block.start);
+                      const end = hourOf(block.end);
+                      const left = toPercent(start);
+                      const width = Math.max(toPercent(end) - left, 1.5);
+                      const range = `${formatTime(block.start)}–${formatTime(block.end)}`;
+                      return (
                         <Box
-                          component="span"
-                          sx={{ overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}
+                          component="li"
+                          key={block.id}
+                          aria-label={`${row.name} ${row.identifier}, ${range}, ${block.label}, ${STATE_LABEL[block.state]}`}
+                          title={`${range} · ${block.label}`}
+                          sx={{
+                            position: 'absolute',
+                            top: 8,
+                            bottom: 8,
+                            left: `${left}%`,
+                            width: `${width}%`,
+                            borderRadius: '3px',
+                            px: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            overflow: 'hidden',
+                            whiteSpace: 'nowrap',
+                            fontSize: '0.825rem',
+                            color: brand.negroLavado,
+                            ...STATE_STYLE[block.state],
+                          }}
                         >
-                          {block.label}
+                          {/* Si empezó antes de la franja visible, su hora de inicio no ayuda a leer el tablero. */}
+                          {start >= fromHour ? (
+                            <Box component="span" className="tabular" sx={{ fontSize: '0.75rem' }}>
+                              {formatTime(block.start)}
+                            </Box>
+                          ) : null}
+                          <Box
+                            component="span"
+                            sx={{ overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}
+                          >
+                            {block.label}
+                          </Box>
                         </Box>
-                      </Box>
-                    );
-                  })}
+                      );
+                    })}
                 </Box>
               </Box>
             ))}

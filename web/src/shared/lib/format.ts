@@ -97,3 +97,36 @@ export function formatLongDate(value: string | Date): string {
   const text = LONG_DATE.format(date);
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
+
+/**
+ * Nicaragua no tiene horario de verano: siempre UTC-6. Los campos
+ * `datetime-local` del navegador no traen zona, así que se interpretan siempre
+ * como hora de Managua, aunque quien los llene esté en otro país.
+ */
+const MANAGUA_OFFSET = '-06:00';
+
+/** `2026-10-20T08:00` (hora de Managua) → `2026-10-20T08:00:00-06:00`. */
+export function managuaLocalToIso(local: string): string {
+  return `${local.length === 16 ? `${local}:00` : local}${MANAGUA_OFFSET}`;
+}
+
+/** Instante → `2026-10-20T08:00`, para precargar un `datetime-local`. */
+export function isoToManaguaLocal(value: string | Date): string {
+  const date = toDate(value);
+  if (!date) return '';
+  const day = date.toLocaleDateString('en-CA', { timeZone: TIME_ZONE });
+  return `${day}T${formatTime(date)}`;
+}
+
+/** Día completo en Managua que contiene `value`: `[00:00, 00:00 del día siguiente)`. */
+export function managuaDayRange(value: string | Date): { from: string; to: string } {
+  const date = toDate(value) ?? new Date();
+  const day = date.toLocaleDateString('en-CA', { timeZone: TIME_ZONE });
+  const next = new Date(Date.parse(`${day}T12:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+  return { from: `${day}T00:00:00${MANAGUA_OFFSET}`, to: `${next}T00:00:00${MANAGUA_OFFSET}` };
+}
+
+/** Medianoche de Managua del día que contiene `value`. */
+export function managuaMidnight(value: string | Date): Date {
+  return new Date(managuaDayRange(value).from);
+}

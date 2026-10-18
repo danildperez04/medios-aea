@@ -63,3 +63,26 @@ describe('hourOfDay y formatLongDate', () => {
     expect(formatLongDate('2026-10-20T18:00:00Z')).toBe('Martes, 20 de octubre');
   });
 });
+
+describe('fechas de formularios en hora de Managua', () => {
+  it('convierte un datetime-local a ISO con zona de Managua', async () => {
+    const { managuaLocalToIso } = await import('./format');
+    expect(managuaLocalToIso('2026-10-20T08:00')).toBe('2026-10-20T08:00:00-06:00');
+    expect(new Date(managuaLocalToIso('2026-10-20T08:00')).toISOString()).toBe(
+      '2026-10-20T14:00:00.000Z',
+    );
+  });
+
+  it('precarga un datetime-local con la hora de Managua', async () => {
+    const { isoToManaguaLocal } = await import('./format');
+    expect(isoToManaguaLocal('2026-10-20T14:00:00Z')).toBe('2026-10-20T08:00');
+  });
+
+  it('da el dia completo de Managua, aunque en UTC ya sea el siguiente', async () => {
+    const { managuaDayRange } = await import('./format');
+    expect(managuaDayRange('2026-10-21T03:00:00Z')).toEqual({
+      from: '2026-10-20T00:00:00-06:00',
+      to: '2026-10-21T00:00:00-06:00',
+    });
+  });
+});
