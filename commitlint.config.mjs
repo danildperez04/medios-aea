@@ -5,7 +5,19 @@ export default {
     'type-enum': [
       2,
       'always',
-      ['feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'build', 'ci', 'chore', 'revert'],
+      [
+        'feat',
+        'fix',
+        'docs',
+        'style',
+        'refactor',
+        'perf',
+        'test',
+        'build',
+        'ci',
+        'chore',
+        'revert',
+      ],
     ],
     'scope-enum': [
       2,
@@ -34,6 +46,8 @@ export default {
         'repo',
       ],
     ],
+    // El alcance es obligatorio (docs/05 §2): ordena el CHANGELOG y el historial.
+    'scope-empty': [2, 'never'],
     'scope-case': [2, 'always', 'kebab-case'],
     'subject-case': [2, 'always', 'lower-case'],
     'header-max-length': [2, 'always', 100],
