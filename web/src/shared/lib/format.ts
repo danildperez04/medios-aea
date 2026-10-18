@@ -65,3 +65,35 @@ export function formatKm(value: number | null | undefined): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return '—';
   return `${NUMBER_FORMAT.format(value)} km`;
 }
+
+const HOUR_PARTS = new Intl.DateTimeFormat('en-US', {
+  timeZone: TIME_ZONE,
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+/** Hora decimal en Managua (8:30 → 8.5). Ubica bloques en una línea de tiempo. */
+export function hourOfDay(value: string | Date): number {
+  const date = toDate(value);
+  if (!date) return Number.NaN;
+  const parts = HOUR_PARTS.formatToParts(date);
+  const hour = Number(parts.find((part) => part.type === 'hour')?.value);
+  const minute = Number(parts.find((part) => part.type === 'minute')?.value);
+  return hour + minute / 60;
+}
+
+const LONG_DATE = new Intl.DateTimeFormat('es-NI', {
+  timeZone: TIME_ZONE,
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+});
+
+/** "Sábado 18 de octubre", con mayúscula inicial. */
+export function formatLongDate(value: string | Date): string {
+  const date = toDate(value);
+  if (!date) return '—';
+  const text = LONG_DATE.format(date);
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}

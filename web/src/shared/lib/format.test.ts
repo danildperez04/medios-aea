@@ -51,3 +51,15 @@ describe('formatKm', () => {
     expect(formatKm(null)).toBe('—');
   });
 });
+
+describe('hourOfDay y formatLongDate', () => {
+  it('devuelve la hora decimal en Managua', async () => {
+    const { hourOfDay } = await import('./format');
+    expect(hourOfDay('2026-10-20T14:30:00Z')).toBe(8.5);
+  });
+
+  it('escribe la fecha larga con mayuscula inicial', async () => {
+    const { formatLongDate } = await import('./format');
+    expect(formatLongDate('2026-10-20T18:00:00Z')).toBe('Martes, 20 de octubre');
+  });
+});
