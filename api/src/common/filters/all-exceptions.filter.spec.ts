@@ -82,6 +82,18 @@ describe('AllExceptionsFilter', () => {
     expect(result.body.details).toEqual(['El código es obligatorio', 'El nombre es obligatorio']);
   });
 
+  it('conserva los detalles que el servicio adjunta a la excepcion', () => {
+    const conflicts = [{ code: 'SOL-2026-00001' }];
+    const result = invoke(
+      filter,
+      new HttpException({ message: 'Choca con un viaje', details: conflicts }, HttpStatus.CONFLICT),
+    );
+
+    expect(result.statusCode).toBe(409);
+    expect(result.body.message).toBe('Choca con un viaje');
+    expect(result.body.details).toEqual(conflicts);
+  });
+
   it('traduce una violacion de unicidad a 409 sin filtrar el SQL', () => {
     const result = invoke(filter, pgError('23505', 'uq_vehicle_plate'));
 
