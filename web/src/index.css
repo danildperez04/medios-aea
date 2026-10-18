@@ -1,39 +1,60 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/fraunces/full.css';
+@import '@fontsource/dm-mono/400.css';
+@import '@fontsource/dm-mono/500.css';
+
+/*
+ * Tipografía de marca (Manual de marca de Ayuda en Acción, §Nuestra tipografía).
+ *
+ * La principal es Bogart (ZetaFonts, de pago). Si la fundación comparte su licencia
+ * web, basta con copiar Bogart-Regular.woff2 y Bogart-Medium.woff2 en public/fonts/:
+ * este @font-face la toma primero. Mientras no estén, el navegador cae en Fraunces
+ * (libre), una serif suave de proporciones parecidas.
+ */
+@font-face {
+  font-family: 'Bogart';
+  src: url('/fonts/Bogart-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Bogart';
+  src: url('/fonts/Bogart-Medium.woff2') format('woff2');
+  font-weight: 500 700;
+  font-display: swap;
+}
 
 @theme {
-  /* Azul petróleo primario: sobrio, institucional y con buen contraste. */
-  --color-brand-50: oklch(0.97 0.02 220);
-  --color-brand-100: oklch(0.93 0.04 220);
-  --color-brand-200: oklch(0.86 0.07 220);
-  --color-brand-300: oklch(0.76 0.1 220);
-  --color-brand-400: oklch(0.65 0.12 220);
-  --color-brand-500: oklch(0.55 0.12 220);
-  --color-brand-600: oklch(0.47 0.11 220);
-  --color-brand-700: oklch(0.4 0.09 220);
-  --color-brand-800: oklch(0.33 0.07 220);
-  --color-brand-900: oklch(0.27 0.05 220);
-  --color-brand-950: oklch(0.18 0.04 220);
+  /*
+   * Paleta del manual de marca. Regla de contraste (verificada, WCAG AA):
+   * los colores cálidos (naranja, amarillo, verde) llevan SIEMPRE texto en
+   * negro lavado; con blanco no llegan a 3:1. El turquesa fuerte es el único
+   * que sirve como texto o enlace sobre blanco (6.4:1).
+   */
+  --color-naranja: #f87c56; /* Naranja Ayuda — color principal */
+  --color-naranja-brillante: #fead77;
+  --color-naranja-fuerte: #e5554f; /* choques y errores; solo bordes y bloques */
+  --color-amarillo: #ffc658; /* Amarillo Ayuda — pendiente */
+  --color-verde: #71b790; /* Verde brillante — asignado / aprobado */
+  --color-turquesa: #009681; /* Turquesa medio */
+  --color-turquesa-fuerte: #006975; /* enlaces y foco */
+  --color-negro-lavado: #382e2c; /* texto */
+  --color-crema: #fdf0d5; /* fondo de tablas y tablero, como los gráficos del manual */
+  --color-linea: #e4dcd3; /* filetes finos sobre blanco */
+  --color-tinta-suave: #6e625f; /* texto secundario: 5.9:1 sobre blanco */
 
-  /* Ámbar para solicitudes pendientes y licencias por vencer. */
-  --color-alerta-400: oklch(0.82 0.16 75);
-  --color-alerta-500: oklch(0.75 0.16 70);
-  --color-alerta-600: oklch(0.66 0.15 62);
-
-  /* Rojo solo para choques de horario y errores. */
-  --color-critico-500: oklch(0.58 0.21 27);
-  --color-critico-600: oklch(0.51 0.2 27);
+  --font-serif: 'Bogart', 'Fraunces Variable', Georgia, serif;
+  --font-mono: 'DM Mono', ui-monospace, monospace;
 }
 
 :root {
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    sans-serif;
-  line-height: 1.5;
+  font-family: var(--font-serif);
+  /* Fraunces: cuerpo suave y sin las formas "wonky", más cerca de Bogart. */
+  font-variation-settings:
+    'SOFT' 100,
+    'WONK' 0;
+  font-optical-sizing: auto;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -41,6 +62,22 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: var(--color-neutral-50);
-  color: var(--color-neutral-900);
+  background-color: #ffffff;
+  color: var(--color-negro-lavado);
+}
+
+/* Datos técnicos (placas, códigos, horas, km): DM Mono, como indica el manual. */
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
