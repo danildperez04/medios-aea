@@ -15,6 +15,7 @@ import { useAuthStore } from '@/app/stores/auth.store';
 import { BrandLockup } from '@/design-system/ui';
 import { brand } from '@/design-system/theme/theme';
 import { ChangePasswordDialog } from '@/features/auth/components/ChangePasswordDialog';
+import { usePendingCount } from '@/features/reservations/services/reservations.service';
 
 /** Ancho del menú lateral, fijo para que las tablas no se recalculen. */
 const DRAWER_WIDTH = 240;
@@ -66,6 +67,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [passwordOpen, setPasswordOpen] = useState(false);
   const { user, clearSession } = useAuthStore();
   const navigate = useNavigate();
+  const pending = usePendingCount(user?.role === 'ADMIN');
+  /** Contadores junto al nombre de una sección: lo que espera acción. */
+  const counts: Record<string, number | undefined> = { '/solicitudes': pending.data };
 
   const handleLogout = () => {
     clearSession();
@@ -114,6 +118,23 @@ export function AppLayout({ children }: AppLayoutProps) {
                   }}
                 >
                   {item.label}
+                  {counts[item.to] ? (
+                    <Box
+                      component="span"
+                      className="tabular"
+                      aria-label={`, ${counts[item.to]} por decidir`}
+                      sx={{
+                        ml: 1,
+                        px: 0.75,
+                        borderRadius: '3px',
+                        bgcolor: brand.amarillo,
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {counts[item.to]}
+                    </Box>
+                  ) : null}
                 </Box>
               </li>
             ))}
