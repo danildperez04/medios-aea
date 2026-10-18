@@ -1,6 +1,6 @@
 {
   "name": "@medios-aea/web",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Panel web de Medios AeA — React 19 + Vite 8",
   "private": true,
   "license": "UNLICENSED",

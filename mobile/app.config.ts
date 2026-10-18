@@ -18,7 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'Medios AeA',
   slug: 'medios-aea',
-  version: '0.1.0',
+  version: '0.3.0', // x-release-please-version
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'light',

@@ -1,6 +1,6 @@
 {
   "name": "medios-aea",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Gestión de medios (vehículos) de la Fundación Ayuda en Acción: solicitudes, aprobación sin choques de horario, bitácora de viajes y reportes",
   "private": true,
   "license": "UNLICENSED",
@@ -28,12 +28,13 @@
     "prepare": "husky",
     "db:migrate": "pnpm --filter @medios-aea/api build && pnpm --filter @medios-aea/api migration:run",
     "db:seed": "pnpm --filter @medios-aea/api seed:run",
-    "prod:up": "./scripts/compose-prod.sh up -d --build",
+    "prod:up": "./scripts/compose-prod.sh pull api web && ./scripts/compose-prod.sh up -d",
     "prod:down": "./scripts/compose-prod.sh down",
     "prod:ps": "./scripts/compose-prod.sh ps",
     "prod:logs": "./scripts/compose-prod.sh logs -f --tail=200",
     "prod:admin": "./scripts/compose-prod.sh exec api node dist/database/scripts/create-admin.js",
-    "prod:backup": "./scripts/backup.sh"
+    "prod:backup": "./scripts/backup.sh",
+    "prod:build": "./scripts/compose-prod.sh up -d --build"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
