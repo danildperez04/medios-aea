@@ -1,16 +1,27 @@
 import { Logger } from '@nestjs/common';
 import { hash } from 'bcrypt';
 import type { DataSource } from 'typeorm';
+import { BlackoutReason, ResourceStatus, ResourceType } from '#common/enums/domain.enums.js';
+import { Blackout } from '#modules/blackouts/entities/blackout.entity.js';
+import { Driver } from '#modules/drivers/entities/driver.entity.js';
 import { Project } from '#modules/projects/entities/project.entity.js';
+import { Resource } from '#modules/resources/entities/resource.entity.js';
+import { Vehicle } from '#modules/resources/entities/vehicle.entity.js';
 import { User } from '#modules/users/entities/user.entity.js';
-import { SEED_PASSWORD, SEED_PROJECTS, SEED_USERS } from './seed-data.js';
+import {
+  SEED_DRIVERS,
+  SEED_PASSWORD,
+  SEED_PROJECTS,
+  SEED_USERS,
+  SEED_VEHICLES,
+} from './seed-data.js';
 
 const logger = new Logger('Seeder');
 
 /**
  * Carga los datos de ejemplo. Es IDEMPOTENTE: cada fila se busca primero por su
  * clave natural (correo, código), así que se puede ejecutar varias veces.
- * Cada sprint agrega aquí sus datos (vehículos y conductores en el Sprint 2).
+ * Cada sprint agrega aquí sus datos.
  */
 export async function runSeeders(dataSource: DataSource): Promise<void> {
   const rounds = Number(process.env.BCRYPT_ROUNDS ?? 12);
@@ -33,6 +44,62 @@ export async function runSeeders(dataSource: DataSource): Promise<void> {
     createdProjects += 1;
   }
   logger.log(`${createdProjects} proyectos creados (${SEED_PROJECTS.length} en total)`);
+
+  // ---------- Vehículos (resource + vehicle en una transacción) ----------
+  let createdVehicles = 0;
+  for (const seed of SEED_VEHICLES) {
+    if (await dataSource.getRepository(Vehicle).existsBy({ plate: seed.plate })) continue;
+    await dataSource.transaction(async (manager) => {
+      const { name, ...detail } = seed;
+      const resource = await manager.save(
+        manager.create(Resource, {
+          type: ResourceType.VEHICLE,
+          name,
+          status: ResourceStatus.AVAILABLE,
+        }),
+      );
+      await manager.save(manager.create(Vehicle, { resourceId: resource.id, ...detail }));
+    });
+    createdVehicles += 1;
+  }
+  logger.log(`${createdVehicles} vehículos creados (${SEED_VEHICLES.length} en total)`);
+
+  // ---------- Conductores ----------
+  const drivers = dataSource.getRepository(Driver);
+  let createdDrivers = 0;
+  for (const seed of SEED_DRIVERS) {
+    const user = await users.findOneBy({ email: seed.email });
+    if (!user || (await drivers.existsBy({ userId: user.id }))) continue;
+    await drivers.save(
+      drivers.create({
+        userId: user.id,
+        licenseNumber: seed.licenseNumber,
+        licenseExpiry: seed.licenseExpiry,
+      }),
+    );
+    createdDrivers += 1;
+  }
+  logger.log(`${createdDrivers} conductores creados (${SEED_DRIVERS.length} en total)`);
+
+  // ---------- Un bloqueo de ejemplo: la Frontier en taller mañana ----------
+  const frontier = await dataSource.getRepository(Vehicle).findOneBy({ plate: 'M 345-678' });
+  const blackouts = dataSource.getRepository(Blackout);
+  if (frontier && !(await blackouts.existsBy({ resourceId: frontier.resourceId }))) {
+    const tomorrow = new Date(Date.now() + 86_400_000);
+    const day = tomorrow.toLocaleDateString('en-CA', { timeZone: 'America/Managua' });
+    await blackouts.save(
+      blackouts.create({
+        resourceId: frontier.resourceId,
+        period: {
+          start: new Date(`${day}T07:00:00-06:00`),
+          end: new Date(`${day}T17:00:00-06:00`),
+        },
+        reason: BlackoutReason.MAINTENANCE,
+        description: 'Cambio de frenos',
+      }),
+    );
+    logger.log('Bloqueo de ejemplo creado para la Frontier azul');
+  }
 }
 
 /** Punto de entrada para `pnpm seed:run`. */

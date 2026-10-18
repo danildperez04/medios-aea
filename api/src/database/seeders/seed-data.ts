@@ -1,4 +1,4 @@
-import { UserRole } from '#common/enums/domain.enums.js';
+import { FuelType, UserRole } from '#common/enums/domain.enums.js';
 
 /**
  * Datos de ejemplo para desarrollo y demostraciones.
@@ -33,4 +33,51 @@ export const SEED_PROJECTS = [
   { code: 'PRY-AGUA', name: 'Agua segura en comunidades rurales' },
   { code: 'PRY-EDU', name: 'Educación y refuerzo escolar' },
   { code: 'PRY-SAN', name: 'Seguridad alimentaria y nutrición' },
+] as const;
+
+export const SEED_VEHICLES = [
+  {
+    name: 'Hilux blanca',
+    plate: 'M 123-456',
+    brand: 'Toyota',
+    model: 'Hilux',
+    year: 2022,
+    passengerCapacity: 4,
+    fuelType: FuelType.DIESEL,
+    currentOdometer: 45_200,
+  },
+  {
+    name: 'Prado gris',
+    plate: 'M 789-012',
+    brand: 'Toyota',
+    model: 'Land Cruiser Prado',
+    year: 2019,
+    passengerCapacity: 6,
+    fuelType: FuelType.DIESEL,
+    currentOdometer: 112_640,
+  },
+  {
+    name: 'Frontier azul',
+    plate: 'M 345-678',
+    brand: 'Nissan',
+    model: 'Frontier',
+    year: 2020,
+    passengerCapacity: 4,
+    fuelType: FuelType.DIESEL,
+    currentOdometer: 87_310,
+  },
+] as const;
+
+/** Licencias de los conductores de ejemplo (por correo). */
+export const SEED_DRIVERS = [
+  {
+    email: 'jose.gutierrez@demo.medios-aea.org',
+    licenseNumber: 'B-1029384',
+    licenseExpiry: '2028-03-31',
+  },
+  {
+    email: 'luis.herrera@demo.medios-aea.org',
+    licenseNumber: 'B-5647382',
+    licenseExpiry: '2026-11-10',
+  },
 ] as const;
