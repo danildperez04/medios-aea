@@ -23,6 +23,7 @@
     "test:e2e": "pnpm --filter @medios-aea/api test:e2e",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md,yml,yaml}\"",
+    "github:setup": "node scripts/github/setup.mjs",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
     "prepare": "husky",
