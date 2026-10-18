@@ -85,6 +85,20 @@ Rama `feature/deployment-containers` (sobre la del Sprint 1).
 **Pendiente:** reconstruir la imagen `api` con el `create-admin` corregido; el disco del
 equipo de desarrollo se llenó durante las pruebas (ver informe de la sesión).
 
+## Sistema de diseño con la marca AeA · EN CURSO
+
+Rama `feature/brand-design-system`. Aplicado a partir del manual de marca de Ayuda en
+Acción (`docs/16-sistema-de-diseno.md`).
+
+- Web: paleta y tipografía de marca, `BrandLockup`, `ResourceTag` y `AgendaBoard`
+  genéricos para cualquier tipo de medio, menú agrupado sin íconos, login con el panel
+  naranja del manual, tablas que se apilan en el teléfono, textos sin menciones a sprints.
+- Móvil: mismas fuentes y colores, login y pantalla de inicio con la marca; vista
+  previa web con `react-native-web`.
+- Verificado con capturas a 1366 px y 390 px: sin scroll horizontal ni errores de JS.
+
+**Pendiente con comunicación:** archivo oficial del logo y licencia de Bogart.
+
 ## Siguiente: Sprint 2 — Flota y disponibilidad
 
 HU-05 a HU-08: vehículos (`resource` + `vehicle` en una transacción), conductores con
