@@ -154,6 +154,24 @@ describe('DATABASE_URL (PaaS)', () => {
   });
 });
 
+describe('SWAGGER_ENABLED', () => {
+  const swagger = (env: Record<string, string>) =>
+    configValidationSchema.validate({ ...BASE_ENV, ...env }).value.SWAGGER_ENABLED as boolean;
+
+  it('esta activo por defecto en desarrollo y pruebas', () => {
+    expect(swagger({ NODE_ENV: 'development' })).toBe(true);
+    expect(swagger({ NODE_ENV: 'test' })).toBe(true);
+  });
+
+  it('esta apagado por defecto en produccion', () => {
+    expect(swagger({ NODE_ENV: 'production' })).toBe(false);
+  });
+
+  it('se puede activar a proposito en produccion', () => {
+    expect(swagger({ NODE_ENV: 'production', SWAGGER_ENABLED: 'true' })).toBe(true);
+  });
+});
+
 describe('configValidationSchema', () => {
   const base = { ...BASE_ENV };
 

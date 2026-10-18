@@ -136,4 +136,11 @@ export const configValidationSchema = Joi.object({
   JWT_EXPIRES_IN: Joi.string().default('8h'),
   BCRYPT_ROUNDS: Joi.number().integer().min(4).max(15).default(12),
   CORS_ORIGIN: Joi.string().default('http://localhost:5173'),
+  // La documentación interactiva expone todos los endpoints: apagada en producción
+  // salvo que se pida expresamente.
+  SWAGGER_ENABLED: Joi.boolean().when('NODE_ENV', {
+    is: 'production',
+    then: Joi.boolean().default(false),
+    otherwise: Joi.boolean().default(true),
+  }),
 });
