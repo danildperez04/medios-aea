@@ -72,6 +72,7 @@ async function bootstrap(): Promise<void> {
     .addTag('Conductores', 'Conductores y vencimiento de licencias')
     .addTag('Bloqueos', 'Periodos en que un medio no se puede usar')
     .addTag('Disponibilidad', 'Medios y conductores libres; agenda')
+    .addTag('Solicitudes', 'Solicitudes de medios y su ciclo de vida')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document, {

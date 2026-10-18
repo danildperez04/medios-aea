@@ -4,6 +4,7 @@ import { LoginView } from '@/features/auth/views/LoginView';
 import { DashboardView } from '@/features/dashboard/views/DashboardView';
 import { NotFoundView } from './views/NotFoundView';
 import { ComingSoonView } from './views/ComingSoonView';
+import { RequestsView } from '@/features/reservations/views/RequestsView';
 import { DriversView } from '@/features/drivers/views/DriversView';
 import { VehiclesView } from '@/features/vehicles/views/VehiclesView';
 import { ProjectsView } from '@/features/projects/views/ProjectsView';
@@ -25,15 +26,7 @@ export function AppRouter() {
         <Route element={<RequireAdmin />}>
           <Route element={<PrivateLayout />}>
             <Route index element={<DashboardView />} />
-            <Route
-              path="solicitudes"
-              element={
-                <ComingSoonView
-                  title="Solicitudes"
-                  description="Aquí revisarás las solicitudes de medios, verás cuáles están libres en ese horario y las aprobarás o rechazarás."
-                />
-              }
-            />
+            <Route path="solicitudes" element={<RequestsView />} />
             <Route
               path="agenda"
               element={

@@ -16,6 +16,7 @@ import { AvailabilityModule } from '#modules/availability/availability.module.js
 import { BlackoutsModule } from '#modules/blackouts/blackouts.module.js';
 import { DriversModule } from '#modules/drivers/drivers.module.js';
 import { ResourcesModule } from '#modules/resources/resources.module.js';
+import { ReservationsModule } from '#modules/reservations/reservations.module.js';
 
 /**
  * Módulo raíz de Medios AeA.
@@ -44,6 +45,7 @@ import { ResourcesModule } from '#modules/resources/resources.module.js';
     DriversModule,
     BlackoutsModule,
     AvailabilityModule,
+    ReservationsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
