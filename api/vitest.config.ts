@@ -42,12 +42,8 @@ export default defineConfig({
         'src/test/**',
         'src/**/*.{test,spec}.ts',
       ],
-      thresholds: {
-        lines: 70,
-        functions: 65,
-        branches: 60,
-        statements: 70,
-      },
+      // Sin umbrales aquí: solo unitarias no representa la cobertura real.
+      // Los umbrales viven en vitest.coverage.config.ts (unitarias + e2e).
     },
   },
 });
