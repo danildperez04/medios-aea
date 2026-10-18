@@ -4,6 +4,8 @@ import { LoginView } from '@/features/auth/views/LoginView';
 import { DashboardView } from '@/features/dashboard/views/DashboardView';
 import { NotFoundView } from './views/NotFoundView';
 import { ComingSoonView } from './views/ComingSoonView';
+import { DriversView } from '@/features/drivers/views/DriversView';
+import { VehiclesView } from '@/features/vehicles/views/VehiclesView';
 import { ProjectsView } from '@/features/projects/views/ProjectsView';
 import { UsersView } from '@/features/users/views/UsersView';
 
@@ -51,24 +53,8 @@ export function AppRouter() {
                 />
               }
             />
-            <Route
-              path="vehiculos"
-              element={
-                <ComingSoonView
-                  title="Vehículos"
-                  description="Aquí registrarás los vehículos de la fundación con su placa, capacidad y estado."
-                />
-              }
-            />
-            <Route
-              path="conductores"
-              element={
-                <ComingSoonView
-                  title="Conductores"
-                  description="Aquí registrarás a los conductores y el vencimiento de sus licencias."
-                />
-              }
-            />
+            <Route path="vehiculos" element={<VehiclesView />} />
+            <Route path="conductores" element={<DriversView />} />
             <Route path="proyectos" element={<ProjectsView />} />
             <Route path="usuarios" element={<UsersView />} />
             <Route
