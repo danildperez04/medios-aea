@@ -68,6 +68,10 @@ async function bootstrap(): Promise<void> {
     .addTag('Salud', 'Estado del servicio')
     .addTag('Usuarios', 'Personal con acceso al sistema (solo ADMIN)')
     .addTag('Proyectos', 'Proyectos a los que se cargan los viajes')
+    .addTag('Vehículos', 'Vehículos de la flota (medios de tipo VEHICLE)')
+    .addTag('Conductores', 'Conductores y vencimiento de licencias')
+    .addTag('Bloqueos', 'Periodos en que un medio no se puede usar')
+    .addTag('Disponibilidad', 'Medios y conductores libres; agenda')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document, {

@@ -1,8 +1,9 @@
-import { Button, Chip, IconButton, MenuItem, Stack, Tooltip } from '@mui/material';
+import { Button, IconButton, MenuItem, Stack, Tooltip } from '@mui/material';
 import { Archive, ArchiveRestore, FolderKanban, Pencil, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '@/app/services/api';
 import {
+  ActiveBadge,
   ConfirmDialog,
   DataTable,
   EmptyState,
@@ -48,17 +49,17 @@ export function ProjectsView() {
   };
 
   const columns: DataTableColumn<Project>[] = [
-    { key: 'code', header: 'Código', render: (p) => <strong>{p.code}</strong>, width: 180 },
-    { key: 'name', header: 'Nombre', render: (p) => p.name },
+    {
+      key: 'code',
+      header: 'Código',
+      render: (p) => <span className="tabular">{p.code}</span>,
+      width: 180,
+    },
+    { key: 'name', header: 'Nombre', render: (p) => p.name, primary: true },
     {
       key: 'status',
       header: 'Estado',
-      render: (p) =>
-        p.isActive ? (
-          <Chip size="small" color="success" label="Activo" />
-        ) : (
-          <Chip size="small" variant="outlined" label="Inactivo" />
-        ),
+      render: (p) => <ActiveBadge active={p.isActive} />,
     },
     { key: 'created', header: 'Creado', render: (p) => formatDate(p.createdAt) },
     {
@@ -100,7 +101,7 @@ export function ProjectsView() {
     <>
       <PageHeader
         title="Proyectos"
-        description="Solo los proyectos activos aparecen al solicitar un vehículo"
+        description="Solo los proyectos activos aparecen al solicitar un medio"
         actions={
           <Button
             variant="contained"

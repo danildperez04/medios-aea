@@ -67,7 +67,15 @@ Siguen la documentación de NestJS (_Validation_ y _Mapped types_):
   `@Trim()` / `@TrimUpperCase()` (`common/transformers/string.transformers.ts`).
 - Cada DTO nuevo con reglas propias se agrega a `common/validation/dto-contracts.spec.ts`.
 
-## 5. Comandos
+## 5. Interfaz (web y móvil)
+
+Antes de tocar pantallas, leer `docs/16-sistema-de-diseno.md` (sale del manual de marca
+de Ayuda en Acción). En corto: texto negro lavado sobre los colores cálidos, nunca
+blanco; DM Mono solo para datos técnicos; nada de "vehículo" en textos generales (el
+sistema es de **medios**); sin tarjetas de indicadores ni íconos decorativos; ninguna
+pantalla con scroll horizontal a 390 px.
+
+## 6. Comandos
 
 ```bash
 pnpm install
@@ -81,7 +89,7 @@ pnpm lint && pnpm typecheck && pnpm test   # antes de dar algo por terminado
 pnpm test:e2e                              # requiere pnpm db:up
 ```
 
-## 6. Git
+## 7. Git
 
 Conventional Commits con los alcances de `commitlint.config.mjs`. Ramas
 `feature/hu-XX-<slug>` desde `develop`.

@@ -14,5 +14,6 @@
 | 12  | [Plan de pruebas](12-plan-pruebas.md)                           | Niveles de prueba y casos críticos                          |
 | 13  | [Glosario](13-glosario.md)                                      | Términos del dominio y su nombre en el código               |
 | 14  | [Arquitectura](14-arquitectura.md)                              | Componentes, capas, secuencia de aprobación                 |
+| 16  | [Sistema de diseño](16-sistema-de-diseno.md)                    | Marca AeA aplicada: color, tipografía, componentes          |
 
 Pendiente: `15-checklist-uat` (S6).

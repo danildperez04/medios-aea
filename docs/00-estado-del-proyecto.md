@@ -85,7 +85,52 @@ Rama `feature/deployment-containers` (sobre la del Sprint 1).
 **Pendiente:** reconstruir la imagen `api` con el `create-admin` corregido; el disco del
 equipo de desarrollo se llenó durante las pruebas (ver informe de la sesión).
 
-## Siguiente: Sprint 2 — Flota y disponibilidad
+## Sistema de diseño con la marca AeA · EN CURSO
 
-HU-05 a HU-08: vehículos (`resource` + `vehicle` en una transacción), conductores con
-licencia, bloqueos por mantenimiento y endpoint de disponibilidad.
+Rama `feature/brand-design-system`. Aplicado a partir del manual de marca de Ayuda en
+Acción (`docs/16-sistema-de-diseno.md`).
+
+- Web: paleta y tipografía de marca, `BrandLockup`, `ResourceTag` y `AgendaBoard`
+  genéricos para cualquier tipo de medio, menú agrupado sin íconos, login con el panel
+  naranja del manual, tablas que se apilan en el teléfono, textos sin menciones a sprints.
+- Móvil: mismas fuentes y colores, login y pantalla de inicio con la marca; vista
+  previa web con `react-native-web`.
+- Verificado con capturas a 1366 px y 390 px: sin scroll horizontal ni errores de JS.
+
+**Pendiente con comunicación:** archivo oficial del logo y licencia de Bogart.
+
+## Sprint 2 — Flota y disponibilidad · EN CURSO
+
+Rama `feature/sprint-2-fleet` (sobre la del sistema de diseño).
+
+- **HU-05 Vehículos**: `/vehicles` (resource + vehicle en transacción), placa única,
+  odómetro que solo aumenta, mantenimiento y baja lógica. Web: tabla, alta/edición,
+  mantenimiento y baja.
+- **HU-06 Conductores**: `/drivers` vincula un usuario DRIVER con su licencia; estado
+  vigente / por vencer / vencida en hora de Managua. Web: tabla y aviso en "Hoy".
+- **HU-07 Bloqueos**: `/resources/:id/blackouts` para cualquier medio; choque con un
+  viaje aprobado → 409 con el detalle. Web: diálogo de bloqueos por vehículo.
+- **HU-08 Disponibilidad**: `/availability` (medios, con motivos) y
+  `/availability/drivers`. Base para la aprobación del Sprint 3 y la app del Sprint 4.
+- **Agenda real en "Hoy"**: `/agenda` con viajes, bloqueos, mantenimiento y solicitudes
+  pendientes con medio preferido.
+- Seeder: 3 vehículos, 2 licencias (una por vencer) y un bloqueo para mañana.
+
+### Verificación
+
+| Workspace | Lint | Typecheck | Pruebas                |
+| --------- | ---- | --------- | ---------------------- |
+| api       | ✓    | ✓         | 107 unitarias · 56 e2e |
+| web       | ✓    | ✓         | 28                     |
+
+Recorrido en Chromium sobre la base de desarrollo: alta de vehículo (placa normalizada,
+duplicada → 409), mantenimiento, bloqueo, reflejo inmediato en "Hoy", licencias por
+vencer; sin scroll horizontal a 1366 px ni a 390 px. Se corrigieron en el camino: un
+texto oculto con `width: 1` (100% en MUI) que desbordaba la página, bloques de varios
+días mal ubicados en la agenda, y la petición fallida de la fuente Bogart.
+
+## Siguiente: Sprint 3 — Solicitudes y aprobación sin choques
+
+HU-09 a HU-15: crear y cancelar solicitudes, aprobar asignando medio y conductor con la
+disponibilidad de este sprint (mismo candado que los bloqueos), rechazo con motivo,
+reasignación, calendario semanal y auditoría.

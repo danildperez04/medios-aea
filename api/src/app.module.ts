@@ -12,6 +12,10 @@ import { AuthModule } from '#modules/auth/auth.module.js';
 import { HealthModule } from '#modules/health/health.module.js';
 import { ProjectsModule } from '#modules/projects/projects.module.js';
 import { UsersModule } from '#modules/users/users.module.js';
+import { AvailabilityModule } from '#modules/availability/availability.module.js';
+import { BlackoutsModule } from '#modules/blackouts/blackouts.module.js';
+import { DriversModule } from '#modules/drivers/drivers.module.js';
+import { ResourcesModule } from '#modules/resources/resources.module.js';
 
 /**
  * Módulo raíz de Medios AeA.
@@ -36,6 +40,10 @@ import { UsersModule } from '#modules/users/users.module.js';
     HealthModule,
     UsersModule,
     ProjectsModule,
+    ResourcesModule,
+    DriversModule,
+    BlackoutsModule,
+    AvailabilityModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
