@@ -25,12 +25,12 @@ Estados: `PENDIENTE` · `EN CURSO` · `TERMINADO` (PR aprobado y merge a `develo
 
 ## Sprint 2 — Flota y disponibilidad
 
-| HU    | RF    | Historia                                                          | Criterios de aceptación                                                                                                | Estado    |
-| ----- | ----- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | --------- |
-| HU-05 | RF-06 | Como ADMIN, quiero registrar los vehículos con placa y capacidad  | Placa única; capacidad > 0; estado `AVAILABLE/MAINTENANCE/INACTIVE`; se crea `resource` + `vehicle` en una transacción | PENDIENTE |
-| HU-06 | RF-07 | Como ADMIN, quiero registrar conductores con su licencia          | Vinculado a un usuario `DRIVER`; vencimiento de licencia obligatorio                                                   | PENDIENTE |
-| HU-07 | RF-08 | Como ADMIN, quiero bloquear un vehículo por mantenimiento         | Bloqueo con rango y motivo; no se permite si choca con una asignación activa (409 indicando cuál)                      | PENDIENTE |
-| HU-08 | RF-09 | Como técnico, quiero ver qué vehículos están libres en un horario | Excluye ocupados, bloqueados, inactivos y sin capacidad; muestra la ocupación del día                                  | PENDIENTE |
+| HU    | RF    | Historia                                                          | Criterios de aceptación                                                                                                | Estado   |
+| ----- | ----- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------- |
+| HU-05 | RF-06 | Como ADMIN, quiero registrar los vehículos con placa y capacidad  | Placa única; capacidad > 0; estado `AVAILABLE/MAINTENANCE/INACTIVE`; se crea `resource` + `vehicle` en una transacción | EN CURSO |
+| HU-06 | RF-07 | Como ADMIN, quiero registrar conductores con su licencia          | Vinculado a un usuario `DRIVER`; vencimiento de licencia obligatorio                                                   | EN CURSO |
+| HU-07 | RF-08 | Como ADMIN, quiero bloquear un vehículo por mantenimiento         | Bloqueo con rango y motivo; no se permite si choca con una asignación activa (409 indicando cuál)                      | EN CURSO |
+| HU-08 | RF-09 | Como técnico, quiero ver qué vehículos están libres en un horario | Excluye ocupados, bloqueados, inactivos y sin capacidad; muestra la ocupación del día                                  | EN CURSO |
 
 ## Sprint 3 — Solicitudes y aprobación (núcleo)
 
