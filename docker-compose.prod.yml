@@ -54,10 +54,11 @@ services:
       dockerfile: web/Dockerfile
     restart: unless-stopped
     environment:
-      PORT: 80
+      PORT: 8080
       API_UPSTREAM: http://api:3000
     ports:
-      - '${WEB_PORT:-80}:80'
+      # nginx corre sin privilegios y escucha en 8080 dentro del contenedor.
+      - '${WEB_PORT:-80}:8080'
     depends_on:
       api:
         condition: service_healthy

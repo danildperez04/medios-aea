@@ -1,6 +1,6 @@
 # Plantilla de nginx. La imagen oficial sustituye ${PORT} y ${API_UPSTREAM} al
 # arrancar (envsubst), así la misma imagen sirve en Docker Compose y en un PaaS.
-#   PORT          puerto en el que escucha (los PaaS lo imponen). Default 80.
+#   PORT          puerto en el que escucha (los PaaS lo imponen). Default 8080 (sin root).
 #   API_UPSTREAM  dónde está la API. Default http://api:3000 (servicio de Compose).
 
 server {
