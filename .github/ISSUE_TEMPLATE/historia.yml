@@ -1,0 +1,58 @@
+name: Historia de usuario
+description: Algo que una persona podrá hacer con el sistema (una HU del backlog).
+title: 'HU-XX: '
+labels: ['tipo:historia']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Una historia = una rama `feature/hu-XX-<slug>` = un PR (`docs/05` §3).
+        Si es demasiado grande para 1–3 días, divídela.
+  - type: input
+    id: id
+    attributes:
+      label: Identificador
+      description: Número de la historia en docs/03-backlog-del-producto.md.
+      placeholder: HU-11
+    validations:
+      required: true
+  - type: textarea
+    id: story
+    attributes:
+      label: Historia
+      description: Como <rol>, quiero <acción>, para <beneficio>.
+      placeholder: Como coordinación logística, quiero aprobar una solicitud asignando vehículo y conductor, para que nadie quede sin transporte por un choque de horarios.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Criterios de aceptación
+      description: Verificables, uno por línea. Se convierten en pruebas.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: input
+    id: requirements
+    attributes:
+      label: Requisitos y reglas relacionados
+      placeholder: RF-12, RF-14, RN-01, RN-08
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioridad (MoSCoW)
+      options: [Must, Should, Could]
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Áreas que toca
+      multiple: true
+      options: [api, web, móvil, infra, docs]
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notas
+      description: Dependencias con otras historias, decisiones pendientes, diseño.

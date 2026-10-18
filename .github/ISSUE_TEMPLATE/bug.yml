@@ -1,0 +1,54 @@
+name: Error
+description: Algo que no funciona como debería.
+title: 'Error: '
+labels: ['tipo:bug']
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Qué pasa
+      description: Lo que viste, con el mensaje exacto si hubo uno.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Qué debería pasar
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Cómo reproducirlo
+      value: |
+        1. 
+        2.
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Dónde
+      multiple: true
+      options: [Panel web, App móvil (técnico), App móvil (conductor), API, Despliegue]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versión
+      description: Está en el pie del Release de GitHub o en `GET /api/v1/health` (campo version).
+      placeholder: 0.4.0
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Gravedad
+      options:
+        - Bloquea el trabajo (nadie puede pedir o aprobar)
+        - Molesta pero hay forma de seguir
+        - Detalle visual o de texto
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: '**No incluyas contraseñas, tokens ni datos personales.** Si es una vulnerabilidad, usa el canal privado (SECURITY.md).'
