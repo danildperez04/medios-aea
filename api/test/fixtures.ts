@@ -94,3 +94,17 @@ export async function loginAs(
   }
   return response.body.accessToken as string;
 }
+
+/**
+ * Token firmado directamente, sin pasar por POST /auth/login. Para pruebas que no
+ * prueban el login: así no consumen el límite de 10 intentos por minuto.
+ */
+export async function signToken(
+  app: { get: <T>(token: new (...args: never[]) => T) => T },
+  user: Pick<User, 'id' | 'email' | 'fullName' | 'role'>,
+): Promise<string> {
+  const { JwtService } = await import('@nestjs/jwt');
+  return app
+    .get(JwtService)
+    .signAsync({ sub: user.id, email: user.email, fullName: user.fullName, role: user.role });
+}

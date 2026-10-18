@@ -5,7 +5,7 @@ import request from 'supertest';
 import { UserRole } from '#common/enums/domain.enums.js';
 import type { User } from '#modules/users/entities/user.entity.js';
 import { createE2eContext, destroyE2eContext, runMigrations } from './e2e-context.js';
-import { createUser, loginAs, PASSWORD } from './fixtures.js';
+import { createUser, loginAs, PASSWORD, signToken } from './fixtures.js';
 
 /**
  * Pruebas de integracion de salud y autenticacion (RF-01, RNF-06).
@@ -119,6 +119,41 @@ describe('Autenticacion (integracion)', () => {
         .send({ currentPassword: PASSWORD, newPassword: 'ClaveNueva456' })
         .expect(200);
       await loginAs(app, user, 'ClaveNueva456');
+    });
+  });
+
+  describe('revocacion inmediata', () => {
+    it('una cuenta desactivada pierde el acceso con su token vigente (401)', async () => {
+      const user = await createUser(dataSource, UserRole.REQUESTER);
+      const userToken = await signToken(app, user);
+      await request(app.getHttpServer())
+        .get(`${basePath}/projects`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(200);
+
+      await dataSource.query(`UPDATE "user" SET is_active = false WHERE id = $1`, [user.id]);
+
+      const response = await request(app.getHttpServer())
+        .get(`${basePath}/projects`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(401);
+      expect(response.body.message).toMatch(/desactivada/);
+    });
+
+    it('un cambio de rol se aplica sin esperar a que venza el token', async () => {
+      const admin = await createUser(dataSource, UserRole.ADMIN);
+      const adminToken = await signToken(app, admin);
+      await request(app.getHttpServer())
+        .get(`${basePath}/users`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      await dataSource.query(`UPDATE "user" SET role = 'REQUESTER' WHERE id = $1`, [admin.id]);
+
+      await request(app.getHttpServer())
+        .get(`${basePath}/users`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(403);
     });
   });
 
