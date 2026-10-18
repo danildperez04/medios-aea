@@ -40,23 +40,93 @@ fix(availability): treat ranges as half-open so back-to-back trips do not clash
 docs(db): document blackout locking strategy
 ```
 
-## 3. Ramas
+## 3. Ramas y flujo de trabajo
 
-Git Flow simplificado:
+Se trabaja con **ramas cortas por historia de usuario** que vuelven rápido a
+`develop` (GitHub Flow sobre `develop`). El sprint es una unidad de planificación,
+no de código: **nunca hay una rama por sprint**.
 
-| Rama                   | Uso                                                                      |
-| ---------------------- | ------------------------------------------------------------------------ |
-| `main`                 | Producción; solo merges desde `release/*` o `hotfix/*`, con tag `vX.Y.Z` |
-| `develop`              | Integración del sprint                                                   |
-| `feature/hu-XX-<slug>` | Una historia de usuario, sale de `develop`                               |
-| `fix/<slug>`           | Corrección en `develop`                                                  |
-| `release/X.Y.0`        | Cierre de sprint                                                         |
-| `hotfix/<slug>`        | Corrección urgente desde `main`                                          |
+### 3.1 Ramas permanentes
 
-Ejemplo: `feature/hu-11-approve-without-overlap`.
+| Rama      | Contenido                                 | Quién escribe                                              |
+| --------- | ----------------------------------------- | ---------------------------------------------------------- |
+| `main`    | Lo que está (o puede estar) en producción | Solo merges desde `develop` o `hotfix/*`, con tag `vX.Y.Z` |
+| `develop` | Historias terminadas e integradas         | Solo PR con CI en verde                                    |
+
+### 3.2 Ramas de trabajo
+
+| Prefijo             | Cuándo                                                                    | Ejemplo                                 |
+| ------------------- | ------------------------------------------------------------------------- | --------------------------------------- |
+| `feature/`          | Una historia de usuario                                                   | `feature/hu-11-approve-without-overlap` |
+| `fix/`              | Corrección de un bug en `develop`                                         | `fix/agenda-multi-day-blocks`           |
+| `refactor/`         | Cambio interno sin comportamiento nuevo                                   | `refactor/nest-dtos`                    |
+| `chore/` · `build/` | Trabajo transversal sin historia (despliegue, herramientas, dependencias) | `build/deployment-containers`           |
+| `docs/`             | Solo documentación                                                        | `docs/branching-workflow`               |
+| `hotfix/`           | Corrección urgente de producción, sale de `main`                          | `hotfix/login-500`                      |
+
+Nombres en inglés, `kebab-case`, con el número de historia cuando lo hay.
+
+### 3.3 Ciclo de una historia
+
+1. **Actualizar `develop`** (`git switch develop && git pull`).
+2. **Crear la rama** desde `develop`: `git switch -c feature/hu-09-create-request`.
+3. **Commits pequeños** con Conventional Commits (§2). Hooks de husky: Prettier y commitlint.
+4. **Antes del PR**: `pnpm lint && pnpm typecheck && pnpm test` (y `pnpm test:e2e` si
+   toca la API). Si `develop` avanzó, `git rebase develop`.
+5. **Push y PR hacia `develop`** con la plantilla `.github/pull_request_template.md`.
+   La rama vive idealmente **1 a 3 días**; el PR, **menos de ~400 líneas** sin contar
+   pruebas ni lockfile.
+6. **Revisión + CI en verde → _squash merge_**. En `develop` cada historia queda como
+   un solo commit, con el título del PR en formato Conventional Commits.
+7. **Borrar la rama** (local y remota) y empezar la siguiente desde `develop` actualizado.
+
+### 3.4 Dependencias entre historias: no apilar ramas
+
+Si la historia B necesita código de la historia A, **primero se mergea A** y luego B
+sale de `develop`. No se crean ramas encima de otras ramas sin mergear: el PR de la
+de arriba arrastra el código de todas las de abajo, y un cambio pedido en la revisión
+de la primera hay que propagarlo a mano por las demás.
+
+Si de verdad no se puede esperar, la excepción es un **PR apilado declarado**: el PR
+de B apunta a la rama de A (no a `develop`), lo dice en su descripción y, cuando A se
+mergea, B se rebasa sobre `develop` y se cambia su destino. Es una excepción, no la
+forma normal de trabajar.
+
+Para avanzar sin esperar: partir la historia en pasos que se pueden mergear solos
+(primero la API con sus pruebas, después la pantalla) u ocultar lo incompleto detrás
+de una ruta que todavía no aparece en el menú.
+
+### 3.5 Cierre de sprint y versiones
+
+1. Todas las historias del sprint mergeadas en `develop`, CI en verde.
+2. Actualizar `docs/00-estado-del-proyecto.md`, el backlog y la matriz de trazabilidad.
+3. PR `develop → main` titulado `release: vX.Y.0`; después del merge, tag `vX.Y.0` en
+   `main` (§1).
+4. Si en el sprint hubo cambios de esquema, verificar las migraciones contra una copia
+   de la base antes de desplegar (`docs/11-guia-despliegue.md`).
+
+### 3.6 Correcciones urgentes
+
+Rama `hotfix/<slug>` desde `main` → PR a `main` → tag PATCH (`vX.Y.Z+1`) → merge de
+`main` a `develop` para que la corrección no se pierda.
+
+### 3.7 Asistentes de código (IA)
+
+- Trabajan en la rama de **una** historia, creada desde `develop` actualizado.
+- Hacen commits locales; **el push y los PR los hace la persona responsable**.
+- No crean una rama nueva encima de otra que todavía no está mergeada (§3.4): si la
+  siguiente historia depende de la anterior, avisan y esperan el merge.
+
+### 3.8 Lección aprendida (sprints 0 a 2)
+
+Los sprints 0 a 2 se trabajaron con cinco ramas apiladas (`sprint-1 ← deployment ←
+refactor ← brand ← sprint-2`), cada una por sprint o por tema y creada antes del merge
+de la anterior. Funcionó porque se mergearon en orden, pero generó PR grandes y
+difíciles de revisar. Desde el Sprint 3 se aplica este flujo: una rama por historia.
 
 ## Historial
 
-| Versión | Fecha       | Autor        | Cambio                         |
-| ------- | ----------- | ------------ | ------------------------------ |
-| 1.0.0   | 16 oct 2026 | Danild Pérez | Creación inicial del documento |
+| Versión | Fecha       | Autor        | Cambio                                                             |
+| ------- | ----------- | ------------ | ------------------------------------------------------------------ |
+| 1.0.0   | 16 oct 2026 | Danild Pérez | Creación inicial del documento                                     |
+| 1.1.0   | 18 oct 2026 | Danild Pérez | Flujo de ramas por historia, sin apilar; cierre de sprint y hotfix |

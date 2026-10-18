@@ -91,5 +91,13 @@ pnpm test:e2e                              # requiere pnpm db:up
 
 ## 7. Git
 
-Conventional Commits con los alcances de `commitlint.config.mjs`. Ramas
-`feature/hu-XX-<slug>` desde `develop`.
+Flujo completo en `docs/05-versionado-commits-y-ramas.md` §3. En corto:
+
+- **Una rama corta por historia** (`feature/hu-XX-<slug>`), creada desde `develop`
+  actualizado. Nunca una rama por sprint.
+- **No apilar ramas:** si la historia depende de otra que todavía no está mergeada,
+  avisa y espera el merge en lugar de crear la rama encima.
+- Conventional Commits con los alcances de `commitlint.config.mjs`.
+- **Commits locales sí; `git push` y PR no:** los hace la persona responsable.
+- Antes de dar la historia por terminada: `pnpm lint && pnpm typecheck && pnpm test`
+  (y `pnpm test:e2e` si toca la API).
