@@ -16,12 +16,17 @@ export interface ReservationView {
   requester: { id: string; fullName: string };
   /** Medio que pidió quien solicita; null si le da igual. */
   preferredResource: { id: string; name: string; identifier: string } | null;
+  /** Quién propone quien solicita que conduzca (RN-15). */
+  proposedDriver: { id: string; fullName: string } | null;
   rejectionReason: string | null;
   decidedAt: Date | null;
   createdAt: Date;
 }
 
-/** Requiere las relaciones project, requester y preferredResource (+ vehicle) cargadas. */
+/**
+ * Requiere las relaciones project, requester, preferredResource (+ vehicle) y
+ * proposedDriver (+ user) cargadas.
+ */
 export function toReservationView(request: ReservationRequest): ReservationView {
   const preferred = request.preferredResource;
   return {
@@ -42,6 +47,9 @@ export function toReservationView(request: ReservationRequest): ReservationView 
           name: preferred.name,
           identifier: preferred.vehicle?.plate ?? preferred.name,
         }
+      : null,
+    proposedDriver: request.proposedDriver
+      ? { id: request.proposedDriver.id, fullName: request.proposedDriver.user.fullName }
       : null,
     rejectionReason: request.rejectionReason,
     decidedAt: request.decidedAt,

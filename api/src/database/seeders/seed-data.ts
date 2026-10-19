@@ -68,8 +68,16 @@ export const SEED_VEHICLES = [
   },
 ] as const;
 
-/** Licencias de los conductores de ejemplo (por correo). */
+/**
+ * Licencias de ejemplo (por correo). Ana es técnica y maneja ella misma, como casi
+ * todo el personal de la fundación (ADR 0004); Carlos no tiene licencia.
+ */
 export const SEED_DRIVERS = [
+  {
+    email: 'ana.martinez@demo.medios-aea.org',
+    licenseNumber: 'B-3344556',
+    licenseExpiry: '2029-06-30',
+  },
   {
     email: 'jose.gutierrez@demo.medios-aea.org',
     licenseNumber: 'B-1029384',

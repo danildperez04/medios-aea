@@ -5,18 +5,24 @@ import request from 'supertest';
 import { UserRole } from '#common/enums/domain.enums.js';
 import { AuditLog } from '#modules/audit/entities/audit-log.entity.js';
 import { Notification } from '#modules/notifications/entities/notification.entity.js';
+import type { Driver } from '#modules/drivers/entities/driver.entity.js';
 import type { Project } from '#modules/projects/entities/project.entity.js';
 import type { User } from '#modules/users/entities/user.entity.js';
 import { createE2eContext, destroyE2eContext, runMigrations } from './e2e-context.js';
 import { createDriver, createProject, createUser, createVehicle, loginAs } from './fixtures.js';
 
-/** HU-09 y HU-10 — crear, consultar y cancelar solicitudes (RF-10, RF-11, RN-06, RN-07, RN-10, RN-13, RN-14). */
+/**
+ * HU-09, HU-10 y HU-26 — crear, consultar y cancelar solicitudes, con quién conduce
+ * (RF-10, RF-11, RN-06, RN-07, RN-10, RN-13, RN-14, RN-15).
+ */
 describe('Solicitudes (integracion)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
   let admin: User;
   let ana: User;
   let carlos: User;
+  let pedro: User;
+  let anaDriver: Driver;
   let project: Project;
   const tokens: Record<string, string> = {};
   const api = '/api/v1';
@@ -48,11 +54,16 @@ describe('Solicitudes (integracion)', () => {
     admin = await createUser(dataSource, UserRole.ADMIN);
     ana = await createUser(dataSource, UserRole.REQUESTER, { fullName: 'Ana Martínez' });
     carlos = await createUser(dataSource, UserRole.REQUESTER, { fullName: 'Carlos Rivera' });
+    // Ana y Carlos manejan (ADR 0004); Pedro no tiene licencia.
+    pedro = await createUser(dataSource, UserRole.REQUESTER, { fullName: 'Pedro Sánchez' });
+    anaDriver = await createDriver(dataSource, '2035-12-31', ana);
+    await createDriver(dataSource, '2035-12-31', carlos);
     const driver = await createUser(dataSource, UserRole.DRIVER);
     project = await createProject(dataSource);
     tokens.admin = await loginAs(app, admin);
     tokens.ana = await loginAs(app, ana);
     tokens.carlos = await loginAs(app, carlos);
+    tokens.pedro = await loginAs(app, pedro);
     tokens.driver = await loginAs(app, driver);
   }, 60_000);
 
@@ -72,6 +83,8 @@ describe('Solicitudes (integracion)', () => {
         requester: { id: ana.id, fullName: 'Ana Martínez' },
         project: { id: project.id },
         preferredResource: null,
+        // Sin decir quién conduce, conduce quien pide si tiene licencia (RN-15).
+        proposedDriver: { id: anaDriver.id, fullName: 'Ana Martínez' },
       });
       expect(response.body.code).toMatch(/^SOL-\d{4}-\d{5}$/);
     });
@@ -315,6 +328,39 @@ describe('Solicitudes (integracion)', () => {
         [assignmentId],
       );
       expect(assignment.active).toBe(true);
+    });
+  });
+
+  describe('quien conduce (HU-26, RN-15)', () => {
+    it('propone a otra persona habilitada y la coordinacion lo ve en el aviso', async () => {
+      const jose = await createDriver(dataSource, '2035-12-31');
+      const response = await create('pedro', { ...body(), proposedDriverId: jose.id }).expect(201);
+      expect(response.body.proposedDriver.id).toBe(jose.id);
+
+      const [note] = await dataSource
+        .getRepository(Notification)
+        .findBy({ userId: admin.id, title: `Nueva solicitud ${response.body.code}` });
+      expect(note.body).toMatch(/Conduce Usuario driver/);
+    });
+
+    it('sin licencia propia hay que decir quien conduce (400)', async () => {
+      const response = await create('pedro', body()).expect(400);
+      expect(response.body.message).toMatch(/Indica quién conduce: Pedro Sánchez/);
+    });
+
+    it('rechaza una licencia que vence antes del viaje o un conductor inactivo (400)', async () => {
+      const soon = await createDriver(dataSource, '2026-01-01');
+      const expired = await create('pedro', { ...body(), proposedDriverId: soon.id }).expect(400);
+      expect(expired.body.message).toMatch(/vence el 01\/01\/2026/);
+
+      const off = await createDriver(dataSource, '2035-12-31');
+      await dataSource.query(`UPDATE driver SET is_active = false WHERE id = $1`, [off.id]);
+      await create('pedro', { ...body(), proposedDriverId: off.id }).expect(400);
+    });
+
+    it('la coordinacion pidiendo por otra persona usa la licencia de esa persona', async () => {
+      const onBehalf = await create('admin', { ...body(), requesterId: ana.id }).expect(201);
+      expect(onBehalf.body.proposedDriver.id).toBe(anaDriver.id);
     });
   });
 });

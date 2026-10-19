@@ -1,5 +1,6 @@
 import { MAX_RANGE_DAYS } from '#common/dto/time-range-query.dto.js';
 import { RequestStatus } from '#common/enums/domain.enums.js';
+import { licenseCovers } from '#common/utils/calendar.js';
 
 /** Margen para relojes desfasados: una solicitud "para ahora" no se rechaza por segundos. */
 export const PAST_TOLERANCE_MS = 5 * 60_000;
@@ -43,4 +44,29 @@ export function cancellationError(status: RequestStatus, tripStarted: boolean): 
     case RequestStatus.COMPLETED:
       return 'El viaje ya terminó; no se puede cancelar.';
   }
+}
+
+/** Lo que hace falta de un conductor para proponerlo (RN-15). */
+export interface ProposedDriverCandidate {
+  isActive: boolean;
+  licenseExpiry: string;
+  user: { fullName: string; isActive: boolean };
+}
+
+/**
+ * Valida al conductor propuesto para un viaje que termina en `end` (RN-15, RN-09).
+ * Devuelve el mensaje de error, o null si puede conducir.
+ */
+export function proposedDriverError(
+  driver: ProposedDriverCandidate | null,
+  end: Date,
+): string | null {
+  if (!driver || !driver.isActive || !driver.user.isActive) {
+    return 'La persona que conduce no está habilitada. Elige a alguien con licencia registrada.';
+  }
+  if (!licenseCovers(driver.licenseExpiry, end)) {
+    const [year, month, day] = driver.licenseExpiry.split('-');
+    return `La licencia de ${driver.user.fullName} vence el ${day}/${month}/${year} y no cubre el viaje. Elige a otra persona.`;
+  }
+  return null;
 }

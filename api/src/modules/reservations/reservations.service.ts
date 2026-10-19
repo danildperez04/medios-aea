@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, type Repository, type SelectQueryBuilder } from 'typeorm';
+import { DataSource, type EntityManager, type Repository, type SelectQueryBuilder } from 'typeorm';
 import type { AuthenticatedUser } from '#common/decorators/current-user.decorator.js';
 import { PaginatedResponse } from '#common/dto/pagination.dto.js';
 import {
@@ -19,6 +19,7 @@ import {
 } from '#common/enums/domain.enums.js';
 import { calendarDateIn } from '#common/utils/calendar.js';
 import { AuditLog } from '#modules/audit/entities/audit-log.entity.js';
+import { Driver } from '#modules/drivers/entities/driver.entity.js';
 import { NotificationsService } from '#modules/notifications/notifications.service.js';
 import { Project } from '#modules/projects/entities/project.entity.js';
 import { Resource } from '#modules/resources/entities/resource.entity.js';
@@ -28,7 +29,12 @@ import type { ReservationFiltersDto } from './dto/reservation-filters.dto.js';
 import { ReservationAssignment } from './entities/reservation-assignment.entity.js';
 import { ReservationRequest } from './entities/reservation-request.entity.js';
 import { toReservationView, type ReservationView } from './reservation.view.js';
-import { cancellationError, formatRequestCode, requestWindowError } from './request.rules.js';
+import {
+  cancellationError,
+  formatRequestCode,
+  proposedDriverError,
+  requestWindowError,
+} from './request.rules.js';
 
 const WHEN = new Intl.DateTimeFormat('es-NI', {
   timeZone: 'America/Managua',
@@ -82,6 +88,14 @@ export class ReservationsService {
         }
       }
 
+      const proposedDriver = await this.resolveProposedDriver(
+        manager,
+        dto.proposedDriverId,
+        requester,
+        resourceType,
+        endsAt,
+      );
+
       const [{ nextval }] = await manager.query<{ nextval: string }[]>(
         `SELECT nextval('reservation_request_code_seq')`,
       );
@@ -97,6 +111,7 @@ export class ReservationsService {
           projectId: project.id,
           resourceType,
           preferredResourceId: dto.preferredResourceId ?? null,
+          proposedDriverId: proposedDriver?.id ?? null,
           purpose: dto.purpose,
           destination: dto.destination,
           passengers: dto.passengers,
@@ -109,7 +124,9 @@ export class ReservationsService {
       // La coordinación se entera en la misma transacción (HU-09). Push: HU-19.
       await this.notifications.notifyRole(manager, UserRole.ADMIN, {
         title: `Nueva solicitud ${code}`,
-        body: `${requester.fullName} pide un medio para ${dto.destination} (${WHEN.format(startsAt)} – ${WHEN.format(endsAt)}).`,
+        body:
+          `${requester.fullName} pide un medio para ${dto.destination} (${WHEN.format(startsAt)} – ${WHEN.format(endsAt)}).` +
+          (proposedDriver ? ` Conduce ${proposedDriver.user.fullName}.` : ''),
         data: { kind: 'RESERVATION_CREATED', reservationId: saved.id },
       });
 
@@ -238,7 +255,36 @@ export class ReservationsService {
       .innerJoinAndSelect('request.project', 'project')
       .innerJoinAndSelect('request.requester', 'requester')
       .leftJoinAndSelect('request.preferredResource', 'preferred')
-      .leftJoinAndSelect('preferred.vehicle', 'preferredVehicle');
+      .leftJoinAndSelect('preferred.vehicle', 'preferredVehicle')
+      .leftJoinAndSelect('request.proposedDriver', 'proposedDriver')
+      .leftJoinAndSelect('proposedDriver.user', 'proposedDriverUser');
+  }
+
+  /**
+   * RN-15 (ADR 0004): quien solicita propone quién conduce. Si no lo dice y es un
+   * vehículo, conduce la persona solicitante, que debe tener licencia registrada.
+   */
+  private async resolveProposedDriver(
+    manager: EntityManager,
+    proposedDriverId: string | undefined,
+    requester: User,
+    resourceType: ResourceType,
+    endsAt: Date,
+  ): Promise<Driver | null> {
+    if (!proposedDriverId && resourceType !== ResourceType.VEHICLE) return null;
+
+    const driver = await manager.findOne(Driver, {
+      where: proposedDriverId ? { id: proposedDriverId } : { userId: requester.id },
+      relations: { user: true },
+    });
+    if (!driver && !proposedDriverId) {
+      throw new BadRequestException(
+        `Indica quién conduce: ${requester.fullName} no tiene licencia registrada.`,
+      );
+    }
+    const error = proposedDriverError(driver, endsAt);
+    if (error) throw new BadRequestException(error);
+    return driver;
   }
 
   /** RN-14: solo la coordinación puede pedir en nombre de otra persona. */
