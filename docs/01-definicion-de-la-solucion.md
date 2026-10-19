@@ -76,11 +76,16 @@ las dobles asignaciones.
 
 ## 4. Actores
 
-| Actor                  | Rol en el sistema | Aplicación principal | Necesidad                                                     |
-| ---------------------- | ----------------- | -------------------- | ------------------------------------------------------------- |
-| Técnico/a de proyecto  | `REQUESTER`       | App móvil            | Pedir un vehículo y saber pronto si lo tiene                  |
-| Conductor/a            | `DRIVER`          | App móvil            | Saber qué viajes tiene y registrar salida y llegada           |
-| Coordinación logística | `ADMIN`           | Panel web            | Ver toda la agenda, aprobar sin choques, administrar la flota |
+| Actor                  | Rol en el sistema   | Aplicación principal | Necesidad                                                      |
+| ---------------------- | ------------------- | -------------------- | -------------------------------------------------------------- |
+| Técnico/a de proyecto  | `REQUESTER`         | App móvil            | Pedir un medio, decir quién conduce y saber pronto si lo tiene |
+| Quien conduce          | perfil de conductor | App móvil            | Saber qué viajes tiene y registrar salida y llegada            |
+| Coordinación logística | `ADMIN`             | Panel web            | Ver toda la agenda, aprobar sin choques, administrar la flota  |
+
+Casi siempre conduce el mismo personal técnico; hoy no hay choferes de planta. Por eso
+"conductor" no es un rol sino una habilitación: cualquier usuario con licencia
+registrada puede conducir, y quien solicita decide quién maneja (ADR 0004). El rol
+`DRIVER` queda para choferes de planta, si la fundación los contrata.
 
 ## 5. Alcance del MVP
 
@@ -89,21 +94,21 @@ las dobles asignaciones.
 3. Bloqueos de vehículos (mantenimiento, uso administrativo).
 4. Consulta de disponibilidad por rango de fechas y nº de pasajeros.
 5. Solicitud de vehículo desde la app móvil.
-6. Bandeja de aprobación en web: aprobar asignando vehículo y conductor, rechazar
-   con motivo, reasignar.
+6. Bandeja de aprobación en web: aprobar asignando vehículo (el conductor lo propone
+   quien solicita), rechazar con motivo, reasignar.
 7. **Prevención de choques** de vehículo y de conductor en base de datos.
 8. Calendario de la flota en web.
 9. Notificaciones in-app y push.
-10. Bitácora de viaje del conductor (km y combustible).
+10. Bitácora de viaje de quien conduce (km y combustible).
 11. Reportes de uso por proyecto y por vehículo, exportables a CSV.
 
 ## 6. Flujo principal
 
 ```
-Técnico (móvil)            Sistema                       Coordinación (web)        Conductor (móvil)
+Técnico (móvil)            Sistema                       Coordinación (web)        Quien conduce (móvil)
      │ consulta disponibilidad ─▶ muestra libres
      │ envía solicitud ─────────▶ PENDING ─────────────▶ ve en bandeja
-     │                            valida choques ◀────── aprueba (vehículo+conductor)
+     │ (con quién conduce)        valida choques ◀────── aprueba (vehículo)
      │ ◀── push "aprobada" ────── APPROVED ───────────────────────────────────────▶ ve viaje
      │                                                                              registra salida
      │                                                                              registra llegada

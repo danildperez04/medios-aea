@@ -8,6 +8,7 @@ contexto y las alternativas descartadas, para que dentro de un año se entienda 
 | [0001](0001-anti-choque-en-la-base-de-datos.md)      | La regla anti-choque vive en PostgreSQL      | Aceptada      |
 | [0002](0002-monorepo-e-imagenes-portables.md)        | Monorepo pnpm e imágenes Docker portables    | Aceptada      |
 | [0003](0003-almacenamiento-del-token-en-el-panel.md) | Dónde guarda el panel web el token de sesión | **Propuesta** |
+| [0004](0004-el-personal-tecnico-conduce.md)          | El personal técnico conduce                  | Aceptada      |
 
 ## Cómo escribir uno
 

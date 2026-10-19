@@ -5,13 +5,13 @@
 
 ## Resumen
 
-| Bloque                                                        | Estado                     | Versión           |
-| ------------------------------------------------------------- | -------------------------- | ----------------- |
-| Sprint 0 — Documentación y andamiaje                          | TERMINADO                  | `v0.1.0`          |
-| Sprint 1 — Acceso y catálogos base                            | TERMINADO                  | `v0.2.0`          |
-| Sprint 2 — Flota y disponibilidad (+ despliegue, DTO, diseño) | TERMINADO                  | `v0.3.0`          |
-| Sprint 3 — Solicitudes y aprobación                           | EN CURSO (HU-09 terminada) | `0.4.0` al cerrar |
-| Revisión de DevOps, calidad, seguridad y proceso              | EN REVISIÓN (5 PR)         | —                 |
+| Bloque                                                        | Estado                   | Versión           |
+| ------------------------------------------------------------- | ------------------------ | ----------------- |
+| Sprint 0 — Documentación y andamiaje                          | TERMINADO                | `v0.1.0`          |
+| Sprint 1 — Acceso y catálogos base                            | TERMINADO                | `v0.2.0`          |
+| Sprint 2 — Flota y disponibilidad (+ despliegue, DTO, diseño) | TERMINADO                | `v0.3.0`          |
+| Sprint 3 — Solicitudes y aprobación                           | EN CURSO (HU-09 y HU-10) | `0.4.0` al cerrar |
+| Revisión de DevOps, calidad, seguridad y proceso              | TERMINADO (PR #8–#13)    | —                 |
 
 ---
 
@@ -142,11 +142,12 @@ días mal ubicados en la agenda, y la petición fallida de la fuente Bogart.
 
 Primera historia con el flujo de una rama por historia (`docs/05` §3).
 
-| Historia                            | Rama                           | Estado            |
-| ----------------------------------- | ------------------------------ | ----------------- |
-| HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request` | TERMINADO (PR #7) |
-| HU-10 Cancelar una solicitud        | `feature/hu-10-cancel-request` | Lista para PR     |
-| HU-11 a HU-15                       | —                              | Pendientes        |
+| Historia                            | Rama                           | Estado                    |
+| ----------------------------------- | ------------------------------ | ------------------------- |
+| HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request` | TERMINADO (PR #7)         |
+| HU-10 Cancelar una solicitud        | `feature/hu-10-cancel-request` | TERMINADO (PR #49)        |
+| HU-26 Indicar quién conduce         | —                              | Pendiente; antes de HU-11 |
+| HU-11 a HU-15                       | —                              | Pendientes                |
 
 HU-09: `POST /reservations` (queda PENDING, código `SOL-AAAA-NNNNN`, aviso interno a la
 coordinación, RN-06 y RN-14), `GET /reservations` (cada técnico solo las suyas),
@@ -160,7 +161,7 @@ pidió y al conductor. Botón de cancelar con confirmación en la bandeja web.
 Verificación: 122 unitarias, 77 e2e y 33 web en verde; revisada en el navegador a 1366
 y 390 px.
 
-## Revisión de DevOps, calidad, seguridad y proceso · EN REVISIÓN
+## Revisión de DevOps, calidad, seguridad y proceso · TERMINADO
 
 Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`:
 
@@ -174,6 +175,9 @@ Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`
 | 5   | `chore/github-setup`       | Script de configuración de GitHub (etiquetas, milestones, issues, protección de ramas, tablero)                                                                                                                             |
 
 ## Siguiente en el Sprint 3
+
+HU-26 (indicar quién conduce, ADR 0004) va antes de HU-11: en la fundación casi
+siempre conduce el mismo personal técnico.
 
 HU-09 a HU-15: crear y cancelar solicitudes, aprobar asignando medio y conductor con la
 disponibilidad de este sprint (mismo candado que los bloqueos), rechazo con motivo,

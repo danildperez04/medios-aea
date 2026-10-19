@@ -114,6 +114,7 @@ user ─1:n─ notification · user_device · audit_log
 | `project_id`            | uuid           | not null, FK → `project.id`             |
 | `resource_type`         | resource_type  | not null, default `VEHICLE`             |
 | `preferred_resource_id` | uuid           | FK → `resource.id`                      |
+| `proposed_driver_id`    | uuid           | FK → `driver.id` (quién conduce)        |
 | `purpose`               | varchar(300)   | not null                                |
 | `destination`           | varchar(200)   | not null                                |
 | `passengers`            | smallint       | not null, check > 0                     |
