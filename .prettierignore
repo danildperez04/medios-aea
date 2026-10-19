@@ -1,2 +1,5 @@
 # Lo genera pnpm con su propio formato; Prettier lo reescribiría en cada PR de Dependabot.
 pnpm-lock.yaml
+
+# Lo escribe release-please con su propio formato.
+CHANGELOG.md
