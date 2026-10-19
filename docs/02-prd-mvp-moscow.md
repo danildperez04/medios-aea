@@ -21,7 +21,7 @@
 | RF-09 | Consultar disponibilidad por rango y nº de pasajeros                   | Must        | S2     |
 | RF-10 | Crear solicitud de vehículo indicando quién conduce                    | Must        | S3     |
 | RF-11 | Cancelar una solicitud propia (pendiente o aprobada, antes de iniciar) | Must        | S3     |
-| RF-12 | Aprobar una solicitud asignando vehículo, con el conductor propuesto   | Must        | S3     |
+| RF-12 | Aprobar asignando vehículo y conductor (por defecto, el propuesto)     | Must        | S3     |
 | RF-13 | Rechazar una solicitud con motivo                                      | Must        | S3     |
 | RF-14 | Impedir asignaciones solapadas de vehículo o conductor                 | Must        | S3     |
 | RF-15 | Reasignar vehículo/conductor de una solicitud aprobada                 | Should      | S3     |
@@ -57,7 +57,7 @@
 | RN-12 | Una solicitud aprobada pasa a `COMPLETED` cuando el conductor registra la llegada.                                                                                                  |
 | RN-13 | Solo el solicitante (o un ADMIN) puede cancelar una solicitud; no se cancela un viaje ya iniciado.                                                                                  |
 | RN-14 | El ADMIN puede crear solicitudes en nombre de otra persona (casos urgentes).                                                                                                        |
-| RN-15 | Quien solicita propone al conductor: él mismo u otra persona con perfil de conductor y licencia vigente a la fecha del viaje (ADR 0004).                                            |
+| RN-15 | Quien solicita propone al conductor (él mismo u otra persona habilitada, con licencia vigente a la fecha); la coordinación puede cambiarlo al aprobar y se avisa (ADR 0004).        |
 | RN-16 | La bitácora del viaje la registra la persona asignada como conductor, tenga el rol que tenga.                                                                                       |
 
 ## 3. Estados de la solicitud

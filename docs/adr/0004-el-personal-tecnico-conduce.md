@@ -19,7 +19,8 @@ Con el modelo actual un técnico no puede ser conductor:
 - aprobar "sin conductor" (`driver_id` nulo) no sirve: nadie registraría la bitácora
   (RF-22, RF-23) ni la solicitud pasaría a `COMPLETED` (RN-12).
 
-Además, en la práctica **quien pide decide quién maneja** y la coordinación aprueba.
+Además, en la práctica **quien pide propone quién maneja** y la coordinación aprueba,
+con la última palabra sobre el vehículo y el conductor.
 
 ## Opciones consideradas
 
@@ -43,11 +44,12 @@ Se elige la **opción 2**:
 - **Quien solicita propone al conductor** (RN-15): él mismo (por defecto, si tiene
   perfil) u otra persona habilitada. La licencia debe cubrir la fecha del viaje (RN-09).
   La solicitud guarda ese conductor en `reservation_request.proposed_driver_id`.
-- **La coordinación aprueba con ese conductor** (HU-11): elige el vehículo y valida en
-  la misma transacción que el conductor no tenga otro viaje (RN-02) ni la licencia
-  vencida. Si el conductor propuesto no puede, la API responde 409 y la coordinación
-  rechaza con motivo (HU-12). Cambiar al conductor de una solicitud ya aprobada es una
-  reasignación (HU-13) y se avisa a quien pidió y a ambos conductores.
+- **La coordinación aprueba y puede cambiar al conductor** (HU-11): elige el vehículo
+  y, por defecto, asigna al conductor propuesto; si no puede (otro viaje, licencia
+  vencida) o la coordinación lo decide, asigna a otra persona habilitada. En la misma
+  transacción valida que el conductor asignado no tenga otro viaje (RN-02) ni la
+  licencia vencida (RN-09). Si lo cambia, se avisa a quien pidió y a ambos
+  conductores. Cambiarlo después de aprobada es una reasignación (HU-13).
 - **La bitácora la lleva quien conduce** (RN-16): "Mis viajes" y el registro de salida
   y llegada dependen de ser el conductor asignado, no del rol.
 
@@ -62,6 +64,8 @@ Se elige la **opción 2**:
   nombre y vencimiento, sin número de licencia, accesible a `REQUESTER`.
 - Una solicitud pendiente sigue sin reservar al conductor (RN-07): el formulario puede
   advertir que ya tiene otro viaje, pero solo la aprobación lo ocupa.
+- La asignación guarda al conductor que conduce de verdad (`driver_id`); la solicitud
+  conserva al propuesto, así se sabe si la coordinación lo cambió.
 - Los endpoints de viajes (HU-20, HU-21) admiten `REQUESTER`, `DRIVER` y `ADMIN` y
   verifican que la asignación sea del usuario.
 - Nueva historia **HU-26** (Sprint 3) antes de HU-11. HU-06 ya terminada se ajusta en

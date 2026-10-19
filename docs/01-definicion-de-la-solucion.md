@@ -84,7 +84,8 @@ las dobles asignaciones.
 
 Casi siempre conduce el mismo personal técnico; hoy no hay choferes de planta. Por eso
 "conductor" no es un rol sino una habilitación: cualquier usuario con licencia
-registrada puede conducir, y quien solicita decide quién maneja (ADR 0004). El rol
+registrada puede conducir; quien solicita propone quién maneja y la coordinación puede
+cambiarlo al aprobar (ADR 0004). El rol
 `DRIVER` queda para choferes de planta, si la fundación los contrata.
 
 ## 5. Alcance del MVP
@@ -94,8 +95,8 @@ registrada puede conducir, y quien solicita decide quién maneja (ADR 0004). El 
 3. Bloqueos de vehículos (mantenimiento, uso administrativo).
 4. Consulta de disponibilidad por rango de fechas y nº de pasajeros.
 5. Solicitud de vehículo desde la app móvil.
-6. Bandeja de aprobación en web: aprobar asignando vehículo (el conductor lo propone
-   quien solicita), rechazar con motivo, reasignar.
+6. Bandeja de aprobación en web: aprobar asignando vehículo y conductor (por defecto
+   el que propuso quien solicita), rechazar con motivo, reasignar.
 7. **Prevención de choques** de vehículo y de conductor en base de datos.
 8. Calendario de la flota en web.
 9. Notificaciones in-app y push.
@@ -108,7 +109,7 @@ registrada puede conducir, y quien solicita decide quién maneja (ADR 0004). El 
 Técnico (móvil)            Sistema                       Coordinación (web)        Quien conduce (móvil)
      │ consulta disponibilidad ─▶ muestra libres
      │ envía solicitud ─────────▶ PENDING ─────────────▶ ve en bandeja
-     │ (con quién conduce)        valida choques ◀────── aprueba (vehículo)
+     │ (con quién conduce)        valida choques ◀────── aprueba (vehículo+conductor)
      │ ◀── push "aprobada" ────── APPROVED ───────────────────────────────────────▶ ve viaje
      │                                                                              registra salida
      │                                                                              registra llegada
