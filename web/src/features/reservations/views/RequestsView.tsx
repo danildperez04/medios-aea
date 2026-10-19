@@ -104,6 +104,18 @@ export function RequestsView() {
     },
     { key: 'requester', header: 'Solicita', render: (r) => r.requester.fullName },
     {
+      key: 'driver',
+      header: 'Conduce',
+      render: (r) =>
+        r.proposedDriver ? (
+          r.proposedDriver.fullName
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            Sin indicar
+          </Typography>
+        ),
+    },
+    {
       key: 'project',
       header: 'Proyecto',
       render: (r) => (

@@ -16,6 +16,8 @@ export interface Reservation {
   project: { id: string; code: string; name: string };
   requester: { id: string; fullName: string };
   preferredResource: { id: string; name: string; identifier: string } | null;
+  /** Quién propone quien solicita que conduzca (RN-15). */
+  proposedDriver: { id: string; fullName: string } | null;
   rejectionReason: string | null;
   decidedAt: string | null;
   createdAt: string;
