@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Inject, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '#common/decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from '#common/decorators/current-user.decorator.js';
@@ -47,5 +58,19 @@ export class ReservationsController {
     @CurrentUser() actor: AuthenticatedUser,
   ): Promise<ReservationView> {
     return this.service.findOneOrFail(id, actor);
+  }
+
+  @Post(':id/cancel')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Cancelar una solicitud pendiente o aprobada; libera el medio y el conductor',
+  })
+  @ApiResponse({ status: 404, description: 'No existe o no es tuya' })
+  @ApiResponse({ status: 409, description: 'Ya está cerrada o el viaje ya inició' })
+  cancel(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentUser() actor: AuthenticatedUser,
+  ): Promise<ReservationView> {
+    return this.service.cancel(id, actor);
   }
 }
