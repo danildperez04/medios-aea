@@ -65,5 +65,7 @@ Decisiones abiertas: el almacenamiento del token en el panel web (ADR 0003).
 - `JWT_SECRET`: `openssl rand -hex 32`. `DATABASE_PASSWORD`: `openssl rand -base64 24`.
 - Si un secreto se filtra: **rotarlo primero** (un secreto en el historial de git sigue
   siendo público aunque se borre el archivo), luego limpiar el historial si hace falta.
+- `RELEASE_PLEASE_TOKEN` (secreto de Actions): token de alcance mínimo, solo este
+  repositorio y solo Contents / Pull requests / Issues; con vencimiento.
 - El seeder carga usuarios de ejemplo con una contraseña pública y se niega a correr
   con `NODE_ENV=production`.
