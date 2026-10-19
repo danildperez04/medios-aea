@@ -61,6 +61,7 @@ El alcance es obligatorio:
 | `trips`, `notifications`, `reports`, `audit`       | Resto del dominio                     |
 | `api`, `web`, `mobile`                             | Transversal a una aplicación          |
 | `db`, `deps`, `docker`, `docs`, `cicd`             | Infraestructura                       |
+| `deps-dev`                                         | Dependabot (dependencias de dev.)     |
 
 Ejemplos:
 
