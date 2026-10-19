@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/app/services/api';
 import type { RequestStatus } from '@/design-system/ui';
 import type { Paginated } from '@/shared/types/api';
@@ -54,5 +54,19 @@ export function usePendingCount(enabled = true) {
       ).data.total,
     refetchInterval: 60_000,
     enabled,
+  });
+}
+
+/** Cancela una solicitud pendiente o aprobada (HU-10); si estaba aprobada, libera el medio. */
+export function useCancelReservation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) =>
+      (await api.post<Reservation>(`/reservations/${id}/cancel`)).data,
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: KEY }),
+        queryClient.invalidateQueries({ queryKey: ['agenda'] }),
+      ]),
   });
 }

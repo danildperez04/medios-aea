@@ -1,8 +1,9 @@
-import { Box, MenuItem, Stack, Typography } from '@mui/material';
-import { ClipboardList } from 'lucide-react';
+import { Box, IconButton, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
+import { Ban, ClipboardList } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '@/app/services/api';
 import {
+  ConfirmDialog,
   DataTable,
   EmptyState,
   FormError,
@@ -16,9 +17,16 @@ import {
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { mono } from '@/design-system/theme/theme';
 import { formatRange } from '@/shared/lib/format';
-import { useReservations, type Reservation } from '../services/reservations.service';
+import {
+  useCancelReservation,
+  useReservations,
+  type Reservation,
+} from '../services/reservations.service';
 
 type StatusFilter = RequestStatus | 'ALL';
+
+/** RN-13: solo pendientes y aprobadas; la API rechaza además un viaje ya iniciado. */
+const CANCELLABLE: RequestStatus[] = ['PENDING', 'APPROVED'];
 
 const STATUS_OPTIONS: [StatusFilter, string][] = [
   ['PENDING', 'Por decidir'],
@@ -30,8 +38,8 @@ const STATUS_OPTIONS: [StatusFilter, string][] = [
 ];
 
 /**
- * Bandeja de solicitudes (HU-09). Por ahora de consulta: aprobar y rechazar
- * llegan con HU-11 y HU-12.
+ * Bandeja de solicitudes (HU-09). La coordinación puede cancelar una pendiente o
+ * aprobada (HU-10); aprobar y rechazar llegan con HU-11 y HU-12.
  */
 export function RequestsView() {
   const [page, setPage] = useState(1);
@@ -39,6 +47,8 @@ export function RequestsView() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusFilter>('PENDING');
   const debouncedSearch = useDebouncedValue(search);
+  const [cancelling, setCancelling] = useState<Reservation | null>(null);
+  const cancel = useCancelReservation();
 
   const reservations = useReservations({
     page,
@@ -112,7 +122,37 @@ export function RequestsView() {
         ),
     },
     { key: 'status', header: 'Estado', render: (r) => <StatusBadge status={r.status} /> },
+    {
+      key: 'actions',
+      header: '',
+      align: 'right',
+      render: (r) =>
+        CANCELLABLE.includes(r.status) ? (
+          <Tooltip title="Cancelar solicitud">
+            <IconButton
+              size="small"
+              aria-label={`Cancelar la solicitud ${r.code}`}
+              onClick={() => {
+                cancel.reset();
+                setCancelling(r);
+              }}
+            >
+              <Ban size={18} />
+            </IconButton>
+          </Tooltip>
+        ) : null,
+    },
   ];
+
+  const confirmCancel = async () => {
+    if (!cancelling) return;
+    try {
+      await cancel.mutateAsync(cancelling.id);
+      setCancelling(null);
+    } catch {
+      // Se muestra en el diálogo.
+    }
+  };
 
   const pendingView = status === 'PENDING';
 
@@ -190,6 +230,22 @@ export function RequestsView() {
             setPage(1);
           },
         }}
+      />
+
+      <ConfirmDialog
+        open={cancelling !== null}
+        title="Cancelar solicitud"
+        message={
+          cancelling?.status === 'APPROVED'
+            ? `${cancelling.code} quedará cancelada y el medio y el conductor asignados quedarán libres en ese horario. Se avisará a ${cancelling.requester.fullName}.`
+            : `${cancelling?.code ?? ''} quedará cancelada y saldrá de la lista por decidir. Se avisará a ${cancelling?.requester.fullName ?? ''}.`
+        }
+        confirmLabel="Cancelar solicitud"
+        dismissLabel="Volver"
+        loading={cancel.isPending}
+        error={cancel.error instanceof ApiError ? cancel.error.message : null}
+        onConfirm={confirmCancel}
+        onClose={() => setCancelling(null)}
       />
     </>
   );
