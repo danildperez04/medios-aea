@@ -1,6 +1,6 @@
 {
   "name": "medios-aea",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Gestión de medios (vehículos) de la Fundación Ayuda en Acción: solicitudes, aprobación sin choques de horario, bitácora de viajes y reportes",
   "private": true,
   "license": "UNLICENSED",
