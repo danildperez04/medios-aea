@@ -2,6 +2,7 @@ import { Box, IconButton, MenuItem, Stack, Tooltip, Typography } from '@mui/mate
 import { Ban, ClipboardList } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '@/app/services/api';
+import { useAuthStore } from '@/app/stores/auth.store';
 import {
   ConfirmDialog,
   DataTable,
@@ -37,6 +38,17 @@ const STATUS_OPTIONS: [StatusFilter, string][] = [
   ['ALL', 'Todas'],
 ];
 
+/** Qué pasa al cancelar; la API avisa a la persona solicitante si no es quien cancela. */
+function cancelMessage(reservation: Reservation, currentUserId: string | undefined): string {
+  const effect =
+    reservation.status === 'APPROVED'
+      ? `${reservation.code} quedará cancelada y el medio y el conductor asignados quedarán libres en ese horario.`
+      : `${reservation.code} quedará cancelada y saldrá de la lista por decidir.`;
+  return reservation.requester.id === currentUserId
+    ? effect
+    : `${effect} Se avisará a ${reservation.requester.fullName}.`;
+}
+
 /**
  * Bandeja de solicitudes (HU-09). La coordinación puede cancelar una pendiente o
  * aprobada (HU-10); aprobar y rechazar llegan con HU-11 y HU-12.
@@ -49,6 +61,7 @@ export function RequestsView() {
   const debouncedSearch = useDebouncedValue(search);
   const [cancelling, setCancelling] = useState<Reservation | null>(null);
   const cancel = useCancelReservation();
+  const currentUserId = useAuthStore((state) => state.user?.id);
 
   const reservations = useReservations({
     page,
@@ -235,11 +248,7 @@ export function RequestsView() {
       <ConfirmDialog
         open={cancelling !== null}
         title="Cancelar solicitud"
-        message={
-          cancelling?.status === 'APPROVED'
-            ? `${cancelling.code} quedará cancelada y el medio y el conductor asignados quedarán libres en ese horario. Se avisará a ${cancelling.requester.fullName}.`
-            : `${cancelling?.code ?? ''} quedará cancelada y saldrá de la lista por decidir. Se avisará a ${cancelling?.requester.fullName ?? ''}.`
-        }
+        message={cancelling ? cancelMessage(cancelling, currentUserId) : ''}
         confirmLabel="Cancelar solicitud"
         dismissLabel="Volver"
         loading={cancel.isPending}

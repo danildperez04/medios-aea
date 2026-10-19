@@ -120,7 +120,9 @@ describe('RequestsView', () => {
 
     await user.click(await screen.findByLabelText('Cancelar la solicitud SOL-2026-00001'));
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText(/quedarán libres/)).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/quedarán libres.*Se avisará a Ana Martínez/),
+    ).toBeInTheDocument();
     expect(post).not.toHaveBeenCalled();
 
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar solicitud' }));
