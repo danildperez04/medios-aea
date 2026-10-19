@@ -38,15 +38,16 @@ referencia de producto: qué se construye y con qué criterios.
 
 ## Sprint 3 — Solicitudes y aprobación (núcleo)
 
-| HU    | RF           | Historia                                                              | Criterios de aceptación                                                                                            | Estado    |
-| ----- | ------------ | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------- |
-| HU-09 | RF-10        | Como técnico, quiero solicitar un vehículo para una actividad         | Proyecto activo, destino, propósito, pasajeros, rango futuro válido; queda `PENDING`; notifica a ADMIN             | TERMINADO |
-| HU-10 | RF-11        | Como técnico, quiero cancelar mi solicitud                            | Solo el dueño o ADMIN; no si el viaje inició; libera la asignación                                                 | EN CURSO  |
-| HU-11 | RF-12, RF-14 | Como ADMIN, quiero aprobar asignando vehículo y conductor sin choques | Sugiere vehículos/conductores libres; dos aprobaciones concurrentes del mismo vehículo/horario → una OK y otra 409 | PENDIENTE |
-| HU-12 | RF-13        | Como ADMIN, quiero rechazar con motivo                                | Motivo obligatorio; notifica al solicitante                                                                        | PENDIENTE |
-| HU-13 | RF-15        | Como ADMIN, quiero reasignar vehículo o conductor                     | Desactiva la asignación previa y crea otra en una transacción; notifica                                            | PENDIENTE |
-| HU-14 | RF-16        | Como ADMIN, quiero ver el calendario de la flota                      | Filas = vehículos; vista día/semana; colores por estado; bloqueos visibles                                         | PENDIENTE |
-| HU-15 | RF-17        | Como ADMIN, quiero saber quién aprobó o rechazó cada solicitud        | Registro en `audit_log` con usuario, acción y fecha                                                                | PENDIENTE |
+| HU    | RF           | Historia                                                              | Criterios de aceptación                                                                                         | Estado    |
+| ----- | ------------ | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | --------- |
+| HU-09 | RF-10        | Como técnico, quiero solicitar un vehículo para una actividad         | Proyecto activo, destino, propósito, pasajeros, rango futuro válido; queda `PENDING`; notifica a ADMIN          | TERMINADO |
+| HU-10 | RF-11        | Como técnico, quiero cancelar mi solicitud                            | Solo el dueño o ADMIN; no si el viaje inició; libera la asignación                                              | TERMINADO |
+| HU-11 | RF-12, RF-14 | Como ADMIN, quiero aprobar asignando vehículo y conductor sin choques | Conductor propuesto por defecto (HU-26), cambiable con aviso; dos aprobaciones concurrentes → una OK y otra 409 | PENDIENTE |
+| HU-12 | RF-13        | Como ADMIN, quiero rechazar con motivo                                | Motivo obligatorio; notifica al solicitante                                                                     | PENDIENTE |
+| HU-13 | RF-15        | Como ADMIN, quiero reasignar vehículo o conductor                     | Desactiva la asignación previa y crea otra en una transacción; notifica                                         | PENDIENTE |
+| HU-14 | RF-16        | Como ADMIN, quiero ver el calendario de la flota                      | Filas = vehículos; vista día/semana; colores por estado; bloqueos visibles                                      | PENDIENTE |
+| HU-15 | RF-17        | Como ADMIN, quiero saber quién aprobó o rechazó cada solicitud        | Registro en `audit_log` con usuario, acción y fecha                                                             | PENDIENTE |
+| HU-26 | RF-07, RF-10 | Como técnico, quiero indicar quién conduce al solicitar               | Perfil de conductor para cualquier usuario; "yo" por defecto; licencia vigente a la fecha (RN-15)               | PENDIENTE |
 
 ## Sprint 4 — App móvil del solicitante
 
@@ -61,7 +62,7 @@ referencia de producto: qué se construye y con qué criterios.
 
 | HU    | RF           | Historia                                                   | Criterios de aceptación                                                                | Estado    |
 | ----- | ------------ | ---------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------- |
-| HU-20 | RF-21        | Como conductor, quiero ver mis viajes de hoy y próximos    | Solo asignaciones activas propias                                                      | PENDIENTE |
+| HU-20 | RF-21        | Como conductor, quiero ver mis viajes de hoy y próximos    | Solo asignaciones activas propias, tenga el rol que tenga (RN-16)                      | PENDIENTE |
 | HU-21 | RF-22, RF-23 | Como conductor, quiero registrar salida y llegada          | km llegada ≥ km salida; actualiza km del vehículo; solicitud → `COMPLETED`             | PENDIENTE |
 | HU-22 | RF-24, RF-25 | Como ADMIN, quiero reportes de uso por proyecto y vehículo | Filtro por rango; km, horas, viajes, cancelaciones; exporta CSV                        | PENDIENTE |
 | HU-23 | RF-26        | Como ADMIN, quiero un dashboard                            | Pendientes, viajes de hoy, vehículos en mantenimiento, licencias que vencen en 30 días | PENDIENTE |

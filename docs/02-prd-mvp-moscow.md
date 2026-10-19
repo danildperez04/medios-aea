@@ -16,12 +16,12 @@
 | RF-04 | CRUD de proyectos (ADMIN)                                              | Must        | S1     |
 | RF-05 | Cambiar la propia contraseña                                           | Should      | S1     |
 | RF-06 | CRUD de vehículos como recurso tipo `VEHICLE` (ADMIN)                  | Must        | S2     |
-| RF-07 | CRUD de conductores con licencia y vencimiento (ADMIN)                 | Must        | S2     |
+| RF-07 | Perfil de conductor (licencia) para cualquier usuario (ADMIN)          | Must        | S2     |
 | RF-08 | Registrar bloqueos de un vehículo (mantenimiento, uso administrativo)  | Must        | S2     |
 | RF-09 | Consultar disponibilidad por rango y nº de pasajeros                   | Must        | S2     |
-| RF-10 | Crear solicitud de vehículo                                            | Must        | S3     |
+| RF-10 | Crear solicitud de vehículo indicando quién conduce                    | Must        | S3     |
 | RF-11 | Cancelar una solicitud propia (pendiente o aprobada, antes de iniciar) | Must        | S3     |
-| RF-12 | Aprobar una solicitud asignando vehículo y conductor                   | Must        | S3     |
+| RF-12 | Aprobar asignando vehículo y conductor (por defecto, el propuesto)     | Must        | S3     |
 | RF-13 | Rechazar una solicitud con motivo                                      | Must        | S3     |
 | RF-14 | Impedir asignaciones solapadas de vehículo o conductor                 | Must        | S3     |
 | RF-15 | Reasignar vehículo/conductor de una solicitud aprobada                 | Should      | S3     |
@@ -30,9 +30,9 @@
 | RF-18 | App móvil: login, solicitar, ver mis solicitudes, cancelar             | Must        | S4     |
 | RF-19 | Notificaciones in-app                                                  | Must        | S4     |
 | RF-20 | Notificaciones push (Expo)                                             | Should      | S4     |
-| RF-21 | Conductor: ver mis viajes asignados                                    | Must        | S5     |
-| RF-22 | Conductor: registrar salida (km, combustible)                          | Must        | S5     |
-| RF-23 | Conductor: registrar llegada (km, combustible, observaciones)          | Must        | S5     |
+| RF-21 | Quien conduce: ver mis viajes asignados                                | Must        | S5     |
+| RF-22 | Quien conduce: registrar salida (km, combustible)                      | Must        | S5     |
+| RF-23 | Quien conduce: registrar llegada (km, combustible, observaciones)      | Must        | S5     |
 | RF-24 | Reporte de uso por proyecto y por vehículo                             | Should      | S5     |
 | RF-25 | Exportar reportes a CSV                                                | Could       | S5     |
 | RF-26 | Dashboard con pendientes, viajes de hoy, licencias por vencer          | Should      | S5     |
@@ -57,6 +57,8 @@
 | RN-12 | Una solicitud aprobada pasa a `COMPLETED` cuando el conductor registra la llegada.                                                                                                  |
 | RN-13 | Solo el solicitante (o un ADMIN) puede cancelar una solicitud; no se cancela un viaje ya iniciado.                                                                                  |
 | RN-14 | El ADMIN puede crear solicitudes en nombre de otra persona (casos urgentes).                                                                                                        |
+| RN-15 | Quien solicita propone al conductor (él mismo u otra persona habilitada, con licencia vigente a la fecha); la coordinación puede cambiarlo al aprobar y se avisa (ADR 0004).        |
+| RN-16 | La bitácora del viaje la registra la persona asignada como conductor, tenga el rol que tenga.                                                                                       |
 
 ## 3. Estados de la solicitud
 
