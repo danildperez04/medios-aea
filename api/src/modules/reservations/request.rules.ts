@@ -1,4 +1,5 @@
 import { MAX_RANGE_DAYS } from '#common/dto/time-range-query.dto.js';
+import { RequestStatus } from '#common/enums/domain.enums.js';
 
 /** Margen para relojes desfasados: una solicitud "para ahora" no se rechaza por segundos. */
 export const PAST_TOLERANCE_MS = 5 * 60_000;
@@ -21,4 +22,25 @@ export function requestWindowError(start: Date, end: Date, now: Date = new Date(
 /** `SOL-2026-00042`: año de la solicitud y correlativo global. */
 export function formatRequestCode(year: number, sequence: number): string {
   return `SOL-${year}-${String(sequence).padStart(5, '0')}`;
+}
+
+/**
+ * Valida que una solicitud se pueda cancelar (RF-11, RN-13). Devuelve el mensaje
+ * de error, o null si se puede. Solo pendientes y aprobadas cuyo viaje no inició.
+ */
+export function cancellationError(status: RequestStatus, tripStarted: boolean): string | null {
+  switch (status) {
+    case RequestStatus.PENDING:
+      return null;
+    case RequestStatus.APPROVED:
+      return tripStarted
+        ? 'El viaje ya inició; no se puede cancelar. Pide al conductor que registre la llegada.'
+        : null;
+    case RequestStatus.CANCELLED:
+      return 'La solicitud ya estaba cancelada.';
+    case RequestStatus.REJECTED:
+      return 'La solicitud fue rechazada; no hay nada que cancelar.';
+    case RequestStatus.COMPLETED:
+      return 'El viaje ya terminó; no se puede cancelar.';
+  }
 }

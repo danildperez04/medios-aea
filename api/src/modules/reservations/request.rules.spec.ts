@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { formatRequestCode, requestWindowError } from './request.rules.js';
+import { RequestStatus } from '#common/enums/domain.enums.js';
+import { cancellationError, formatRequestCode, requestWindowError } from './request.rules.js';
 
 /** Reglas del horario de una solicitud (RN-06). */
 describe('requestWindowError', () => {
@@ -43,5 +44,23 @@ describe('requestWindowError', () => {
 describe('formatRequestCode', () => {
   it('rellena el correlativo a cinco digitos', () => {
     expect(formatRequestCode(2026, 42)).toBe('SOL-2026-00042');
+  });
+});
+
+/** Qué solicitudes se pueden cancelar (RF-11, RN-13). */
+describe('cancellationError', () => {
+  it('permite cancelar una pendiente', () => {
+    expect(cancellationError(RequestStatus.PENDING, false)).toBeNull();
+  });
+
+  it('permite cancelar una aprobada mientras el viaje no inicie', () => {
+    expect(cancellationError(RequestStatus.APPROVED, false)).toBeNull();
+    expect(cancellationError(RequestStatus.APPROVED, true)).toMatch(/ya inició/);
+  });
+
+  it('no cancela una solicitud cerrada', () => {
+    expect(cancellationError(RequestStatus.CANCELLED, false)).toMatch(/ya estaba cancelada/);
+    expect(cancellationError(RequestStatus.REJECTED, false)).toMatch(/rechazada/);
+    expect(cancellationError(RequestStatus.COMPLETED, false)).toMatch(/terminó/);
   });
 });

@@ -32,7 +32,10 @@ aún sin merge) · `VERIFICADO` (validado en revisión de sprint / UAT).
 | RN-06                   | HU-09 | `request.rules.ts` (`requestWindowError`) + `ck_request_dates`                                         | `request.rules.spec.ts` · `reservations.e2e-spec.ts`                                       | IMPLEMENTADO      |
 | RN-07                   | HU-09 | La solicitud PENDING no crea asignación; la agenda la dibuja con trama                                 | `reservations.e2e-spec.ts` (agenda y disponibilidad)                                       | IMPLEMENTADO      |
 | RN-14                   | HU-09 | `ReservationsService.resolveRequester`                                                                 | `reservations.e2e-spec.ts`                                                                 | IMPLEMENTADO      |
-| RF-11…15, 17…25, 27, 28 | —     | —                                                                                                      | —                                                                                          | PENDIENTE         |
+| RF-11                   | HU-10 | `POST /reservations/:id/cancel` · botón en la bandeja                                                  | `request.rules.spec.ts` · `reservations.e2e-spec.ts` · `RequestsView.test.tsx`             | IMPLEMENTADO      |
+| RN-10                   | HU-10 | `ReservationsService.cancel` (`active = false` + aviso)                                                | `reservations.e2e-spec.ts` (PT-10)                                                         | IMPLEMENTADO      |
+| RN-13                   | HU-10 | `request.rules.ts` (`cancellationError`)                                                               | `request.rules.spec.ts` · `reservations.e2e-spec.ts`                                       | IMPLEMENTADO      |
+| RF-12…15, 17…25, 27, 28 | —     | —                                                                                                      | —                                                                                          | PENDIENTE         |
 
 ## Decisiones tomadas en el Sprint 1
 
@@ -65,3 +68,7 @@ aún sin merge) · `VERIFICADO` (validado en revisión de sprint / UAT).
 | Se tolera un inicio hasta 5 min en el pasado                         | Pedir "para ahora" no falla por desfase de reloj del teléfono                 |
 | Duración máxima de una solicitud: 31 días                            | Igual al rango máximo de agenda y disponibilidad                              |
 | La notificación a la coordinación se escribe en la misma transacción | Si la solicitud no se guarda, no queda un aviso huérfano                      |
+| Cancelar bloquea la fila de la solicitud con FOR UPDATE              | Aprobar o iniciar el viaje a la vez espera; no queda un estado cruzado        |
+| Cancelar una solicitud cerrada o un viaje iniciado responde 409      | Es un choque con el estado actual, no un dato mal escrito                     |
+| Una aprobada se puede cancelar aunque ya pasó su hora de inicio      | RN-13 solo prohíbe cancelar un viaje que el conductor ya inició               |
+| Quien cancela no recibe aviso; sí la otra parte y el conductor       | El aviso es para quien no sabe del cambio                                     |

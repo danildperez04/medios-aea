@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -10,21 +11,24 @@ import { DataSource, type Repository, type SelectQueryBuilder } from 'typeorm';
 import type { AuthenticatedUser } from '#common/decorators/current-user.decorator.js';
 import { PaginatedResponse } from '#common/dto/pagination.dto.js';
 import {
+  AuditAction,
   RequestStatus,
   ResourceStatus,
   ResourceType,
   UserRole,
 } from '#common/enums/domain.enums.js';
 import { calendarDateIn } from '#common/utils/calendar.js';
+import { AuditLog } from '#modules/audit/entities/audit-log.entity.js';
 import { NotificationsService } from '#modules/notifications/notifications.service.js';
 import { Project } from '#modules/projects/entities/project.entity.js';
 import { Resource } from '#modules/resources/entities/resource.entity.js';
 import { User } from '#modules/users/entities/user.entity.js';
 import type { CreateReservationDto } from './dto/create-reservation.dto.js';
 import type { ReservationFiltersDto } from './dto/reservation-filters.dto.js';
+import { ReservationAssignment } from './entities/reservation-assignment.entity.js';
 import { ReservationRequest } from './entities/reservation-request.entity.js';
 import { toReservationView, type ReservationView } from './reservation.view.js';
-import { formatRequestCode, requestWindowError } from './request.rules.js';
+import { cancellationError, formatRequestCode, requestWindowError } from './request.rules.js';
 
 const WHEN = new Intl.DateTimeFormat('es-NI', {
   timeZone: 'America/Managua',
@@ -36,8 +40,8 @@ const WHEN = new Intl.DateTimeFormat('es-NI', {
 });
 
 /**
- * Solicitudes de medios (RF-10, HU-09). Una solicitud nueva queda PENDING y no
- * ocupa la agenda (RN-07): solo su asignación aprobada lo hace (HU-11).
+ * Solicitudes de medios (RF-10, RF-11; HU-09, HU-10). Una solicitud nueva queda
+ * PENDING y no ocupa la agenda (RN-07): solo su asignación aprobada lo hace (HU-11).
  */
 @Injectable()
 export class ReservationsService {
@@ -146,6 +150,76 @@ export class ReservationsService {
       .take(limit)
       .getManyAndCount();
     return new PaginatedResponse(rows.map(toReservationView), total, page, limit);
+  }
+
+  /**
+   * Cancela una solicitud pendiente o aprobada (RF-11, HU-10). Solo su dueño o
+   * la coordinación (RN-13). Si estaba aprobada, sus asignaciones pasan a
+   * `active = false` y el medio y el conductor quedan libres (RN-10).
+   *
+   * La fila de la solicitud se bloquea con FOR UPDATE: una aprobación (HU-11) o
+   * el inicio del viaje (HU-21) de la misma solicitud esperan a que esto termine.
+   */
+  async cancel(id: string, actor: AuthenticatedUser): Promise<ReservationView> {
+    await this.dataSource.transaction(async (manager) => {
+      const request = await manager.findOne(ReservationRequest, {
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!request || (actor.role !== UserRole.ADMIN && request.requesterId !== actor.id)) {
+        throw new NotFoundException('La solicitud no existe.');
+      }
+
+      const assignments = await manager.find(ReservationAssignment, {
+        where: { requestId: id, active: true },
+        relations: { trip: true, driver: true },
+      });
+      const fromStatus = request.status;
+      const error = cancellationError(
+        fromStatus,
+        assignments.some((assignment) => assignment.trip),
+      );
+      if (error) throw new ConflictException(error);
+
+      if (assignments.length) {
+        await manager.update(
+          ReservationAssignment,
+          assignments.map((assignment) => assignment.id),
+          { active: false },
+        );
+      }
+      await manager.update(ReservationRequest, id, { status: RequestStatus.CANCELLED });
+
+      await manager.insert(AuditLog, {
+        actorId: actor.id,
+        action: AuditAction.CANCEL,
+        entity: 'reservation_request',
+        entityId: id,
+        payload: {
+          fromStatus,
+          releasedAssignmentIds: assignments.map((assignment) => assignment.id),
+        },
+      });
+
+      // Se entera quien no canceló: la coordinación, la persona solicitante y
+      // el conductor que ya tenía el viaje asignado (RN-10).
+      const content = {
+        title: `Solicitud ${request.code} cancelada`,
+        body: `${actor.fullName} canceló el viaje a ${request.destination} (${WHEN.format(request.startsAt)} – ${WHEN.format(request.endsAt)}).`,
+        data: { kind: 'RESERVATION_CANCELLED', reservationId: id },
+      };
+      if (actor.role !== UserRole.ADMIN) {
+        await this.notifications.notifyRole(manager, UserRole.ADMIN, content);
+      }
+      const others = new Set([
+        request.requesterId,
+        ...assignments.flatMap((assignment) => assignment.driver?.userId ?? []),
+      ]);
+      others.delete(actor.id);
+      await this.notifications.notifyUsers(manager, [...others], content);
+    });
+
+    return this.findOneOrFail(id, actor);
   }
 
   /** Quien no es dueño ni ADMIN recibe 404: no se revela que la solicitud existe. */
