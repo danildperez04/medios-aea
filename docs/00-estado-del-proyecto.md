@@ -142,15 +142,23 @@ días mal ubicados en la agenda, y la petición fallida de la fuente Bogart.
 
 Primera historia con el flujo de una rama por historia (`docs/05` §3).
 
-| Historia                            | Rama                           | Estado                                      |
-| ----------------------------------- | ------------------------------ | ------------------------------------------- |
-| HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request` | TERMINADO (PR #7)                           |
-| HU-10 a HU-15                       | —                              | Pendientes; HU-10 a HU-13 dependen de HU-09 |
+| Historia                            | Rama                           | Estado            |
+| ----------------------------------- | ------------------------------ | ----------------- |
+| HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request` | TERMINADO (PR #7) |
+| HU-10 Cancelar una solicitud        | `feature/hu-10-cancel-request` | Lista para PR     |
+| HU-11 a HU-15                       | —                              | Pendientes        |
 
 HU-09: `POST /reservations` (queda PENDING, código `SOL-AAAA-NNNNN`, aviso interno a la
 coordinación, RN-06 y RN-14), `GET /reservations` (cada técnico solo las suyas),
 bandeja de solicitudes en la web con contador en el menú. Verificación: 113 unitarias,
 69 e2e y 30 web en verde; revisada en el navegador a 1366 y 390 px.
+
+HU-10: `POST /reservations/:id/cancel` para el dueño o la coordinación (RN-13). Cancela
+pendientes y aprobadas mientras el viaje no inicie; las asignaciones pasan a
+`active = false` (RN-10), queda en `audit_log` y se avisa a la coordinación, a quien
+pidió y al conductor. Botón de cancelar con confirmación en la bandeja web.
+Verificación: 122 unitarias, 77 e2e y 33 web en verde; revisada en el navegador a 1366
+y 390 px.
 
 ## Revisión de DevOps, calidad, seguridad y proceso · EN REVISIÓN
 
