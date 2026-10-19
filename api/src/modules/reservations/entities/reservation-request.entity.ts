@@ -10,13 +10,14 @@ import {
   type Relation,
 } from 'typeorm';
 import { RequestStatus, ResourceType } from '#common/enums/domain.enums.js';
+import { Driver } from '#modules/drivers/entities/driver.entity.js';
 import { Project } from '#modules/projects/entities/project.entity.js';
 import { Resource } from '#modules/resources/entities/resource.entity.js';
 import { User } from '#modules/users/entities/user.entity.js';
 import { ReservationAssignment } from './reservation-assignment.entity.js';
 
 /**
- * Solicitud de un técnico para usar un vehículo en un horario.
+ * Solicitud de un técnico para usar un vehículo en un horario, con quién conduce.
  * Una solicitud PENDING no ocupa la agenda (RN-07): solo su asignación aprobada lo hace.
  */
 @Entity('reservation_request')
@@ -57,6 +58,14 @@ export class ReservationRequest {
   @ManyToOne(() => Resource, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'preferred_resource_id' })
   preferredResource: Relation<Resource | null>;
+
+  /** Quién propone quien solicita que conduzca (RN-15). La asignación guarda al real. */
+  @Column({ name: 'proposed_driver_id', type: 'uuid', nullable: true })
+  proposedDriverId: string | null;
+
+  @ManyToOne(() => Driver, { onDelete: 'RESTRICT', nullable: true })
+  @JoinColumn({ name: 'proposed_driver_id' })
+  proposedDriver: Relation<Driver | null>;
 
   @Column({ type: 'varchar', length: 300 })
   purpose: string;

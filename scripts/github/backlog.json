@@ -100,7 +100,7 @@
     {
       "key": "HU-11",
       "title": "HU-11: Como ADMIN, quiero aprobar asignando vehículo y conductor sin choques",
-      "body": "**Historia:** Como ADMIN, quiero aprobar asignando vehículo y conductor sin choques.\n\n## Criterios de aceptación\n\n- [ ] Sugiere vehículos/conductores libres\n- [ ] dos aprobaciones concurrentes del mismo vehículo/horario → una OK y otra 409\n\n**Requisitos:** RF-12, RF-14 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 3). Rama: `feature/hu-11-<slug>` desde `develop`.",
+      "body": "**Historia:** Como ADMIN, quiero aprobar asignando vehículo y conductor sin choques.\n\n## Criterios de aceptación\n\n- [ ] Sugiere vehículos libres\n- [ ] Conductor propuesto por quien solicita por defecto (HU-26); la coordinación puede cambiarlo y se avisa a quien pidió y a ambos conductores (ADR 0004)\n- [ ] dos aprobaciones concurrentes del mismo vehículo/horario → una OK y otra 409\n\n**Requisitos:** RF-12, RF-14 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 3). Depende de HU-26. Rama: `feature/hu-11-<slug>` desde `develop`.",
       "labels": ["tipo:historia", "prioridad:must", "área:api", "área:web"],
       "milestone": "Sprint 3"
     },
@@ -130,6 +130,13 @@
       "title": "HU-15: Como ADMIN, quiero saber quién aprobó o rechazó cada solicitud",
       "body": "**Historia:** Como ADMIN, quiero saber quién aprobó o rechazó cada solicitud.\n\n## Criterios de aceptación\n\n- [ ] Registro en `audit_log` con usuario, acción y fecha\n\n**Requisitos:** RF-17 · **Prioridad:** Should\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 3). Rama: `feature/hu-15-<slug>` desde `develop`.",
       "labels": ["tipo:historia", "prioridad:should", "área:api", "área:web"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "HU-26",
+      "title": "HU-26: Como técnico, quiero indicar quién conduce al solicitar",
+      "body": "**Historia:** Como técnico, quiero indicar quién conduce al solicitar.\n\n## Criterios de aceptación\n\n- [ ] Perfil de conductor (licencia) para cualquier usuario activo, no solo rol `DRIVER`\n- [ ] La solicitud de vehículo exige un conductor propuesto; \"yo\" por defecto si tengo perfil\n- [ ] El conductor propuesto está activo y su licencia cubre la fecha del viaje (RN-15, RN-09)\n- [ ] Un técnico ve la lista de personas habilitadas, sin números de licencia\n- [ ] La bandeja web muestra quién conduce\n\n**Requisitos:** RF-07, RF-10 · **Prioridad:** Must · **Decisión:** ADR 0004\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 3). Va antes de HU-11. Rama: `feature/hu-26-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:api", "área:web"],
       "milestone": "Sprint 3"
     },
     {

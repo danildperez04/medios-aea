@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { RequestStatus } from '#common/enums/domain.enums.js';
-import { cancellationError, formatRequestCode, requestWindowError } from './request.rules.js';
+import {
+  cancellationError,
+  formatRequestCode,
+  proposedDriverError,
+  requestWindowError,
+} from './request.rules.js';
 
 /** Reglas del horario de una solicitud (RN-06). */
 describe('requestWindowError', () => {
@@ -62,5 +67,38 @@ describe('cancellationError', () => {
     expect(cancellationError(RequestStatus.CANCELLED, false)).toMatch(/ya estaba cancelada/);
     expect(cancellationError(RequestStatus.REJECTED, false)).toMatch(/rechazada/);
     expect(cancellationError(RequestStatus.COMPLETED, false)).toMatch(/terminó/);
+  });
+});
+
+/** Quién puede conducir un viaje (RN-15, RN-09). */
+describe('proposedDriverError', () => {
+  const driver = (
+    overrides: { isActive?: boolean; userActive?: boolean; expiry?: string } = {},
+  ) => ({
+    isActive: overrides.isActive ?? true,
+    licenseExpiry: overrides.expiry ?? '2030-12-31',
+    user: { fullName: 'Ana Martínez', isActive: overrides.userActive ?? true },
+  });
+  // Termina el 22/10/2026 a las 15:00 de Managua.
+  const end = new Date('2026-10-22T21:00:00Z');
+
+  it('acepta a una persona activa con licencia vigente', () => {
+    expect(proposedDriverError(driver(), end)).toBeNull();
+  });
+
+  it('acepta una licencia que vence el mismo dia del viaje', () => {
+    expect(proposedDriverError(driver({ expiry: '2026-10-22' }), end)).toBeNull();
+  });
+
+  it('rechaza una licencia que vence antes y dice la fecha en dd/mm/aaaa', () => {
+    expect(proposedDriverError(driver({ expiry: '2026-10-21' }), end)).toBe(
+      'La licencia de Ana Martínez vence el 21/10/2026 y no cubre el viaje. Elige a otra persona.',
+    );
+  });
+
+  it('rechaza a alguien sin perfil, con perfil inactivo o usuario desactivado', () => {
+    expect(proposedDriverError(null, end)).toMatch(/no está habilitada/);
+    expect(proposedDriverError(driver({ isActive: false }), end)).toMatch(/no está habilitada/);
+    expect(proposedDriverError(driver({ userActive: false }), end)).toMatch(/no está habilitada/);
   });
 });

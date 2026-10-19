@@ -8,18 +8,19 @@ import {
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { PaginatedResponse } from '#common/dto/pagination.dto.js';
-import { UserRole } from '#common/enums/domain.enums.js';
 import { calendarDateIn } from '#common/utils/calendar.js';
 import { User } from '#modules/users/entities/user.entity.js';
 import type { CreateDriverDto } from './dto/create-driver.dto.js';
 import type { DriverFiltersDto } from './dto/driver-filters.dto.js';
 import type { UpdateDriverDto } from './dto/update-driver.dto.js';
-import { toDriverView, type DriverView } from './driver.view.js';
+import { toDriverOption, toDriverView, type DriverOption, type DriverView } from './driver.view.js';
 import { Driver } from './entities/driver.entity.js';
 
 /**
- * Conductores (RF-07, HU-06). Un conductor es un usuario con rol DRIVER más su
- * licencia; sin licencia vigente no se puede asignar a un viaje (RN-09).
+ * Conductores (RF-07, HU-06, HU-26). Un conductor es cualquier usuario con su
+ * licencia registrada, tenga el rol que tenga: en la fundación casi siempre conduce
+ * el mismo personal técnico (ADR 0004). Sin licencia vigente no se puede asignar a
+ * un viaje (RN-09).
  */
 @Injectable()
 export class DriversService {
@@ -69,6 +70,22 @@ export class DriversService {
     );
   }
 
+  /**
+   * Personas que se pueden proponer para conducir (RN-15): perfil y usuario activos
+   * y licencia no vencida hoy. La vigencia en la fecha del viaje se valida al crear
+   * la solicitud.
+   */
+  async findOptions(): Promise<DriverOption[]> {
+    const rows = await this.drivers
+      .createQueryBuilder('driver')
+      .innerJoinAndSelect('driver.user', 'user')
+      .where('driver.isActive = true AND user.isActive = true')
+      .andWhere('driver.licenseExpiry >= :today::date', { today: calendarDateIn(new Date()) })
+      .orderBy('user.fullName', 'ASC')
+      .getMany();
+    return rows.map(toDriverOption);
+  }
+
   async findOneOrFail(id: string): Promise<DriverView> {
     const driver = await this.drivers.findOne({ where: { id }, relations: { user: true } });
     if (!driver) throw new NotFoundException('El conductor no existe.');
@@ -78,11 +95,6 @@ export class DriversService {
   async create(dto: CreateDriverDto): Promise<DriverView> {
     const user = await this.users.findOneBy({ id: dto.userId });
     if (!user) throw new NotFoundException('El usuario no existe.');
-    if (user.role !== UserRole.DRIVER) {
-      throw new BadRequestException(
-        `${user.fullName} no tiene rol de conductor. Cámbiale el rol en Usuarios antes de registrar su licencia.`,
-      );
-    }
     if (!user.isActive) {
       throw new BadRequestException(`${user.fullName} está desactivado.`);
     }

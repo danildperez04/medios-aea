@@ -142,12 +142,12 @@ días mal ubicados en la agenda, y la petición fallida de la fuente Bogart.
 
 Primera historia con el flujo de una rama por historia (`docs/05` §3).
 
-| Historia                            | Rama                           | Estado                    |
-| ----------------------------------- | ------------------------------ | ------------------------- |
-| HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request` | TERMINADO (PR #7)         |
-| HU-10 Cancelar una solicitud        | `feature/hu-10-cancel-request` | TERMINADO (PR #49)        |
-| HU-26 Indicar quién conduce         | —                              | Pendiente; antes de HU-11 |
-| HU-11 a HU-15                       | —                              | Pendientes                |
+| Historia                            | Rama                            | Estado             |
+| ----------------------------------- | ------------------------------- | ------------------ |
+| HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request`  | TERMINADO (PR #7)  |
+| HU-10 Cancelar una solicitud        | `feature/hu-10-cancel-request`  | TERMINADO (PR #49) |
+| HU-26 Indicar quién conduce         | `feature/hu-26-proposed-driver` | Lista para PR      |
+| HU-11 a HU-15                       | —                               | Pendientes         |
 
 HU-09: `POST /reservations` (queda PENDING, código `SOL-AAAA-NNNNN`, aviso interno a la
 coordinación, RN-06 y RN-14), `GET /reservations` (cada técnico solo las suyas),
@@ -160,6 +160,13 @@ pendientes y aprobadas mientras el viaje no inicie; las asignaciones pasan a
 pidió y al conductor. Botón de cancelar con confirmación en la bandeja web.
 Verificación: 122 unitarias, 77 e2e y 33 web en verde; revisada en el navegador a 1366
 y 390 px.
+
+HU-26 (ADR 0004): cualquier usuario puede tener perfil de conductor; la solicitud
+guarda al conductor propuesto (`proposed_driver_id`, migración `AddProposedDriver`). Sin
+indicarlo conduce quien solicita, si tiene licencia; si no, hay que elegir a alguien de
+`GET /drivers/options`, cuya licencia debe cubrir el viaje (RN-15). La bandeja muestra
+quién conduce y el rol `DRIVER` pasa a llamarse "Chofer de planta". Verificación: 126
+unitarias, 83 e2e y 34 web en verde; revisada en el navegador a 1366 y 390 px.
 
 ## Revisión de DevOps, calidad, seguridad y proceso · TERMINADO
 
@@ -176,9 +183,6 @@ Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`
 
 ## Siguiente en el Sprint 3
 
-HU-26 (indicar quién conduce, ADR 0004) va antes de HU-11: en la fundación casi
-siempre conduce el mismo personal técnico.
-
-HU-09 a HU-15: crear y cancelar solicitudes, aprobar asignando medio y conductor con la
-disponibilidad de este sprint (mismo candado que los bloqueos), rechazo con motivo,
-reasignación, calendario semanal y auditoría.
+HU-11 a HU-15: aprobar asignando medio y conductor (por defecto el propuesto, cambiable
+con aviso) con el mismo candado que los bloqueos, rechazo con motivo, reasignación,
+calendario semanal y auditoría.

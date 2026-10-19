@@ -63,6 +63,14 @@ export class CreateReservationDto {
   preferredResourceId?: string;
 
   @ApiPropertyOptional({
+    description:
+      'Conductor propuesto (RN-15). Si se omite en un vehículo, conduce quien solicita, si tiene licencia registrada',
+  })
+  @IsOptional()
+  @IsUUID('4', { message: 'El conductor propuesto no es válido' })
+  proposedDriverId?: string;
+
+  @ApiPropertyOptional({
     description: 'Solo ADMIN: crear la solicitud en nombre de otra persona (RN-14)',
   })
   @IsOptional()

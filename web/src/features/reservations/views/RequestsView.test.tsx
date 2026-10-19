@@ -36,6 +36,7 @@ const reservation = (overrides: Partial<Reservation> = {}): Reservation => ({
   project: { id: 'p1', code: 'PRY-AGUA', name: 'Agua segura' },
   requester: { id: 'u1', fullName: 'Ana Martínez' },
   preferredResource: null,
+  proposedDriver: { id: 'd1', fullName: 'Ana Martínez' },
   rejectionReason: null,
   decidedAt: null,
   createdAt: '2026-10-18T13:00:00Z',
@@ -79,6 +80,7 @@ describe('RequestsView', () => {
             id: 'r2',
             code: 'SOL-2026-00002',
             requester: { id: 'u2', fullName: 'Carlos Rivera' },
+            proposedDriver: { id: 'd2', fullName: 'José Gutiérrez' },
             preferredResource: { id: 'v1', name: 'Hilux blanca', identifier: 'M 123-456' },
           }),
         ],
@@ -89,7 +91,9 @@ describe('RequestsView', () => {
       },
     });
     renderView();
-    expect(await screen.findByText('Ana Martínez')).toBeInTheDocument();
+    // Ana pide y conduce; Carlos pide y conduce José (HU-26).
+    expect(await screen.findAllByText('Ana Martínez')).toHaveLength(2);
+    expect(screen.getByText('José Gutiérrez')).toBeInTheDocument();
     expect(screen.getAllByText('22/10/2026 07:00–11:00')).toHaveLength(2);
     expect(screen.getAllByText('PRY-AGUA')).toHaveLength(2);
     expect(screen.getByText('Cualquiera')).toBeInTheDocument();

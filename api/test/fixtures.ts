@@ -68,11 +68,13 @@ export async function createVehicle(
   });
 }
 
+/** Perfil de conductor; sin `user`, crea un usuario DRIVER (chofer de planta). */
 export async function createDriver(
   dataSource: DataSource,
   licenseExpiry = '2030-12-31',
+  user?: User,
 ): Promise<Driver> {
-  const user = await createUser(dataSource, UserRole.DRIVER);
+  user ??= await createUser(dataSource, UserRole.DRIVER);
   const repo = dataSource.getRepository(Driver);
   return repo.save(
     repo.create({ userId: user.id, licenseNumber: unique('LIC'), licenseExpiry, isActive: true }),

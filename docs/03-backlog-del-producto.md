@@ -47,7 +47,7 @@ referencia de producto: qué se construye y con qué criterios.
 | HU-13 | RF-15        | Como ADMIN, quiero reasignar vehículo o conductor                     | Desactiva la asignación previa y crea otra en una transacción; notifica                                         | PENDIENTE |
 | HU-14 | RF-16        | Como ADMIN, quiero ver el calendario de la flota                      | Filas = vehículos; vista día/semana; colores por estado; bloqueos visibles                                      | PENDIENTE |
 | HU-15 | RF-17        | Como ADMIN, quiero saber quién aprobó o rechazó cada solicitud        | Registro en `audit_log` con usuario, acción y fecha                                                             | PENDIENTE |
-| HU-26 | RF-07, RF-10 | Como técnico, quiero indicar quién conduce al solicitar               | Perfil de conductor para cualquier usuario; "yo" por defecto; licencia vigente a la fecha (RN-15)               | PENDIENTE |
+| HU-26 | RF-07, RF-10 | Como técnico, quiero indicar quién conduce al solicitar               | Perfil de conductor para cualquier usuario; "yo" por defecto; licencia vigente a la fecha (RN-15)               | EN CURSO  |
 
 ## Sprint 4 — App móvil del solicitante
 

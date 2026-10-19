@@ -29,5 +29,6 @@ export type UpdateUserForm = z.infer<typeof updateUserSchema>;
 export const ROLE_LABELS = {
   ADMIN: 'Coordinación',
   REQUESTER: 'Técnico/a',
-  DRIVER: 'Conductor/a',
+  // Solo conduce, no pide; el personal técnico que maneja sigue como Técnico/a (ADR 0004).
+  DRIVER: 'Chofer de planta',
 } as const;
