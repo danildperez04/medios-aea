@@ -59,6 +59,12 @@ updates:
       - dependency-name: '@expo-google-fonts/*'
       - dependency-name: 'react-native*'
       - dependency-name: '@react-native-community/*'
+      - dependency-name: '*-expo'
+      # El SDK también fija React: el móvil debe usar la misma versión exacta que su
+      # react-native. La web sube React a mano, junto con el SDK del móvil.
+      - dependency-name: 'react'
+      - dependency-name: 'react-dom'
+      - dependency-name: '@types/react'
 
   - package-ecosystem: github-actions
     directory: /
@@ -86,3 +92,8 @@ updates:
       prefix: build
       include: scope
     labels: ['tipo:deuda', 'área:infra']
+    ignore:
+      # Node sigue en la LTS que usa la CI (NODE_VERSION en ci.yml); el cambio de
+      # versión mayor se hace a mano en las dos partes a la vez.
+      - dependency-name: node
+        update-types: ['version-update:semver-major']

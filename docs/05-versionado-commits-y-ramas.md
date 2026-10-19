@@ -33,6 +33,20 @@ Antes de la `1.0.0`, un `feat` sube MINOR y un cambio incompatible (`feat!:` o
 Las versiones `0.1.0` a `0.3.0` se etiquetaron de forma retroactiva en los commits de
 cierre de cada sprint al adoptar release-please.
 
+### 1.2 Configuración única en GitHub
+
+1. **Permitir que Actions abra PR:** _Settings → Actions → General → Workflow
+   permissions_ → marcar _Allow GitHub Actions to create and approve pull requests_.
+2. **Token para release-please** (para que su PR dispare CI y pase los checks
+   requeridos de `main`): crear un _fine-grained personal access token_ con acceso
+   **solo a este repositorio** y permisos _Contents_, _Pull requests_ e _Issues_ en
+   lectura y escritura (_Metadata_ de solo lectura se agrega solo). Guardarlo en
+   _Settings → Secrets and variables → Actions_ como `RELEASE_PLEASE_TOKEN`.
+   Fijarle vencimiento (p. ej. 1 año) y anotar la fecha para renovarlo.
+
+Sin el secreto el workflow usa `GITHUB_TOKEN`: el PR de release se crea igual, pero
+CI no corre sobre él y hay que mergearlo marcando _bypass_ como administrador.
+
 ## 2. Commits
 
 **Conventional Commits 1.0.0**, validados con commitlint en tres puntos:
@@ -61,6 +75,7 @@ El alcance es obligatorio:
 | `trips`, `notifications`, `reports`, `audit`       | Resto del dominio                     |
 | `api`, `web`, `mobile`                             | Transversal a una aplicación          |
 | `db`, `deps`, `docker`, `docs`, `cicd`             | Infraestructura                       |
+| `deps-dev`                                         | Dependabot (dependencias de dev.)     |
 
 Ejemplos:
 

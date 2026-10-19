@@ -40,6 +40,8 @@ export default {
         'mobile',
         'db',
         'deps',
+        // Dependabot usa `deps-dev` para las dependencias de desarrollo.
+        'deps-dev',
         'docker',
         'docs',
         'cicd',

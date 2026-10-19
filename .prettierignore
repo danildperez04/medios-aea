@@ -1,0 +1,2 @@
+# Lo genera pnpm con su propio formato; Prettier lo reescribiría en cada PR de Dependabot.
+pnpm-lock.yaml
