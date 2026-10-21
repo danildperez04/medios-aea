@@ -5,13 +5,16 @@
 
 ## Resumen
 
-| Bloque                                                        | Estado                   | Versión           |
-| ------------------------------------------------------------- | ------------------------ | ----------------- |
-| Sprint 0 — Documentación y andamiaje                          | TERMINADO                | `v0.1.0`          |
-| Sprint 1 — Acceso y catálogos base                            | TERMINADO                | `v0.2.0`          |
-| Sprint 2 — Flota y disponibilidad (+ despliegue, DTO, diseño) | TERMINADO                | `v0.3.0`          |
-| Sprint 3 — Solicitudes y aprobación                           | EN CURSO (HU-09 y HU-10) | `0.4.0` al cerrar |
-| Revisión de DevOps, calidad, seguridad y proceso              | TERMINADO (PR #8–#13)    | —                 |
+| Bloque                                                        | Estado                 | Versión           |
+| ------------------------------------------------------------- | ---------------------- | ----------------- |
+| Sprint 0 — Documentación y andamiaje                          | TERMINADO              | `v0.1.0`          |
+| Sprint 1 — Acceso y catálogos base                            | TERMINADO              | `v0.2.0`          |
+| Sprint 2 — Flota y disponibilidad (+ despliegue, DTO, diseño) | TERMINADO              | `v0.3.0`          |
+| Sprint 3 — Solicitudes y aprobación                           | EN CURSO (HU-09/10/26) | `0.5.0` al cerrar |
+| Revisión de DevOps, calidad, seguridad y proceso              | TERMINADO (PR #8–#13)  | `v0.4.0`          |
+
+La `v0.4.0` sale a mitad del Sprint 3: reúne la revisión de DevOps y las historias ya
+terminadas (HU-09, HU-10 y HU-26). El resto del sprint llega en la `0.5.0`.
 
 ---
 
@@ -146,7 +149,7 @@ Primera historia con el flujo de una rama por historia (`docs/05` §3).
 | ----------------------------------- | ------------------------------- | ------------------ |
 | HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request`  | TERMINADO (PR #7)  |
 | HU-10 Cancelar una solicitud        | `feature/hu-10-cancel-request`  | TERMINADO (PR #49) |
-| HU-26 Indicar quién conduce         | `feature/hu-26-proposed-driver` | Lista para PR      |
+| HU-26 Indicar quién conduce         | `feature/hu-26-proposed-driver` | TERMINADO (PR #52) |
 | HU-11 a HU-15                       | —                               | Pendientes         |
 
 HU-09: `POST /reservations` (queda PENDING, código `SOL-AAAA-NNNNN`, aviso interno a la

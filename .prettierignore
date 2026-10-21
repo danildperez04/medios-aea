@@ -3,3 +3,6 @@ pnpm-lock.yaml
 
 # Lo escribe release-please con su propio formato.
 CHANGELOG.md
+
+# Lo genera Expo; mobile/.gitignore lo excluye, pero Prettier solo lee el .gitignore raíz.
+mobile/expo-env.d.ts
