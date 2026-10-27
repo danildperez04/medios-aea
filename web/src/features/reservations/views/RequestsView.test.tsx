@@ -37,6 +37,7 @@ const reservation = (overrides: Partial<Reservation> = {}): Reservation => ({
   requester: { id: 'u1', fullName: 'Ana Martínez' },
   preferredResource: null,
   proposedDriver: { id: 'd1', fullName: 'Ana Martínez' },
+  assignment: null,
   rejectionReason: null,
   decidedAt: null,
   createdAt: '2026-10-18T13:00:00Z',

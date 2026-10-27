@@ -4,6 +4,7 @@ import { ChangePasswordDto } from '#modules/auth/dto/change-password.dto.js';
 import { LoginDto } from '#modules/auth/dto/login.dto.js';
 import { CreateProjectDto } from '#modules/projects/dto/create-project.dto.js';
 import { UpdateProjectDto } from '#modules/projects/dto/update-project.dto.js';
+import { ApproveReservationDto } from '#modules/reservations/dto/approve-reservation.dto.js';
 import { CreateUserDto } from '#modules/users/dto/create-user.dto.js';
 import { ResetPasswordDto } from '#modules/users/dto/reset-password.dto.js';
 import { UpdateUserDto } from '#modules/users/dto/update-user.dto.js';
@@ -134,6 +135,21 @@ describe('DTO de autenticacion', () => {
     });
     expect(errors).toContain(
       'La contraseña nueva debe incluir una minúscula, una mayúscula y un número',
+    );
+  });
+});
+
+describe('ApproveReservationDto', () => {
+  const resourceId = '11111111-1111-4111-8111-111111111111';
+
+  it('exige el medio y deja el conductor opcional (por defecto, el propuesto)', async () => {
+    expect(await errorsOf(ApproveReservationDto, {})).toContain('Elige el medio que se asigna');
+    expect(await errorsOf(ApproveReservationDto, { resourceId })).toEqual([]);
+  });
+
+  it('un conductor null no salta la validacion', async () => {
+    expect(await errorsOf(ApproveReservationDto, { resourceId, driverId: null })).toContain(
+      'El conductor no es válido',
     );
   });
 });

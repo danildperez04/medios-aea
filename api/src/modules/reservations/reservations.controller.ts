@@ -16,6 +16,7 @@ import type { AuthenticatedUser } from '#common/decorators/current-user.decorato
 import { Roles } from '#common/decorators/roles.decorator.js';
 import type { PaginatedResponse } from '#common/dto/pagination.dto.js';
 import { UserRole } from '#common/enums/domain.enums.js';
+import { ApproveReservationDto } from './dto/approve-reservation.dto.js';
 import { CreateReservationDto } from './dto/create-reservation.dto.js';
 import { ReservationFiltersDto } from './dto/reservation-filters.dto.js';
 import type { ReservationView } from './reservation.view.js';
@@ -58,6 +59,25 @@ export class ReservationsController {
     @CurrentUser() actor: AuthenticatedUser,
   ): Promise<ReservationView> {
     return this.service.findOneOrFail(id, actor);
+  }
+
+  @Post(':id/approve')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Aprobar asignando medio y conductor (por defecto, el propuesto) sin choques',
+  })
+  @ApiResponse({ status: 409, description: 'Ya no está pendiente o el medio o conductor chocan' })
+  @ApiResponse({
+    status: 422,
+    description: 'Medio en mantenimiento, sin capacidad o licencia vencida',
+  })
+  approve(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: ApproveReservationDto,
+    @CurrentUser() actor: AuthenticatedUser,
+  ): Promise<ReservationView> {
+    return this.service.approve(id, dto, actor);
   }
 
   @Post(':id/cancel')
