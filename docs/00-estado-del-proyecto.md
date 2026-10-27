@@ -150,7 +150,8 @@ Primera historia con el flujo de una rama por historia (`docs/05` §3).
 | HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request`  | TERMINADO (PR #7)  |
 | HU-10 Cancelar una solicitud        | `feature/hu-10-cancel-request`  | TERMINADO (PR #49) |
 | HU-26 Indicar quién conduce         | `feature/hu-26-proposed-driver` | TERMINADO (PR #52) |
-| HU-11 a HU-15                       | —                               | Pendientes         |
+| HU-11 Aprobar sin choques           | `feature/hu-11-approve-request` | Lista para PR      |
+| HU-12 a HU-15                       | —                               | Pendientes         |
 
 HU-09: `POST /reservations` (queda PENDING, código `SOL-AAAA-NNNNN`, aviso interno a la
 coordinación, RN-06 y RN-14), `GET /reservations` (cada técnico solo las suyas),
@@ -171,6 +172,15 @@ indicarlo conduce quien solicita, si tiene licencia; si no, hay que elegir a alg
 quién conduce y el rol `DRIVER` pasa a llamarse "Chofer de planta". Verificación: 126
 unitarias, 83 e2e y 34 web en verde; revisada en el navegador a 1366 y 390 px.
 
+HU-11: `POST /reservations/:id/approve` (ADMIN) asigna el medio y, por defecto, al
+conductor propuesto; la coordinación puede elegir a otra persona y se avisa a quien
+pidió y a ambos conductores (ADR 0004). En una transacción bloquea la solicitud y el
+medio con FOR UPDATE (el mismo candado de los bloqueos) y valida choques (409),
+mantenimiento, capacidad y licencia (422); las restricciones de exclusión siguen siendo
+la garantía ante aprobaciones simultáneas. En la web, diálogo de aprobación que solo
+ofrece medios y conductores libres. Verificación: 135 unitarias, 96 e2e (PT-01 a PT-10)
+y 39 web en verde; revisada en el navegador a 1366 y 390 px.
+
 ## Revisión de DevOps, calidad, seguridad y proceso · TERMINADO
 
 Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`:
@@ -186,6 +196,5 @@ Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`
 
 ## Siguiente en el Sprint 3
 
-HU-11 a HU-15: aprobar asignando medio y conductor (por defecto el propuesto, cambiable
-con aviso) con el mismo candado que los bloqueos, rechazo con motivo, reasignación,
-calendario semanal y auditoría.
+HU-12 a HU-15: rechazo con motivo, reasignación, calendario semanal y la vista de
+auditoría (los registros de aprobar y cancelar ya se guardan).

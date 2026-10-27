@@ -37,7 +37,10 @@ aún sin merge) · `VERIFICADO` (validado en revisión de sprint / UAT).
 | RN-13                   | HU-10 | `request.rules.ts` (`cancellationError`)                                                               | `request.rules.spec.ts` · `reservations.e2e-spec.ts`                                       | IMPLEMENTADO      |
 | RN-15                   | HU-26 | `request.rules.ts` (`proposedDriverError`) · `GET /drivers/options` · columna "Conduce"                | `request.rules.spec.ts` · `reservations.e2e-spec.ts` · `fleet.e2e-spec.ts`                 | IMPLEMENTADO      |
 | RF-07 (ADR 0004)        | HU-26 | `DriversService.create` sin exigir el rol `DRIVER` · `DriverFormDialog`                                | `fleet.e2e-spec.ts` §HU-06 · `DriverFormDialog.test.tsx`                                   | IMPLEMENTADO      |
-| RF-12…15, 17…25, 27, 28 | —     | —                                                                                                      | —                                                                                          | PENDIENTE         |
+| RF-12                   | HU-11 | `POST /reservations/:id/approve` · `ApproveDialog`                                                     | `approval.rules.spec.ts` · `approvals.e2e-spec.ts` · `ApproveDialog.test.tsx`              | IMPLEMENTADO      |
+| RF-14                   | HU-11 | `ReservationsService.approve` (valida antes) + restricciones de exclusión                              | `approvals.e2e-spec.ts` (PT-01 a PT-05, PT-09, PT-10)                                      | IMPLEMENTADO      |
+| RN-08                   | HU-11 | Transacción con FOR UPDATE de solicitud y medio; 23P01 → 409                                           | `approvals.e2e-spec.ts` (PT-09, dos casos)                                                 | IMPLEMENTADO      |
+| RF-13/15, 17…25, 27, 28 | —     | —                                                                                                      | —                                                                                          | PENDIENTE         |
 
 ## Decisiones tomadas en el Sprint 1
 
@@ -79,3 +82,7 @@ aún sin merge) · `VERIFICADO` (validado en revisión de sprint / UAT).
 | La lista para el técnico no muestra números de licencia              | Basta el nombre y el vencimiento para elegir; la licencia es dato personal    |
 | La licencia se valida contra el fin del viaje al solicitar           | El técnico se entera de inmediato, no al aprobar; RN-09 se repite al aprobar  |
 | El rol `DRIVER` se muestra como "Chofer de planta"                   | Evita que a un técnico que maneja le quiten el rol con el que pide            |
+| Aprobar bloquea también la fila de la solicitud                      | Una cancelación o una segunda aprobación de la misma solicitud esperan        |
+| Choque de horario: 409; medio o licencia que no sirven: 422          | El 409 es un choque con lo ya aprobado; el 422, un dato que no sirve          |
+| La coordinación puede cambiar al conductor al aprobar (ADR 0004)     | Si el propuesto no puede, rechazar obligaría a pedir de nuevo                 |
+| El diálogo solo ofrece medios y conductores libres en el horario     | Lo que no está libre se explica en vez de fallar al enviar                    |
