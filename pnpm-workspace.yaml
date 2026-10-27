@@ -23,3 +23,4 @@ auditConfig:
   ignoreGhsas:
     - GHSA-86w9-cpqp-85rv # node-forge — vía herramientas de Expo, sin parche
     - GHSA-vfj7-8cjw-p6xm # braces — vía herramientas de Expo, sin parche
+    - GHSA-mrhx-c7xc-m3w5 # zod 3 — solo en @expo/cli; el parche existe solo para zod 4

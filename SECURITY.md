@@ -36,9 +36,14 @@ tener motivo y fecha de revisión; si no se puede justificar, no se ignora.
 | ------------------- | ---------- | --------- | -------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------ |
 | GHSA-86w9-cpqp-85rv | node-forge | Alta      | Herramientas de Expo (app móvil) | Sin versión corregida; se usa al compilar el APK, no en la app ni en la API | Al actualizar el SDK de Expo, o 18/01/2027 |
 | GHSA-vfj7-8cjw-p6xm | braces     | Alta      | Herramientas de Expo (app móvil) | Sin versión corregida; solo en la compilación del bundle                    | Al actualizar el SDK de Expo, o 18/01/2027 |
+| GHSA-mrhx-c7xc-m3w5 | zod 3      | Alta      | `@expo/cli` (app móvil)          | Parche solo para zod 4; la CLI pide `^3.25.76` y valida configuración local | Al actualizar el SDK de Expo, o 27/01/2027 |
 
-Además hay dos avisos moderados (`uuid`, `decode-uri-component`) por la misma vía;
-no bloquean (`--audit-level high`) y desaparecen al actualizar Expo.
+Además queda un aviso moderado que no bloquea (`--audit-level high`) y no se ignora para
+que siga visible: `decode-uri-component` 0.2.2 (GHSA-vcc3-ghjq-m6fr), que entra en la app
+por `expo-router` → `query-string` 7. La corrección (0.5) es solo ESM y rompe
+`query-string`; el riesgo es que un enlace mal formado congele la app de quien lo abre,
+no la API. Se revisa al actualizar el SDK de Expo. `uuid` desapareció el 27/10/2026
+(`xcode` 4 ya no lo usa).
 
 ## 5. Medidas en la aplicación
 
