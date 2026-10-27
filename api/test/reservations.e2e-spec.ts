@@ -230,22 +230,16 @@ describe('Solicitudes (integracion)', () => {
           ),
         );
 
-    /**
-     * Simula la aprobación (HU-11 todavía no existe): marca la solicitud como
-     * aprobada e inserta su asignación activa con medio y conductor.
-     */
-    const approve = async (reservation: { id: string; startsAt: string; endsAt: string }) => {
+    /** Aprueba con un medio y un conductor nuevos (HU-11). */
+    const approve = async (reservation: { id: string }) => {
       const vehicle = await createVehicle(dataSource);
       const driver = await createDriver(dataSource);
-      await dataSource.query(`UPDATE reservation_request SET status = 'APPROVED' WHERE id = $1`, [
-        reservation.id,
-      ]);
-      const [assignment] = await dataSource.query<{ id: string }[]>(
-        `INSERT INTO reservation_assignment (request_id, resource_id, driver_id, period)
-         VALUES ($1, $2, $3, tstzrange($4, $5, '[)')) RETURNING id`,
-        [reservation.id, vehicle.id, driver.id, reservation.startsAt, reservation.endsAt],
-      );
-      return { vehicle, driver, assignmentId: assignment.id };
+      const response = await request(app.getHttpServer())
+        .post(`${api}/reservations/${reservation.id}/approve`)
+        .set(as('admin'))
+        .send({ resourceId: vehicle.id, driverId: driver.id })
+        .expect(200);
+      return { vehicle, driver, assignmentId: response.body.assignment.id as string };
     };
 
     it('el dueno cancela su pendiente, queda en auditoria y avisa a la coordinacion', async () => {
