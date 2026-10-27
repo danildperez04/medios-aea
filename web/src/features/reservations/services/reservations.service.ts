@@ -18,6 +18,12 @@ export interface Reservation {
   preferredResource: { id: string; name: string; identifier: string } | null;
   /** Quién propone quien solicita que conduzca (RN-15). */
   proposedDriver: { id: string; fullName: string } | null;
+  /** Lo que la coordinación asignó al aprobar (HU-11). */
+  assignment: {
+    id: string;
+    resource: { id: string; name: string; identifier: string };
+    driver: { id: string; fullName: string } | null;
+  } | null;
   rejectionReason: string | null;
   decidedAt: string | null;
   createdAt: string;
@@ -69,6 +75,64 @@ export function useCancelReservation() {
       Promise.all([
         queryClient.invalidateQueries({ queryKey: KEY }),
         queryClient.invalidateQueries({ queryKey: ['agenda'] }),
+      ]),
+  });
+}
+
+export interface ResourceOption {
+  id: string;
+  name: string;
+  identifier: string;
+  passengerCapacity: number | null;
+}
+
+export type ResourceUnavailableReason = 'MAINTENANCE' | 'CAPACITY' | 'BLOCKED' | 'BUSY';
+export type DriverUnavailableReason = 'INACTIVE' | 'LICENSE_EXPIRED' | 'BUSY';
+
+export interface ApprovalOptions {
+  resources: {
+    available: ResourceOption[];
+    unavailable: { resource: ResourceOption; reasons: ResourceUnavailableReason[] }[];
+  };
+  drivers: {
+    available: { id: string; fullName: string }[];
+    unavailable: { driver: { id: string; fullName: string }; reasons: DriverUnavailableReason[] }[];
+  };
+}
+
+/** Medios y conductores libres en el horario de la solicitud (sugerencias de HU-11). */
+export function useApprovalOptions(reservation: Reservation | null) {
+  const range = reservation ? { from: reservation.startsAt, to: reservation.endsAt } : null;
+  return useQuery({
+    queryKey: ['approval-options', reservation?.id],
+    enabled: reservation !== null,
+    queryFn: async (): Promise<ApprovalOptions> => {
+      const [resources, drivers] = await Promise.all([
+        api.get<ApprovalOptions['resources']>('/availability', {
+          params: {
+            ...range,
+            type: reservation?.resourceType,
+            passengers: reservation?.passengers,
+          },
+        }),
+        api.get<ApprovalOptions['drivers']>('/availability/drivers', { params: range }),
+      ]);
+      return { resources: resources.data, drivers: drivers.data };
+    },
+  });
+}
+
+/** Aprueba asignando medio y conductor (HU-11); sin `driverId`, el propuesto. */
+export function useApproveReservation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...body }: { id: string; resourceId: string; driverId?: string }) =>
+      (await api.post<Reservation>(`/reservations/${id}/approve`, body)).data,
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: KEY }),
+        queryClient.invalidateQueries({ queryKey: ['agenda'] }),
+        queryClient.invalidateQueries({ queryKey: ['approval-options'] }),
       ]),
   });
 }

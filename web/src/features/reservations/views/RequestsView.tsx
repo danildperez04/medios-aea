@@ -1,5 +1,5 @@
 import { Box, IconButton, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
-import { Ban, ClipboardList } from 'lucide-react';
+import { Ban, Check, ClipboardList } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '@/app/services/api';
 import { useAuthStore } from '@/app/stores/auth.store';
@@ -18,6 +18,7 @@ import {
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { mono } from '@/design-system/theme/theme';
 import { formatRange } from '@/shared/lib/format';
+import { ApproveDialog } from '../components/ApproveDialog';
 import {
   useCancelReservation,
   useReservations,
@@ -50,8 +51,9 @@ function cancelMessage(reservation: Reservation, currentUserId: string | undefin
 }
 
 /**
- * Bandeja de solicitudes (HU-09). La coordinación puede cancelar una pendiente o
- * aprobada (HU-10); aprobar y rechazar llegan con HU-11 y HU-12.
+ * Bandeja de solicitudes (HU-09). La coordinación aprueba una pendiente asignando
+ * medio y conductor (HU-11) y cancela una pendiente o aprobada (HU-10); rechazar
+ * llega con HU-12.
  */
 export function RequestsView() {
   const [page, setPage] = useState(1);
@@ -60,6 +62,7 @@ export function RequestsView() {
   const [status, setStatus] = useState<StatusFilter>('PENDING');
   const debouncedSearch = useDebouncedValue(search);
   const [cancelling, setCancelling] = useState<Reservation | null>(null);
+  const [approving, setApproving] = useState<Reservation | null>(null);
   const cancel = useCancelReservation();
   const currentUserId = useAuthStore((state) => state.user?.id);
 
@@ -106,9 +109,10 @@ export function RequestsView() {
     {
       key: 'driver',
       header: 'Conduce',
+      // Aprobada: quien conduce de verdad; si no, quien se propuso (RN-15).
       render: (r) =>
-        r.proposedDriver ? (
-          r.proposedDriver.fullName
+        r.assignment?.driver || r.proposedDriver ? (
+          (r.assignment?.driver ?? r.proposedDriver)?.fullName
         ) : (
           <Typography variant="body2" color="text.secondary">
             Sin indicar
@@ -131,10 +135,17 @@ export function RequestsView() {
       render: (r) => <span className="tabular">{r.passengers}</span>,
     },
     {
-      key: 'preferred',
-      header: 'Medio preferido',
+      key: 'resource',
+      header: 'Medio',
+      // Aprobada: el medio asignado; si no, el preferido por quien pide.
       render: (r) =>
-        r.preferredResource ? (
+        r.assignment ? (
+          <ResourceTag
+            kind={r.resourceType}
+            identifier={r.assignment.resource.identifier}
+            name={r.assignment.resource.name}
+          />
+        ) : r.preferredResource ? (
           <ResourceTag
             kind={r.resourceType}
             identifier={r.preferredResource.identifier}
@@ -151,21 +162,35 @@ export function RequestsView() {
       key: 'actions',
       header: '',
       align: 'right',
-      render: (r) =>
-        CANCELLABLE.includes(r.status) ? (
-          <Tooltip title="Cancelar solicitud">
-            <IconButton
-              size="small"
-              aria-label={`Cancelar la solicitud ${r.code}`}
-              onClick={() => {
-                cancel.reset();
-                setCancelling(r);
-              }}
-            >
-              <Ban size={18} />
-            </IconButton>
-          </Tooltip>
-        ) : null,
+      render: (r) => (
+        <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
+          {r.status === 'PENDING' ? (
+            <Tooltip title="Aprobar">
+              <IconButton
+                size="small"
+                aria-label={`Aprobar la solicitud ${r.code}`}
+                onClick={() => setApproving(r)}
+              >
+                <Check size={18} />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+          {CANCELLABLE.includes(r.status) ? (
+            <Tooltip title="Cancelar solicitud">
+              <IconButton
+                size="small"
+                aria-label={`Cancelar la solicitud ${r.code}`}
+                onClick={() => {
+                  cancel.reset();
+                  setCancelling(r);
+                }}
+              >
+                <Ban size={18} />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+        </Stack>
+      ),
     },
   ];
 
@@ -255,6 +280,12 @@ export function RequestsView() {
             setPage(1);
           },
         }}
+      />
+
+      <ApproveDialog
+        key={approving?.id ?? 'closed'}
+        reservation={approving}
+        onClose={() => setApproving(null)}
       />
 
       <ConfirmDialog
