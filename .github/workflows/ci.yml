@@ -135,6 +135,11 @@ jobs:
       - run: pnpm --filter @medios-aea/mobile lint
       - run: pnpm --filter @medios-aea/mobile typecheck
       - run: pnpm --filter @medios-aea/mobile test
+      # Compila el bundle como lo hace Expo Go: atrapa lo que lint y Jest no ven, como
+      # un archivo en src/app/ que Expo Router toma por pantalla. El nombre del job no
+      # cambia porque la protección de ramas lo exige por nombre.
+      - name: Bundle de Android (expo export)
+        run: pnpm --filter @medios-aea/mobile exec expo export --platform android --output-dir "$RUNNER_TEMP/expo-export"
 
   docker:
     name: Imágenes Docker (build)
