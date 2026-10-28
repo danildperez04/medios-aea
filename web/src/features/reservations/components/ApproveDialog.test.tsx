@@ -170,6 +170,7 @@ describe('ApproveDialog', () => {
       ).toBeInTheDocument();
       expect(screen.getByText('José Gutiérrez (asignado)')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Reasignar' })).toBeDisabled();
+      expect(screen.getByText('Se avisará a Carlos Rivera y José Gutiérrez.')).toBeInTheDocument();
     });
 
     it('envia solo lo que cambia y avisa a quien deja de conducir', async () => {

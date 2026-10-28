@@ -193,7 +193,7 @@ export function ApproveDialog({ reservation, mode = 'approve', onClose }: Approv
                   : changed
                     ? `Se avisará a ${joinNames([reservation.requester.fullName, reference?.fullName, chosenDriver?.fullName])}.`
                     : current
-                      ? `Se avisará a ${reservation.requester.fullName} si cambia el medio.`
+                      ? `Se avisará a ${joinNames([reservation.requester.fullName, current.driver?.fullName])}.`
                       : proposed
                         ? `Propuesto por ${reservation.requester.fullName}.`
                         : 'La solicitud no indica quién conduce.'
