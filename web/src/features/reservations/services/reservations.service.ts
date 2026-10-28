@@ -136,3 +136,13 @@ export function useApproveReservation() {
       ]),
   });
 }
+
+/** Rechaza una pendiente con motivo (HU-12); quien pidió lo recibe en su aviso. */
+export function useRejectReservation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) =>
+      (await api.post<Reservation>(`/reservations/${id}/reject`, { reason })).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: KEY }),
+  });
+}

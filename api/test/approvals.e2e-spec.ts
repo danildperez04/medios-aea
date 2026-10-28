@@ -278,4 +278,73 @@ describe('Aprobacion de solicitudes (integracion)', () => {
       await approve(second.id, { resourceId: vehicle.id }).expect(200);
     });
   });
+
+  /** HU-12 — rechazar con motivo (RF-13, PT-22). */
+  describe('rechazar', () => {
+    const reject = (id: string, body: object, who = 'admin') =>
+      request(app.getHttpServer()).post(`${api}/reservations/${id}/reject`).set(as(who)).send(body);
+
+    it('guarda el motivo, queda en auditoria y avisa a quien pidio con el motivo', async () => {
+      const created = await pending(window(40), { proposedDriverId: anaDriver.id }, 'carlos');
+      const response = await reject(created.id, {
+        reason: '  No hay medios libres por la feria departamental.  ',
+      }).expect(200);
+      expect(response.body).toMatchObject({
+        status: 'REJECTED',
+        rejectionReason: 'No hay medios libres por la feria departamental.',
+        assignment: null,
+      });
+      expect(response.body.decidedAt).not.toBeNull();
+
+      const audit = await dataSource
+        .getRepository(AuditLog)
+        .findOneByOrFail({ entityId: created.id, action: 'REJECT' as never });
+      expect(audit).toMatchObject({
+        actorId: admin.id,
+        payload: { reason: 'No hay medios libres por la feria departamental.' },
+      });
+
+      const [note] = await notesFor(carlos.id, created.id);
+      expect(note.title).toBe(`Solicitud ${created.code} rechazada`);
+      expect(note.body).toMatch(/Motivo: No hay medios libres por la feria departamental\./);
+    });
+
+    it('PT-22: sin motivo, en blanco o muy corto responde 400', async () => {
+      const created = await pending(window(41));
+      for (const body of [{}, { reason: '     ' }, { reason: 'no' }]) {
+        const response = await reject(created.id, body).expect(400);
+        expect(JSON.stringify(response.body)).toMatch(/motivo/);
+      }
+    });
+
+    it('una solicitud ya decidida no se rechaza ni se aprueba despues (409)', async () => {
+      const vehicle = await createVehicle(dataSource);
+      const approved = await pending(window(42));
+      await approve(approved.id, { resourceId: vehicle.id }).expect(200);
+      await reject(approved.id, { reason: 'Ya no hace falta el viaje' }).expect(409);
+
+      const rejected = await pending(window(43));
+      await reject(rejected.id, { reason: 'Se cruza con la feria' }).expect(200);
+      await approve(rejected.id, { resourceId: vehicle.id }).expect(409);
+      await request(app.getHttpServer())
+        .post(`${api}/reservations/${rejected.id}/cancel`)
+        .set(as('ana'))
+        .expect(409);
+    });
+
+    it('un tecnico no rechaza (403)', async () => {
+      const created = await pending(window(44));
+      await reject(created.id, { reason: 'Me arrepentí del viaje' }, 'ana').expect(403);
+    });
+
+    it('aprobar y rechazar a la vez: solo una decision gana (409 la otra)', async () => {
+      const vehicle = await createVehicle(dataSource);
+      const created = await pending(window(45));
+      const results = await Promise.all([
+        approve(created.id, { resourceId: vehicle.id }),
+        reject(created.id, { reason: 'No hay presupuesto de combustible' }),
+      ]);
+      expect(results.map((r) => r.status).sort()).toEqual([200, 409]);
+    });
+  });
 });

@@ -147,4 +147,22 @@ describe('RequestsView', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar solicitud' }));
     expect(await within(dialog).findByText(/ya inició/)).toBeInTheDocument();
   });
+
+  it('una rechazada muestra el motivo y una pendiente ofrece rechazar (HU-12)', async () => {
+    get.mockResolvedValue(
+      page([
+        reservation(),
+        reservation({
+          id: 'r2',
+          code: 'SOL-2026-00002',
+          status: 'REJECTED',
+          rejectionReason: 'Se cruza con la feria',
+        }),
+      ]),
+    );
+    renderView();
+    expect(await screen.findByText('Se cruza con la feria')).toBeInTheDocument();
+    expect(screen.getByLabelText('Rechazar la solicitud SOL-2026-00001')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Rechazar la solicitud SOL-2026-00002')).toBeNull();
+  });
 });

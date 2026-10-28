@@ -1,5 +1,5 @@
 import { Box, IconButton, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
-import { Ban, Check, ClipboardList } from 'lucide-react';
+import { Ban, Check, ClipboardList, X } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '@/app/services/api';
 import { useAuthStore } from '@/app/stores/auth.store';
@@ -19,6 +19,7 @@ import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { mono } from '@/design-system/theme/theme';
 import { formatRange } from '@/shared/lib/format';
 import { ApproveDialog } from '../components/ApproveDialog';
+import { RejectDialog } from '../components/RejectDialog';
 import {
   useCancelReservation,
   useReservations,
@@ -52,8 +53,8 @@ function cancelMessage(reservation: Reservation, currentUserId: string | undefin
 
 /**
  * Bandeja de solicitudes (HU-09). La coordinación aprueba una pendiente asignando
- * medio y conductor (HU-11) y cancela una pendiente o aprobada (HU-10); rechazar
- * llega con HU-12.
+ * medio y conductor (HU-11), la rechaza con motivo (HU-12) y cancela una pendiente
+ * o aprobada (HU-10).
  */
 export function RequestsView() {
   const [page, setPage] = useState(1);
@@ -63,6 +64,7 @@ export function RequestsView() {
   const debouncedSearch = useDebouncedValue(search);
   const [cancelling, setCancelling] = useState<Reservation | null>(null);
   const [approving, setApproving] = useState<Reservation | null>(null);
+  const [rejecting, setRejecting] = useState<Reservation | null>(null);
   const cancel = useCancelReservation();
   const currentUserId = useAuthStore((state) => state.user?.id);
 
@@ -157,7 +159,21 @@ export function RequestsView() {
           </Typography>
         ),
     },
-    { key: 'status', header: 'Estado', render: (r) => <StatusBadge status={r.status} /> },
+    {
+      key: 'status',
+      header: 'Estado',
+      // Una rechazada muestra el motivo: es lo que recibió quien pidió (HU-12).
+      render: (r) => (
+        <Box>
+          <StatusBadge status={r.status} />
+          {r.status === 'REJECTED' && r.rejectionReason ? (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              {r.rejectionReason}
+            </Typography>
+          ) : null}
+        </Box>
+      ),
+    },
     {
       key: 'actions',
       header: '',
@@ -172,6 +188,17 @@ export function RequestsView() {
                 onClick={() => setApproving(r)}
               >
                 <Check size={18} />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+          {r.status === 'PENDING' ? (
+            <Tooltip title="Rechazar">
+              <IconButton
+                size="small"
+                aria-label={`Rechazar la solicitud ${r.code}`}
+                onClick={() => setRejecting(r)}
+              >
+                <X size={18} />
               </IconButton>
             </Tooltip>
           ) : null}
@@ -286,6 +313,12 @@ export function RequestsView() {
         key={approving?.id ?? 'closed'}
         reservation={approving}
         onClose={() => setApproving(null)}
+      />
+
+      <RejectDialog
+        key={rejecting?.id ?? 'closed'}
+        reservation={rejecting}
+        onClose={() => setRejecting(null)}
       />
 
       <ConfirmDialog
