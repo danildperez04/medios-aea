@@ -35,6 +35,7 @@ import { User } from '#modules/users/entities/user.entity.js';
 import { driverProblem, resourceProblem, type ApprovalProblem } from './approval.rules.js';
 import type { ApproveReservationDto } from './dto/approve-reservation.dto.js';
 import type { CreateReservationDto } from './dto/create-reservation.dto.js';
+import type { RejectReservationDto } from './dto/reject-reservation.dto.js';
 import type { ReservationFiltersDto } from './dto/reservation-filters.dto.js';
 import { ReservationAssignment } from './entities/reservation-assignment.entity.js';
 import { ReservationRequest } from './entities/reservation-request.entity.js';
@@ -56,7 +57,7 @@ const WHEN = new Intl.DateTimeFormat('es-NI', {
 });
 
 /**
- * Solicitudes de medios (RF-10 a RF-12; HU-09, HU-10, HU-11, HU-26). Una solicitud
+ * Solicitudes de medios (RF-10 a RF-13; HU-09 a HU-12, HU-26). Una solicitud
  * nueva queda PENDING y no ocupa la agenda (RN-07): solo su asignación aprobada lo hace.
  */
 @Injectable()
@@ -197,16 +198,7 @@ export class ReservationsService {
     actor: AuthenticatedUser,
   ): Promise<ReservationView> {
     await this.dataSource.transaction(async (manager) => {
-      const request = await manager.findOne(ReservationRequest, {
-        where: { id },
-        lock: { mode: 'pessimistic_write' },
-      });
-      if (!request) throw new NotFoundException('La solicitud no existe.');
-      if (request.status !== RequestStatus.PENDING) {
-        throw new ConflictException(
-          'La solicitud ya no está pendiente: otra persona la decidió o se canceló. Recarga la bandeja.',
-        );
-      }
+      const request = await this.lockPending(manager, id);
       const period: TimeRange = { start: request.startsAt, end: request.endsAt };
 
       const resource = await manager.findOne(Resource, {
@@ -308,6 +300,43 @@ export class ReservationsService {
   }
 
   /**
+   * Rechaza una solicitud pendiente con un motivo que lee quien pidió (RF-13, HU-12).
+   * Bloquea la solicitud igual que aprobar: si dos personas de la coordinación la
+   * deciden a la vez, la segunda recibe 409. No hay asignación que liberar (RN-07).
+   */
+  async reject(
+    id: string,
+    dto: RejectReservationDto,
+    actor: AuthenticatedUser,
+  ): Promise<ReservationView> {
+    await this.dataSource.transaction(async (manager) => {
+      const request = await this.lockPending(manager, id);
+      await manager.update(ReservationRequest, id, {
+        status: RequestStatus.REJECTED,
+        rejectionReason: dto.reason,
+        decidedById: actor.id,
+        decidedAt: new Date(),
+      });
+      await manager.insert(AuditLog, {
+        actorId: actor.id,
+        action: AuditAction.REJECT,
+        entity: 'reservation_request',
+        entityId: id,
+        payload: { reason: dto.reason },
+      });
+      if (request.requesterId !== actor.id) {
+        await this.notifications.notifyUsers(manager, [request.requesterId], {
+          title: `Solicitud ${request.code} rechazada`,
+          body: `Tu viaje a ${request.destination} (${WHEN.format(request.startsAt)} – ${WHEN.format(request.endsAt)}) no se aprobó. Motivo: ${dto.reason}`,
+          data: { kind: 'RESERVATION_REJECTED', reservationId: id },
+        });
+      }
+    });
+
+    return this.findOneOrFail(id, actor);
+  }
+
+  /**
    * Cancela una solicitud pendiente o aprobada (RF-11, HU-10). Solo su dueño o
    * la coordinación (RN-13). Si estaba aprobada, sus asignaciones pasan a
    * `active = false` y el medio y el conductor quedan libres (RN-10).
@@ -375,6 +404,24 @@ export class ReservationsService {
     });
 
     return this.findOneOrFail(id, actor);
+  }
+
+  /**
+   * Bloquea la solicitud con FOR UPDATE y exige que siga pendiente: aprobar y
+   * rechazar solo deciden una vez, aunque dos personas lo intenten a la vez.
+   */
+  private async lockPending(manager: EntityManager, id: string): Promise<ReservationRequest> {
+    const request = await manager.findOne(ReservationRequest, {
+      where: { id },
+      lock: { mode: 'pessimistic_write' },
+    });
+    if (!request) throw new NotFoundException('La solicitud no existe.');
+    if (request.status !== RequestStatus.PENDING) {
+      throw new ConflictException(
+        'La solicitud ya no está pendiente: otra persona la decidió o se canceló. Recarga la bandeja.',
+      );
+    }
+    return request;
   }
 
   /**

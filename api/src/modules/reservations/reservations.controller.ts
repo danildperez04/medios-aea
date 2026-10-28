@@ -18,6 +18,7 @@ import type { PaginatedResponse } from '#common/dto/pagination.dto.js';
 import { UserRole } from '#common/enums/domain.enums.js';
 import { ApproveReservationDto } from './dto/approve-reservation.dto.js';
 import { CreateReservationDto } from './dto/create-reservation.dto.js';
+import { RejectReservationDto } from './dto/reject-reservation.dto.js';
 import { ReservationFiltersDto } from './dto/reservation-filters.dto.js';
 import type { ReservationView } from './reservation.view.js';
 import { ReservationsService } from './reservations.service.js';
@@ -78,6 +79,20 @@ export class ReservationsController {
     @CurrentUser() actor: AuthenticatedUser,
   ): Promise<ReservationView> {
     return this.service.approve(id, dto, actor);
+  }
+
+  @Post(':id/reject')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Rechazar una solicitud pendiente con motivo; avisa a quien pidió' })
+  @ApiResponse({ status: 400, description: 'Falta el motivo o es muy corto (PT-22)' })
+  @ApiResponse({ status: 409, description: 'La solicitud ya no está pendiente' })
+  reject(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: RejectReservationDto,
+    @CurrentUser() actor: AuthenticatedUser,
+  ): Promise<ReservationView> {
+    return this.service.reject(id, dto, actor);
   }
 
   @Post(':id/cancel')
