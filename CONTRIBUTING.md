@@ -36,8 +36,11 @@ issue ──▶ rama ──▶ commits ──▶ PR ──▶ revisión + CI ─
    pnpm format:check && pnpm lint && pnpm typecheck && pnpm test
    pnpm --filter @medios-aea/api test:cov   # si tocaste la API (requiere pnpm db:up)
    ```
-5. **PR hacia `develop`** con la plantilla. El título es el commit final (mismo
-   formato que un commit) e incluye `Closes #N` en la descripción para cerrar el issue.
+5. **PR hacia `develop`** con la plantilla. El título es el commit final, en el mismo
+   formato que un commit (`feat(reservations): …`): el check de Calidad lo valida, y
+   corregirlo lo vuelve a validar. La descripción incluye `Closes #N`: al mergear a
+   `develop`, el workflow `issues.yml` cierra el issue (GitHub por sí solo lo cerraría
+   recién al llegar a `main`). `Refs #N` lo menciona sin cerrarlo.
    Tamaño ideal: menos de ~400 líneas sin contar pruebas ni lockfile.
 6. **Revisión** (`docs/17-revision-de-codigo.md`) y **CI en verde**: calidad, API, web,
    móvil, Docker, seguridad y CodeQL.
