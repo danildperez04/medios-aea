@@ -1,0 +1,54 @@
+name: Issues
+
+# GitHub solo cierra los issues de `Closes #N` cuando el PR entra a la rama por
+# defecto (`main`), y las historias se mergean a `develop`. Este workflow hace lo
+# mismo al mergear a `develop`, para que el flujo de CONTRIBUTING.md funcione.
+on:
+  pull_request:
+    types: [closed]
+    branches: [develop]
+
+permissions:
+  contents: read
+
+jobs:
+  close-linked:
+    name: Cerrar los issues del PR
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Cerrar los marcados con Closes, Fixes o Resolves
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          # Por variable de entorno, nunca interpolado en el script: lo escribe quien abre el PR.
+          BODY: ${{ github.event.pull_request.body }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # Sin los comentarios HTML de la plantilla; solo números, que es lo único que se usa.
+          numbers=$(printf '%s\n' "$BODY" \
+            | perl -0pe 's/<!--.*?-->//gs' \
+            | grep -oiE '\b(close[sd]?|fix(e[sd])?|resolve[sd]?)[[:space:]]*:?[[:space:]]+#[0-9]+\b' \
+            | grep -oE '[0-9]+$' | sort -un || true)
+          if [ -z "$numbers" ]; then
+            echo "El PR #$PR no marca issues con Closes, Fixes o Resolves."
+            exit 0
+          fi
+          for n in $numbers; do
+            info=$(gh api "repos/$GH_REPO/issues/$n" --jq '[.state, (.pull_request != null)] | @tsv' 2>/dev/null) || {
+              echo "::warning::#$n no existe en este repositorio."
+              continue
+            }
+            state=${info%%$'\t'*}
+            is_pr=${info##*$'\t'}
+            if [ "$is_pr" = true ]; then
+              echo "#$n es un PR, no un issue: se omite."
+            elif [ "$state" = closed ]; then
+              echo "#$n ya estaba cerrado."
+            else
+              gh issue close "$n" --comment "Cerrado por #$PR al mergearse en \`develop\`."
+            fi
+          done

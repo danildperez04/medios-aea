@@ -2,6 +2,10 @@ name: CI
 
 on:
   pull_request:
+    # `edited`: corregir el título del PR vuelve a validarlo; sin esto el check de
+    # Calidad seguía en rojo con el título viejo y re-ejecutarlo usaba el mismo dato.
+    # Corre todo el CI, no solo Calidad: un job omitido contaría como aprobado.
+    types: [opened, synchronize, reopened, edited]
     branches: [develop, main]
   push:
     branches: [develop, main]
