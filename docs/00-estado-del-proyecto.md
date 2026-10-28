@@ -150,8 +150,9 @@ Primera historia con el flujo de una rama por historia (`docs/05` §3).
 | HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request`  | TERMINADO (PR #7)  |
 | HU-10 Cancelar una solicitud        | `feature/hu-10-cancel-request`  | TERMINADO (PR #49) |
 | HU-26 Indicar quién conduce         | `feature/hu-26-proposed-driver` | TERMINADO (PR #52) |
-| HU-11 Aprobar sin choques           | `feature/hu-11-approve-request` | Lista para PR      |
-| HU-12 a HU-15                       | —                               | Pendientes         |
+| HU-11 Aprobar sin choques           | `feature/hu-11-approve-request` | TERMINADO (PR #61) |
+| HU-12 Rechazar con motivo           | `feature/hu-12-reject-request`  | Lista para PR      |
+| HU-13 a HU-15                       | —                               | Pendientes         |
 
 HU-09: `POST /reservations` (queda PENDING, código `SOL-AAAA-NNNNN`, aviso interno a la
 coordinación, RN-06 y RN-14), `GET /reservations` (cada técnico solo las suyas),
@@ -181,6 +182,14 @@ la garantía ante aprobaciones simultáneas. En la web, diálogo de aprobación 
 ofrece medios y conductores libres. Verificación: 135 unitarias, 96 e2e (PT-01 a PT-10)
 y 39 web en verde; revisada en el navegador a 1366 y 390 px.
 
+HU-12: `POST /reservations/:id/reject` (ADMIN) exige un motivo de 5 a 300 caracteres
+(PT-22), lo guarda con quién decidió y cuándo, deja registro en `audit_log` y avisa a
+quien pidió con el motivo. Comparte con la aprobación el candado de la solicitud: si
+alguien aprueba y otra persona rechaza a la vez, solo una decisión queda (409 la otra).
+En la web, diálogo de rechazo y el motivo bajo el estado de las rechazadas.
+Verificación: 136 unitarias, 101 e2e y 43 web en verde; revisada en el navegador a
+1366 y 390 px.
+
 ## Revisión de DevOps, calidad, seguridad y proceso · TERMINADO
 
 Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`:
@@ -196,5 +205,5 @@ Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`
 
 ## Siguiente en el Sprint 3
 
-HU-12 a HU-15: rechazo con motivo, reasignación, calendario semanal y la vista de
-auditoría (los registros de aprobar y cancelar ya se guardan).
+HU-13 a HU-15: reasignación, calendario semanal y la vista de auditoría (los registros
+de aprobar, rechazar y cancelar ya se guardan).
