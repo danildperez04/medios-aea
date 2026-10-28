@@ -18,6 +18,7 @@ import type { PaginatedResponse } from '#common/dto/pagination.dto.js';
 import { UserRole } from '#common/enums/domain.enums.js';
 import { ApproveReservationDto } from './dto/approve-reservation.dto.js';
 import { CreateReservationDto } from './dto/create-reservation.dto.js';
+import { ReassignReservationDto } from './dto/reassign-reservation.dto.js';
 import { RejectReservationDto } from './dto/reject-reservation.dto.js';
 import { ReservationFiltersDto } from './dto/reservation-filters.dto.js';
 import type { ReservationView } from './reservation.view.js';
@@ -93,6 +94,26 @@ export class ReservationsController {
     @CurrentUser() actor: AuthenticatedUser,
   ): Promise<ReservationView> {
     return this.service.reject(id, dto, actor);
+  }
+
+  @Post(':id/reassign')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Reasignar el medio o quién conduce de una solicitud aprobada; avisa a los afectados',
+  })
+  @ApiResponse({ status: 400, description: 'No hay cambios, o el medio o el conductor no existen' })
+  @ApiResponse({ status: 409, description: 'No está aprobada, el viaje inició o hay choque' })
+  @ApiResponse({
+    status: 422,
+    description: 'Medio en mantenimiento, sin capacidad o licencia vencida',
+  })
+  reassign(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: ReassignReservationDto,
+    @CurrentUser() actor: AuthenticatedUser,
+  ): Promise<ReservationView> {
+    return this.service.reassign(id, dto, actor);
   }
 
   @Post(':id/cancel')
