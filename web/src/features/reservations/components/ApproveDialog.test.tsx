@@ -59,11 +59,14 @@ function options(overrides: Partial<ApprovalOptions> = {}) {
   );
 }
 
-function renderDialog(onClose = vi.fn()) {
+function renderDialog(
+  onClose = vi.fn(),
+  props: Partial<React.ComponentProps<typeof ApproveDialog>> = {},
+) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={client}>
-      <ApproveDialog reservation={reservation} onClose={onClose} />
+      <ApproveDialog reservation={reservation} onClose={onClose} {...props} />
     </QueryClientProvider>,
   );
   return onClose;
@@ -137,5 +140,55 @@ describe('ApproveDialog', () => {
     await screen.findByText('Propuesto por Ana Martínez.');
     await userEvent.setup().click(screen.getByRole('button', { name: 'Aprobar' }));
     expect(await screen.findByText('Hilux blanca ya tiene un viaje aprobado.')).toBeInTheDocument();
+  });
+
+  describe('reasignar (HU-13)', () => {
+    // Aprobada con la Hilux y José: la disponibilidad los da por ocupados (este mismo viaje).
+    const approved: Reservation = {
+      ...reservation,
+      status: 'APPROVED',
+      requester: { id: 'u2', fullName: 'Carlos Rivera' },
+      assignment: {
+        id: 'a1',
+        resource: { id: hilux.id, name: hilux.name, identifier: hilux.identifier },
+        driver: jose,
+      },
+    };
+    const busyOwn = () =>
+      options({
+        resources: { available: [prado], unavailable: [{ resource: hilux, reasons: ['BUSY'] }] },
+        drivers: { available: [ana], unavailable: [{ driver: jose, reasons: ['BUSY'] }] },
+      });
+
+    it('marca lo actual aunque figure ocupado y no deja enviar sin cambios', async () => {
+      busyOwn();
+      renderDialog(vi.fn(), { reservation: approved, mode: 'reassign' });
+
+      expect(await screen.findByText('Reasignar SOL-2026-00001')).toBeInTheDocument();
+      expect(
+        await screen.findByText(/Hilux blanca · M 123-456 · 4 pasajeros \(asignado\)/),
+      ).toBeInTheDocument();
+      expect(screen.getByText('José Gutiérrez (asignado)')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Reasignar' })).toBeDisabled();
+    });
+
+    it('envia solo lo que cambia y avisa a quien deja de conducir', async () => {
+      busyOwn();
+      post.mockResolvedValue({ data: approved });
+      const onClose = renderDialog(vi.fn(), { reservation: approved, mode: 'reassign' });
+      const user = userEvent.setup();
+
+      await user.click(await screen.findByRole('combobox', { name: 'Conduce' }));
+      await user.click(within(screen.getByRole('listbox')).getByText('Ana Martínez'));
+      expect(
+        screen.getByText('Se avisará a Carlos Rivera, José Gutiérrez y Ana Martínez.'),
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Reasignar' }));
+      await waitFor(() =>
+        expect(post).toHaveBeenCalledWith('/reservations/r1/reassign', { driverId: ana.id }),
+      );
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+    });
   });
 });
