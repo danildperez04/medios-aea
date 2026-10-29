@@ -487,10 +487,20 @@ export class ReservationsService {
     if (!driverId && request.resourceType === ResourceType.VEHICLE) {
       throw new BadRequestException('Elige quién conduce: la solicitud no indica a nadie.');
     }
-    const driver = driverId
-      ? await manager.findOne(Driver, { where: { id: driverId }, relations: { user: true } })
+    // También se bloquea la fila del conductor, siempre después del medio: dos
+    // aprobaciones con la misma persona en medios distintos se ordenan aquí y la segunda
+    // ve el viaje de la primera (409 claro). Sin esto, cada una bloqueaba su medio,
+    // ambas insertaban y se esperaban en la restricción de exclusión: deadlock y 500.
+    const locked = driverId
+      ? await manager.findOne(Driver, {
+          where: { id: driverId },
+          lock: { mode: 'pessimistic_write' },
+        })
       : null;
-    if (driverId && !driver) throw new BadRequestException('El conductor no existe.');
+    if (driverId && !locked) throw new BadRequestException('El conductor no existe.');
+    const driver = locked
+      ? Object.assign(locked, { user: await manager.findOneByOrFail(User, { id: locked.userId }) })
+      : null;
     if (driver) {
       const driverConflict = await this.firstAssignmentConflict(
         manager,
