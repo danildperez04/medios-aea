@@ -7,12 +7,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '#modules/users/entities/user.entity.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
+import { RefreshToken } from './entities/refresh-token.entity.js';
+import { SessionController } from './session.controller.js';
+import { SessionService } from './session.service.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
 
 @Global()
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, RefreshToken]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -32,8 +35,8 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
     // Límite global de peticiones; el login lo endurece a 10 por minuto.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  controllers: [AuthController, SessionController],
+  providers: [AuthService, SessionService, JwtStrategy],
   exports: [AuthService, JwtModule, PassportModule, ThrottlerModule],
 })
 export class AuthModule {}
