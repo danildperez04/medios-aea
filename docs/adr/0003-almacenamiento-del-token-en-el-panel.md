@@ -1,17 +1,18 @@
 # 0003 — Dónde guarda el panel web el token de sesión
 
-- **Estado:** Propuesta
-- **Fecha:** 2026-10-18
-- **Decide:** pendiente, antes de la UAT (Sprint 6)
+- **Estado:** Aceptada (opción 3)
+- **Fecha:** 2026-10-18 (propuesta) · 2026-10-29 (aceptada)
+- **Decide:** responsable del proyecto
 
 ## Contexto
 
-El panel guarda el JWT en `localStorage` (con zustand `persist`) para que recargar no
-cierre la sesión. Cualquier script que logre ejecutarse en la página (un XSS, una
-dependencia comprometida) puede leerlo y usarlo desde otro equipo hasta que venza (8 h).
+El panel guardaba el JWT en `localStorage` (con zustand `persist`) para que recargar no
+cerrara la sesión. Cualquier script que lograra ejecutarse en la página (un XSS, una
+dependencia comprometida) podía leerlo y usarlo desde otro equipo hasta que venciera
+(8 h).
 
 Mitigaciones presentes: React escapa el contenido por defecto y el código no usa
-`dangerouslySetInnerHTML`. La revisión de seguridad del 18/10/2026 agrega una
+`dangerouslySetInnerHTML`. La revisión de seguridad del 18/10/2026 agregó una
 Content-Security-Policy al panel (solo scripts del propio origen) y hace que la API
 revoque al instante el acceso de una cuenta desactivada (`JwtStrategy` consulta la base
 en cada petición). La app móvil no está afectada: usa SecureStore.
@@ -26,13 +27,35 @@ en cada petición). La app móvil no está afectada: usa SecureStore.
 3. **Token de acceso en memoria + refresh token en cookie `HttpOnly`.** El más robusto y
    el que más cambia: endpoint de refresh, rotación y revocación de refresh tokens.
 
-## Propuesta
+## Decisión
 
-Opción 2 antes de la UAT: cierra el riesgo principal con un cambio acotado, y la
-arquitectura (web y API en el mismo origen) ya la favorece.
+Se elige la **opción 3**. Frente a la 2, un XSS no puede llevarse nada que sirva más de
+unos minutos, el guard sigue leyendo solo el encabezado `Authorization` (igual que la
+app) y cerrar sesión revoca de verdad en el servidor.
 
-## Consecuencias si se acepta
+- **Token de acceso** del panel: JWT de **15 minutos** (`WEB_ACCESS_TOKEN_TTL`), solo en
+  memoria. Recargar la página no cierra la sesión: el panel pide uno nuevo con la cookie.
+- **Refresh token:** valor aleatorio opaco (32 bytes) en la cookie `medios_aea_refresh`:
+  `HttpOnly`, `SameSite=Strict`, `Path=/api/v1/auth/session`, `Secure` en producción.
+  La base guarda solo su **SHA-256** (`refresh_token`), nunca el valor.
+- **Rotación:** cada refresh entrega un token nuevo y marca el anterior como usado. La
+  sesión vence a las **12 horas sin uso** (`REFRESH_TOKEN_TTL_HOURS`).
+- **Detección de robo:** si vuelve un refresh token ya usado, se revoca toda su familia
+  (la sesión): alguien lo copió. Excepción: en los **30 s** siguientes a su uso se acepta
+  y emite otro de la misma familia, para que dos pestañas que refrescan a la vez no se
+  cierren mutuamente.
+- **CSRF:** además de `SameSite=Strict`, refrescar y cerrar sesión exigen el encabezado
+  `X-Medios-Client: web`, que un formulario o un enlace de otro sitio no puede enviar; el
+  CORS solo admite el propio panel.
+- **Endpoints** (`/auth/session`, públicos): `POST` inicia sesión, `POST /refresh` rota,
+  `POST /logout` revoca la familia y borra la cookie.
+- **App móvil:** sin cambios. Sigue con `POST /auth/login`, token de 8 h en SecureStore.
 
-- Issue `tipo:seguridad` con el cambio en API y web y sus pruebas (login, logout, CSRF,
-  convivencia con el encabezado `Authorization` de la app).
-- `SECURITY.md` §5 se actualiza.
+## Consecuencias
+
+- Migración `refresh_token` (usuario, familia, hash, vencimiento, uso, revocación).
+- Una cuenta desactivada no puede refrescar: se revoca su familia.
+- El panel deja de usar `localStorage` y borra la clave anterior al arrancar.
+- Pendiente fuera de este cambio: limpiar periódicamente los refresh tokens vencidos y
+  revocar las sesiones abiertas al cambiar la contraseña.
+- `SECURITY.md` §5 y `docs/14-arquitectura.md` describen el nuevo flujo.

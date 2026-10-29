@@ -89,6 +89,11 @@ Organización por funcionalidad (`src/features/<feature>/{api,components,pages,s
 componentes compartidos en `src/components/ui`, cliente HTTP en `src/lib/api.ts`
 con interceptor de token. Rutas protegidas por rol `ADMIN`.
 
+Sesión (ADR 0003): el token de acceso vive solo en memoria (`app/stores/auth.store.ts`).
+Al abrir o recargar, `restoreSession` pide uno nuevo a `POST /auth/session/refresh` con
+la cookie `HttpOnly`; ante un 401, el cliente renueva una sola vez (un refresh compartido
+por todas las peticiones) y repite la petición.
+
 ## 4. Móvil
 
 ```
@@ -106,7 +111,9 @@ El layout `(app)` redirige al grupo según el rol del usuario.
 
 ## 5. Seguridad
 
-JWT de acceso (8 h), bcrypt (10 rondas), throttler en `/auth/login`, helmet, CORS
+JWT de acceso de 8 h para la app (`/auth/login`) y de 15 min para el panel
+(`/auth/session`, con refresh token rotativo en cookie `HttpOnly`, ADR 0003), bcrypt,
+throttler en ambos inicios de sesión, helmet, CORS
 restringido a los orígenes de la web, validación estricta (`whitelist`,
 `forbidNonWhitelisted`).
 

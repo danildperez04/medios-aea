@@ -172,6 +172,28 @@ describe('SWAGGER_ENABLED', () => {
   });
 });
 
+/** Sesión del panel web (ADR 0003). */
+describe('sesion del panel', () => {
+  const env = (extra: Record<string, string>) =>
+    configValidationSchema.validate({ ...BASE_ENV, ...extra });
+
+  it('la cookie es Secure por defecto en produccion y no en desarrollo', () => {
+    expect(env({ NODE_ENV: 'production' }).value.COOKIE_SECURE).toBe(true);
+    expect(env({ NODE_ENV: 'development' }).value.COOKIE_SECURE).toBe(false);
+  });
+
+  it('token de acceso de 15 minutos y sesion de 12 horas sin uso por defecto', () => {
+    const { value } = env({});
+    expect(value.WEB_ACCESS_TOKEN_TTL).toBe('15m');
+    expect(value.REFRESH_TOKEN_TTL_HOURS).toBe(12);
+  });
+
+  it('rechaza una duracion que no entiende', () => {
+    expect(env({ WEB_ACCESS_TOKEN_TTL: 'quince' }).error).toBeDefined();
+    expect(env({ REFRESH_TOKEN_TTL_HOURS: '0' }).error).toBeDefined();
+  });
+});
+
 describe('configValidationSchema', () => {
   const base = { ...BASE_ENV };
 
