@@ -32,17 +32,19 @@ todos los lunes.
 Configuradas en `pnpm-workspace.yaml` (`auditConfig.ignoreGhsas`). Cada excepción debe
 tener motivo y fecha de revisión; si no se puede justificar, no se ignora.
 
-| Aviso               | Paquete    | Severidad | Vía                              | Motivo                                                                      | Revisar                                    |
-| ------------------- | ---------- | --------- | -------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------ |
-| GHSA-86w9-cpqp-85rv | node-forge | Alta      | Herramientas de Expo (app móvil) | Sin versión corregida; se usa al compilar el APK, no en la app ni en la API | Al actualizar el SDK de Expo, o 18/01/2027 |
-| GHSA-vfj7-8cjw-p6xm | braces     | Alta      | Herramientas de Expo (app móvil) | Sin versión corregida; solo en la compilación del bundle                    | Al actualizar el SDK de Expo, o 18/01/2027 |
-| GHSA-mrhx-c7xc-m3w5 | zod 3      | Alta      | `@expo/cli` (app móvil)          | Parche solo para zod 4; la CLI pide `^3.25.76` y valida configuración local | Al actualizar el SDK de Expo, o 27/01/2027 |
+| Aviso               | Paquete              | Severidad | Vía                                          | Motivo                                                                                                                             | Revisar                                                                               |
+| ------------------- | -------------------- | --------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| GHSA-86w9-cpqp-85rv | node-forge           | Alta      | Herramientas de Expo (app móvil)             | Sin versión corregida; se usa al compilar el APK, no en la app ni en la API                                                        | Al actualizar el SDK de Expo, o 18/01/2027                                            |
+| GHSA-vfj7-8cjw-p6xm | braces               | Alta      | Herramientas de Expo (app móvil)             | Sin versión corregida; solo en la compilación del bundle                                                                           | Al actualizar el SDK de Expo, o 18/01/2027                                            |
+| GHSA-mrhx-c7xc-m3w5 | zod 3                | Alta      | `@expo/cli` (app móvil)                      | Parche solo para zod 4; la CLI pide `^3.25.76` y valida configuración local                                                        | Al actualizar el SDK de Expo, o 27/01/2027                                            |
+| GHSA-qr28-fpjm-wq7f | decode-uri-component | Alta      | `expo-router` → `query-string` 7 (app móvil) | Parche (0.5.1) solo ESM: rompe `query-string` 7. Un enlace mal formado podría congelar la app de quien lo abre; no afecta a la API | Al actualizar a Expo SDK 58 (`expo-router` 58 ya no usa `query-string`), o 29/01/2027 |
 
-Además queda un aviso moderado que no bloquea (`--audit-level high`) y no se ignora para
-que siga visible: `decode-uri-component` 0.2.2 (GHSA-vcc3-ghjq-m6fr), que entra en la app
-por `expo-router` → `query-string` 7. La corrección (0.5) es solo ESM y rompe
-`query-string`; el riesgo es que un enlace mal formado congele la app de quien lo abre,
-no la API. Se revisa al actualizar el SDK de Expo. `uuid` desapareció el 27/10/2026
+El mismo paquete tiene además un aviso moderado (GHSA-vcc3-ghjq-m6fr) que no bloquea
+(`--audit-level high`) y no se ignora para que siga visible. El 29/10/2026 se publicó el
+alto (GHSA-qr28-fpjm-wq7f), sin corrección compatible: se ignora con la fila de arriba
+hasta actualizar a Expo SDK 58, que es la corrección real. También queda visible un aviso bajo de
+`deepmerge` 4.3.1 (GHSA-gcqx-w48m-w2h4), sin corrección, solo en las herramientas de
+compilación de Expo. `uuid` desapareció el 27/10/2026
 (`xcode` 4 ya no lo usa).
 
 ## 5. Medidas en la aplicación
