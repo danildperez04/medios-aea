@@ -39,6 +39,7 @@ La app móvil se distribuye como **APK** generado con EAS Build (§5).
 | api    | `PORT`                                                                        | Puerto interno (3000 por defecto; los PaaS lo imponen)       |
 | api    | `SWAGGER_ENABLED`                                                             | `/api/docs`. Por defecto apagado en producción               |
 | api    | `CORS_ORIGIN`, `JWT_EXPIRES_IN`, `BCRYPT_ROUNDS`, `LOG_LEVEL`, `DATABASE_SSL` | Ver `.env.production.example`                                |
+| api    | `COOKIE_SECURE`                                                               | `false` mientras el panel vaya por HTTP; `true` con HTTPS    |
 | web    | `PORT`                                                                        | Puerto de nginx (8080 por defecto: corre sin privilegios)    |
 | web    | `API_UPSTREAM`                                                                | Dónde está la API (`http://api:3000` por defecto)            |
 
@@ -139,7 +140,8 @@ Sin dominio el sistema funciona por HTTP en la red interna. Cuando exista un dom
 (p. ej. `medios.ayudaenaccion.org`) apuntando al servidor, se agrega **Caddy** delante,
 que obtiene y renueva el certificado de Let's Encrypt solo:
 
-1. En `.env.production`, `WEB_PORT=8080` y `CORS_ORIGIN=https://medios.ayudaenaccion.org`.
+1. En `.env.production`, `WEB_PORT=8080`, `CORS_ORIGIN=https://medios.ayudaenaccion.org` y
+   `COOKIE_SECURE=true` (la cookie de sesión del panel deja de viajar sin cifrar).
 2. Crear `Caddyfile`:
    ```
    medios.ayudaenaccion.org {

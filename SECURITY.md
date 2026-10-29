@@ -52,6 +52,12 @@ compilación de Expo. `uuid` desapareció el 27/10/2026
 - Contraseñas con bcrypt (12 rondas); política de 8+ caracteres con mayúscula,
   minúscula y número.
 - JWT firmado con `JWT_SECRET` de 32+ caracteres (la API no arranca sin él).
+- Sesión del panel web (ADR 0003): token de acceso de 15 min **solo en memoria** (nada en
+  `localStorage`) y refresh token opaco en una cookie `HttpOnly`, `SameSite=Strict`,
+  limitada a `/api/v1/auth/session` y `Secure` con HTTPS. La base guarda solo su SHA-256;
+  rota en cada uso, vence a las 12 h sin uso y, si vuelve un token ya rotado, se revoca
+  toda la sesión. Refrescar y salir exigen el encabezado `X-Medios-Client` (CSRF). Solo
+  la coordinación abre sesión en el panel. La app móvil sigue con su token en SecureStore.
 - Límite de intentos de inicio de sesión (10 por minuto e IP) y límite global.
 - `helmet` en la API; CORS restringido a la web.
 - Panel con Content-Security-Policy (`web/nginx/security-headers.conf`): solo scripts y
@@ -63,7 +69,8 @@ compilación de Expo. `uuid` desapareció el 27/10/2026
 - Contenedores sin root: la API corre como `node` y el panel como `nginx` (uid 101).
 - Solo el contenedor web publica un puerto; la API y PostgreSQL quedan en la red interna.
 
-Decisiones abiertas: el almacenamiento del token en el panel web (ADR 0003).
+Pendiente: limpiar los refresh tokens vencidos y revocar las sesiones al cambiar la
+contraseña (ADR 0003, consecuencias).
 
 ## 6. Manejo de secretos
 
