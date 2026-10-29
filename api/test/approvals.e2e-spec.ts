@@ -12,7 +12,7 @@ import { createE2eContext, destroyE2eContext, runMigrations } from './e2e-contex
 import { createDriver, createProject, createUser, createVehicle, signToken } from './fixtures.js';
 
 /**
- * HU-11 — aprobar asignando medio y conductor sin choques (RF-12, RF-14, RN-01 a
+ * HU-11, HU-12 y HU-13 — aprobar, rechazar y reasignar sin choques (RF-12, RF-14, RN-01 a
  * RN-05, RN-08, RN-09, ADR 0004). Casos PT-01 a PT-10 de docs/12-plan-pruebas.md.
  * Cada prueba usa sus propios medios y conductores para no chocar con las demás.
  */
@@ -343,6 +343,140 @@ describe('Aprobacion de solicitudes (integracion)', () => {
       const results = await Promise.all([
         approve(created.id, { resourceId: vehicle.id }),
         reject(created.id, { reason: 'No hay presupuesto de combustible' }),
+      ]);
+      expect(results.map((r) => r.status).sort()).toEqual([200, 409]);
+    });
+  });
+
+  /** HU-13 — reasignar medio o conductor (RF-15, RN-10). */
+  describe('reasignar', () => {
+    const reassign = (id: string, body: object, who = 'admin') =>
+      request(app.getHttpServer())
+        .post(`${api}/reservations/${id}/reassign`)
+        .set(as(who))
+        .send(body);
+
+    const assignments = (requestId: string) =>
+      dataSource.query<{ id: string; resource_id: string; driver_id: string; active: boolean }[]>(
+        `SELECT id, resource_id, driver_id, active FROM reservation_assignment
+          WHERE request_id = $1 ORDER BY created_at`,
+        [requestId],
+      );
+
+    it('cambia el medio: la asignacion anterior queda inactiva y el medio, libre', async () => {
+      const [hilux, prado] = [await createVehicle(dataSource), await createVehicle(dataSource)];
+      const when = window(50);
+      const created = await pending(when);
+      await approve(created.id, { resourceId: hilux.id }).expect(200);
+
+      const response = await reassign(created.id, { resourceId: prado.id }).expect(200);
+      expect(response.body).toMatchObject({
+        status: 'APPROVED',
+        assignment: { resource: { id: prado.id }, driver: { id: anaDriver.id } },
+      });
+
+      const rows = await assignments(created.id);
+      expect(rows.map((r) => [r.resource_id, r.active])).toEqual([
+        [hilux.id, false],
+        [prado.id, true],
+      ]);
+      const audit = await dataSource
+        .getRepository(AuditLog)
+        .findOneByOrFail({ entityId: created.id, action: 'REASSIGN' as never });
+      expect(audit.payload).toMatchObject({
+        from: { resourceId: hilux.id, driverId: anaDriver.id },
+        to: { resourceId: prado.id, driverId: anaDriver.id },
+      });
+
+      // Ana pidió y conduce: un solo aviso.
+      const notes = (await notesFor(ana.id, created.id)).filter((n) =>
+        n.title.startsWith('Cambió'),
+      );
+      expect(notes.map((n) => n.title)).toEqual([`Cambió tu viaje ${created.code}`]);
+
+      // La Hilux quedó libre en ese horario (RN-10).
+      const other = await pending(when, { proposedDriverId: (await createDriver(dataSource)).id });
+      await approve(other.id, { resourceId: hilux.id }).expect(200);
+    });
+
+    it('cambia quien conduce en el mismo medio y avisa a los tres', async () => {
+      const vehicle = await createVehicle(dataSource);
+      const jose = await createDriver(dataSource);
+      const luis = await createDriver(dataSource);
+      const created = await pending(window(51), { proposedDriverId: jose.id }, 'carlos');
+      await approve(created.id, { resourceId: vehicle.id }).expect(200);
+
+      // Mismo medio y mismo horario: la asignación propia no cuenta como choque.
+      const response = await reassign(created.id, { driverId: luis.id }).expect(200);
+      expect(response.body.assignment).toMatchObject({
+        resource: { id: vehicle.id },
+        driver: { id: luis.id },
+      });
+
+      const titles = async (userId: string) =>
+        (await notesFor(userId, created.id)).map((n) => n.title);
+      expect(await titles(carlos.id)).toContain(`Cambió tu viaje ${created.code}`);
+      expect(await titles(luis.userId)).toContain(`Tienes un viaje asignado: ${created.code}`);
+      expect(await titles(jose.userId)).toContain(`Ya no conduces el viaje ${created.code}`);
+    });
+
+    it('si solo cambia el medio, quien conduce se entera de en cual va', async () => {
+      const [hilux, prado] = [await createVehicle(dataSource), await createVehicle(dataSource)];
+      const jose = await createDriver(dataSource);
+      const created = await pending(window(52), { proposedDriverId: jose.id }, 'carlos');
+      await approve(created.id, { resourceId: hilux.id }).expect(200);
+      await reassign(created.id, { resourceId: prado.id }).expect(200);
+
+      const [note] = (await notesFor(jose.userId, created.id)).filter((n) =>
+        n.title.startsWith('Cambió el medio'),
+      );
+      expect(note.body).toContain(prado.name);
+    });
+
+    it('no reasigna a un medio o conductor ocupado (409) ni sin cambios (400)', async () => {
+      const [hilux, prado] = [await createVehicle(dataSource), await createVehicle(dataSource)];
+      const when = window(53);
+      const busy = await pending(when, { proposedDriverId: (await createDriver(dataSource)).id });
+      await approve(busy.id, { resourceId: prado.id }).expect(200);
+      const created = await pending(when);
+      await approve(created.id, { resourceId: hilux.id }).expect(200);
+
+      const clash = await reassign(created.id, { resourceId: prado.id }).expect(409);
+      expect(clash.body.message).toContain(busy.code);
+      const same = await reassign(created.id, { resourceId: hilux.id }).expect(400);
+      expect(same.body.message).toMatch(/No hay cambios/);
+      await reassign(created.id, { driverId: null }).expect(400);
+    });
+
+    it('solo una aprobada cuyo viaje no inicio; solo la coordinacion (403, 409)', async () => {
+      const vehicle = await createVehicle(dataSource);
+      const pendingOne = await pending(window(54));
+      await reassign(pendingOne.id, { resourceId: vehicle.id }).expect(409);
+
+      const started = await pending(window(55));
+      const approved = await approve(started.id, { resourceId: vehicle.id }).expect(200);
+      await reassign(started.id, { resourceId: vehicle.id }, 'ana').expect(403);
+      await dataSource.query(
+        `INSERT INTO trip_log (assignment_id, started_at, start_odometer, start_fuel_level)
+         VALUES ($1, now(), 10000, 80)`,
+        [approved.body.assignment.id],
+      );
+      const response = await reassign(started.id, {
+        resourceId: (await createVehicle(dataSource)).id,
+      }).expect(409);
+      expect(response.body.message).toMatch(/ya inició/);
+    });
+
+    it('reasignar y aprobar a la vez hacia el mismo medio: una 200 y otra 409', async () => {
+      const [hilux, prado] = [await createVehicle(dataSource), await createVehicle(dataSource)];
+      const when = window(56);
+      const approvedOne = await pending(when);
+      await approve(approvedOne.id, { resourceId: hilux.id }).expect(200);
+      const other = await pending(when, { proposedDriverId: (await createDriver(dataSource)).id });
+
+      const results = await Promise.all([
+        reassign(approvedOne.id, { resourceId: prado.id }),
+        approve(other.id, { resourceId: prado.id }),
       ]);
       expect(results.map((r) => r.status).sort()).toEqual([200, 409]);
     });

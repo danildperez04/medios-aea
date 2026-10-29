@@ -145,14 +145,15 @@ días mal ubicados en la agenda, y la petición fallida de la fuente Bogart.
 
 Primera historia con el flujo de una rama por historia (`docs/05` §3).
 
-| Historia                            | Rama                            | Estado             |
-| ----------------------------------- | ------------------------------- | ------------------ |
-| HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request`  | TERMINADO (PR #7)  |
-| HU-10 Cancelar una solicitud        | `feature/hu-10-cancel-request`  | TERMINADO (PR #49) |
-| HU-26 Indicar quién conduce         | `feature/hu-26-proposed-driver` | TERMINADO (PR #52) |
-| HU-11 Aprobar sin choques           | `feature/hu-11-approve-request` | TERMINADO (PR #61) |
-| HU-12 Rechazar con motivo           | `feature/hu-12-reject-request`  | Lista para PR      |
-| HU-13 a HU-15                       | —                               | Pendientes         |
+| Historia                            | Rama                             | Estado             |
+| ----------------------------------- | -------------------------------- | ------------------ |
+| HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request`   | TERMINADO (PR #7)  |
+| HU-10 Cancelar una solicitud        | `feature/hu-10-cancel-request`   | TERMINADO (PR #49) |
+| HU-26 Indicar quién conduce         | `feature/hu-26-proposed-driver`  | TERMINADO (PR #52) |
+| HU-11 Aprobar sin choques           | `feature/hu-11-approve-request`  | TERMINADO (PR #61) |
+| HU-12 Rechazar con motivo           | `feature/hu-12-reject-request`   | TERMINADO (PR #67) |
+| HU-13 Reasignar medio o conductor   | `feature/hu-13-reassign-request` | Lista para PR      |
+| HU-14 y HU-15                       | —                                | Pendientes         |
 
 HU-09: `POST /reservations` (queda PENDING, código `SOL-AAAA-NNNNN`, aviso interno a la
 coordinación, RN-06 y RN-14), `GET /reservations` (cada técnico solo las suyas),
@@ -190,6 +191,14 @@ En la web, diálogo de rechazo y el motivo bajo el estado de las rechazadas.
 Verificación: 136 unitarias, 101 e2e y 43 web en verde; revisada en el navegador a
 1366 y 390 px.
 
+HU-13: `POST /reservations/:id/reassign` (ADMIN) cambia el medio, quien conduce o ambos
+de una aprobada mientras el viaje no inicie. En una transacción la asignación vigente
+pasa a `active = false` y se crea otra (RN-10), con las mismas validaciones que al
+aprobar (`checkAssignable`), sin contar la asignación propia como choque. Avisa a quien
+pidió, a quien conduce y a quien dejó de conducir; auditoría con el antes y el después.
+En la web, el diálogo de aprobación en modo "reasignar". Verificación: 137 unitarias,
+107 e2e y 45 web en verde; revisada en el navegador a 1366 y 390 px.
+
 ## Revisión de DevOps, calidad, seguridad y proceso · TERMINADO
 
 Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`:
@@ -205,5 +214,5 @@ Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`
 
 ## Siguiente en el Sprint 3
 
-HU-13 a HU-15: reasignación, calendario semanal y la vista de auditoría (los registros
-de aprobar, rechazar y cancelar ya se guardan).
+HU-14 (calendario semanal de la flota) y HU-15 (vista de auditoría: los registros de
+aprobar, rechazar, reasignar y cancelar ya se guardan).

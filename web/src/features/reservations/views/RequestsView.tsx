@@ -1,5 +1,5 @@
 import { Box, IconButton, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
-import { Ban, Check, ClipboardList, X } from 'lucide-react';
+import { ArrowLeftRight, Ban, Check, ClipboardList, X } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '@/app/services/api';
 import { useAuthStore } from '@/app/stores/auth.store';
@@ -53,8 +53,8 @@ function cancelMessage(reservation: Reservation, currentUserId: string | undefin
 
 /**
  * Bandeja de solicitudes (HU-09). La coordinación aprueba una pendiente asignando
- * medio y conductor (HU-11), la rechaza con motivo (HU-12) y cancela una pendiente
- * o aprobada (HU-10).
+ * medio y conductor (HU-11), la rechaza con motivo (HU-12), reasigna una aprobada
+ * (HU-13) y cancela una pendiente o aprobada (HU-10).
  */
 export function RequestsView() {
   const [page, setPage] = useState(1);
@@ -65,6 +65,7 @@ export function RequestsView() {
   const [cancelling, setCancelling] = useState<Reservation | null>(null);
   const [approving, setApproving] = useState<Reservation | null>(null);
   const [rejecting, setRejecting] = useState<Reservation | null>(null);
+  const [reassigning, setReassigning] = useState<Reservation | null>(null);
   const cancel = useCancelReservation();
   const currentUserId = useAuthStore((state) => state.user?.id);
 
@@ -191,6 +192,17 @@ export function RequestsView() {
               </IconButton>
             </Tooltip>
           ) : null}
+          {r.status === 'APPROVED' && r.assignment ? (
+            <Tooltip title="Reasignar medio o conductor">
+              <IconButton
+                size="small"
+                aria-label={`Reasignar la solicitud ${r.code}`}
+                onClick={() => setReassigning(r)}
+              >
+                <ArrowLeftRight size={18} />
+              </IconButton>
+            </Tooltip>
+          ) : null}
           {r.status === 'PENDING' ? (
             <Tooltip title="Rechazar">
               <IconButton
@@ -313,6 +325,13 @@ export function RequestsView() {
         key={approving?.id ?? 'closed'}
         reservation={approving}
         onClose={() => setApproving(null)}
+      />
+
+      <ApproveDialog
+        key={`reassign-${reassigning?.id ?? 'closed'}`}
+        mode="reassign"
+        reservation={reassigning}
+        onClose={() => setReassigning(null)}
       />
 
       <RejectDialog

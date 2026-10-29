@@ -41,7 +41,8 @@ aún sin merge) · `VERIFICADO` (validado en revisión de sprint / UAT).
 | RF-14                   | HU-11 | `ReservationsService.approve` (valida antes) + restricciones de exclusión                              | `approvals.e2e-spec.ts` (PT-01 a PT-05, PT-09, PT-10)                                      | IMPLEMENTADO      |
 | RN-08                   | HU-11 | Transacción con FOR UPDATE de solicitud y medio; 23P01 → 409                                           | `approvals.e2e-spec.ts` (PT-09, dos casos)                                                 | IMPLEMENTADO      |
 | RF-13                   | HU-12 | `POST /reservations/:id/reject` · `RejectDialog`                                                       | `dto-contracts.spec.ts` · `approvals.e2e-spec.ts` (PT-22) · `RejectDialog.test.tsx`        | IMPLEMENTADO      |
-| RF-15, RF-17…25, 27, 28 | —     | —                                                                                                      | —                                                                                          | PENDIENTE         |
+| RF-15                   | HU-13 | `POST /reservations/:id/reassign` · `ApproveDialog` (modo reasignar)                                   | `dto-contracts.spec.ts` · `approvals.e2e-spec.ts` · `ApproveDialog.test.tsx`               | IMPLEMENTADO      |
+| RF-17…25, RF-27 y RF-28 | —     | —                                                                                                      | —                                                                                          | PENDIENTE         |
 
 ## Decisiones tomadas en el Sprint 1
 
@@ -89,3 +90,5 @@ aún sin merge) · `VERIFICADO` (validado en revisión de sprint / UAT).
 | El diálogo solo ofrece medios y conductores libres en el horario     | Lo que no está libre se explica en vez de fallar al enviar                    |
 | El motivo del rechazo exige de 5 a 300 caracteres                    | Lo lee quien pidió; "no" no le dice qué hacer                                 |
 | Rechazar usa el mismo candado que aprobar                            | Si dos personas deciden a la vez, solo una decisión queda                     |
+| Reasignar libera la asignación vigente antes de crear la nueva       | Así no choca consigo misma en la restricción de exclusión                     |
+| No se reasigna un viaje que ya inició                                | La bitácora de salida está atada a la asignación                              |

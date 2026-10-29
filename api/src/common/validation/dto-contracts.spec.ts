@@ -5,6 +5,7 @@ import { LoginDto } from '#modules/auth/dto/login.dto.js';
 import { CreateProjectDto } from '#modules/projects/dto/create-project.dto.js';
 import { UpdateProjectDto } from '#modules/projects/dto/update-project.dto.js';
 import { ApproveReservationDto } from '#modules/reservations/dto/approve-reservation.dto.js';
+import { ReassignReservationDto } from '#modules/reservations/dto/reassign-reservation.dto.js';
 import { RejectReservationDto } from '#modules/reservations/dto/reject-reservation.dto.js';
 import { CreateUserDto } from '#modules/users/dto/create-user.dto.js';
 import { ResetPasswordDto } from '#modules/users/dto/reset-password.dto.js';
@@ -162,6 +163,18 @@ describe('RejectReservationDto', () => {
     expect(await errorsOf(RejectReservationDto, {})).toContain('Indica el motivo del rechazo');
     expect(await errorsOf(RejectReservationDto, { reason: '   ' })).toContain(
       'Explica el motivo con al menos 5 caracteres',
+    );
+  });
+});
+
+describe('ReassignReservationDto — PartialType(ApproveReservationDto)', () => {
+  it('todo es opcional, pero null no salta la validacion', async () => {
+    expect(await errorsOf(ReassignReservationDto, {})).toEqual([]);
+    expect(await errorsOf(ReassignReservationDto, { driverId: null })).toContain(
+      'El conductor no es válido',
+    );
+    expect(await errorsOf(ReassignReservationDto, { resourceId: 'x' })).toContain(
+      'Elige el medio que se asigna',
     );
   });
 });
