@@ -35,6 +35,7 @@ import { User } from '#modules/users/entities/user.entity.js';
 import { driverProblem, resourceProblem, type ApprovalProblem } from './approval.rules.js';
 import type { ApproveReservationDto } from './dto/approve-reservation.dto.js';
 import type { CreateReservationDto } from './dto/create-reservation.dto.js';
+import type { ReassignReservationDto } from './dto/reassign-reservation.dto.js';
 import type { RejectReservationDto } from './dto/reject-reservation.dto.js';
 import type { ReservationFiltersDto } from './dto/reservation-filters.dto.js';
 import { ReservationAssignment } from './entities/reservation-assignment.entity.js';
@@ -57,7 +58,7 @@ const WHEN = new Intl.DateTimeFormat('es-NI', {
 });
 
 /**
- * Solicitudes de medios (RF-10 a RF-13; HU-09 a HU-12, HU-26). Una solicitud
+ * Solicitudes de medios (RF-10 a RF-13 y RF-15; HU-09 a HU-13, HU-26). Una solicitud
  * nueva queda PENDING y no ocupa la agenda (RN-07): solo su asignación aprobada lo hace.
  */
 @Injectable()
@@ -200,66 +201,12 @@ export class ReservationsService {
     await this.dataSource.transaction(async (manager) => {
       const request = await this.lockPending(manager, id);
       const period: TimeRange = { start: request.startsAt, end: request.endsAt };
-
-      const resource = await manager.findOne(Resource, {
-        where: { id: dto.resourceId },
-        lock: { mode: 'pessimistic_write' },
-      });
-      if (!resource || resource.status === ResourceStatus.INACTIVE) {
-        throw new BadRequestException('El medio no existe o fue dado de baja.');
-      }
-      if (resource.type !== request.resourceType) {
-        throw new BadRequestException('El medio no es del tipo que se solicitó.');
-      }
-      const vehicle = await manager.findOneBy(Vehicle, { resourceId: resource.id });
-      const resourceConflict = await this.firstAssignmentConflict(manager, period, {
-        resourceId: resource.id,
-      });
-      const passengerCapacity = vehicle?.passengerCapacity ?? null;
-      throwProblem(
-        resourceProblem(
-          resourceUnavailableReasons(
-            {
-              status: resource.status,
-              passengerCapacity,
-              hasBlackout: await this.hasBlackout(manager, resource.id, period),
-              hasAssignment: resourceConflict !== null,
-            },
-            request.passengers,
-          ),
-          { name: resource.name, passengerCapacity },
-          request.passengers,
-          resourceConflict ?? undefined,
-        ),
+      const { resource, driver } = await this.checkAssignable(
+        manager,
+        request,
+        dto.resourceId,
+        dto.driverId ?? request.proposedDriverId,
       );
-
-      const driverId = dto.driverId ?? request.proposedDriverId;
-      if (!driverId && request.resourceType === ResourceType.VEHICLE) {
-        throw new BadRequestException('Elige quién conduce: la solicitud no indica a nadie.');
-      }
-      const driver = driverId
-        ? await manager.findOne(Driver, { where: { id: driverId }, relations: { user: true } })
-        : null;
-      if (driverId && !driver) throw new BadRequestException('El conductor no existe.');
-      if (driver) {
-        const driverConflict = await this.firstAssignmentConflict(manager, period, {
-          driverId: driver.id,
-        });
-        throwProblem(
-          driverProblem(
-            driverUnavailableReasons(
-              {
-                isActive: driver.isActive && driver.user.isActive,
-                licenseExpiry: driver.licenseExpiry,
-                hasAssignment: driverConflict !== null,
-              },
-              period,
-            ),
-            { fullName: driver.user.fullName, licenseExpiry: driver.licenseExpiry },
-            driverConflict ?? undefined,
-          ),
-        );
-      }
 
       const { identifiers } = await manager.insert(ReservationAssignment, {
         requestId: id,
@@ -337,6 +284,86 @@ export class ReservationsService {
   }
 
   /**
+   * Reasigna el medio, quien conduce o ambos de una solicitud aprobada (RF-15, HU-13).
+   * En una transacción la asignación vigente pasa a `active = false` (no se borra,
+   * RN-10) y se crea otra con las mismas validaciones que al aprobar. No se reasigna
+   * un viaje que ya inició: la bitácora está atada a su asignación.
+   */
+  async reassign(
+    id: string,
+    dto: ReassignReservationDto,
+    actor: AuthenticatedUser,
+  ): Promise<ReservationView> {
+    await this.dataSource.transaction(async (manager) => {
+      const request = await manager.findOne(ReservationRequest, {
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!request) throw new NotFoundException('La solicitud no existe.');
+      if (request.status !== RequestStatus.APPROVED) {
+        throw new ConflictException(
+          'Solo se reasigna una solicitud aprobada. Si está pendiente, apruébala con el medio y la persona que quieras.',
+        );
+      }
+      const current = await manager.findOne(ReservationAssignment, {
+        where: { requestId: id, active: true },
+        relations: { trip: true, driver: { user: true } },
+      });
+      if (!current) throw new ConflictException('La solicitud no tiene una asignación vigente.');
+      if (current.trip) {
+        throw new ConflictException(
+          'El viaje ya inició; no se puede reasignar. Pide al conductor que registre la llegada.',
+        );
+      }
+
+      const resourceId = dto.resourceId ?? current.resourceId;
+      const driverId = dto.driverId ?? current.driverId;
+      if (resourceId === current.resourceId && driverId === current.driverId) {
+        throw new BadRequestException(
+          'No hay cambios: elige otro medio o a otra persona para conducir.',
+        );
+      }
+      const { resource, driver } = await this.checkAssignable(
+        manager,
+        request,
+        resourceId,
+        driverId,
+        current.id,
+      );
+
+      // Primero se libera la vigente: así la nueva no choca consigo misma en la
+      // restricción de exclusión, que sigue siendo la garantía ante otra aprobación.
+      await manager.update(ReservationAssignment, current.id, { active: false });
+      const { identifiers } = await manager.insert(ReservationAssignment, {
+        requestId: id,
+        resourceId: resource.id,
+        driverId: driver?.id ?? null,
+        period: { start: request.startsAt, end: request.endsAt },
+        active: true,
+      });
+
+      await manager.save(
+        manager.create(AuditLog, {
+          actorId: actor.id,
+          action: AuditAction.REASSIGN,
+          entity: 'reservation_request',
+          entityId: id,
+          payload: {
+            fromAssignmentId: current.id,
+            toAssignmentId: identifiers[0]?.id as string,
+            from: { resourceId: current.resourceId, driverId: current.driverId },
+            to: { resourceId: resource.id, driverId: driver?.id ?? null },
+          },
+        }),
+      );
+
+      await this.notifyReassignment(manager, request, current, resource, driver, actor);
+    });
+
+    return this.findOneOrFail(id, actor);
+  }
+
+  /**
    * Cancela una solicitud pendiente o aprobada (RF-11, HU-10). Solo su dueño o
    * la coordinación (RN-13). Si estaba aprobada, sus asignaciones pasan a
    * `active = false` y el medio y el conductor quedan libres (RN-10).
@@ -404,6 +431,91 @@ export class ReservationsService {
     });
 
     return this.findOneOrFail(id, actor);
+  }
+
+  /**
+   * Valida que el medio y el conductor sirvan para la solicitud (RN-01 a RN-05,
+   * RN-09) y bloquea la fila del medio con FOR UPDATE, el mismo candado que los
+   * bloqueos. `exceptAssignmentId` es la asignación que se está reemplazando al
+   * reasignar: la del propio viaje no cuenta como choque.
+   */
+  private async checkAssignable(
+    manager: EntityManager,
+    request: ReservationRequest,
+    resourceId: string,
+    driverId: string | null,
+    exceptAssignmentId?: string,
+  ): Promise<{ resource: Resource; driver: Driver | null }> {
+    const period: TimeRange = { start: request.startsAt, end: request.endsAt };
+    const resource = await manager.findOne(Resource, {
+      where: { id: resourceId },
+      lock: { mode: 'pessimistic_write' },
+    });
+    if (!resource || resource.status === ResourceStatus.INACTIVE) {
+      throw new BadRequestException('El medio no existe o fue dado de baja.');
+    }
+    if (resource.type !== request.resourceType) {
+      throw new BadRequestException('El medio no es del tipo que se solicitó.');
+    }
+    const vehicle = await manager.findOneBy(Vehicle, { resourceId: resource.id });
+    const resourceConflict = await this.firstAssignmentConflict(
+      manager,
+      period,
+      {
+        resourceId: resource.id,
+      },
+      exceptAssignmentId,
+    );
+    const passengerCapacity = vehicle?.passengerCapacity ?? null;
+    throwProblem(
+      resourceProblem(
+        resourceUnavailableReasons(
+          {
+            status: resource.status,
+            passengerCapacity,
+            hasBlackout: await this.hasBlackout(manager, resource.id, period),
+            hasAssignment: resourceConflict !== null,
+          },
+          request.passengers,
+        ),
+        { name: resource.name, passengerCapacity },
+        request.passengers,
+        resourceConflict ?? undefined,
+      ),
+    );
+
+    if (!driverId && request.resourceType === ResourceType.VEHICLE) {
+      throw new BadRequestException('Elige quién conduce: la solicitud no indica a nadie.');
+    }
+    const driver = driverId
+      ? await manager.findOne(Driver, { where: { id: driverId }, relations: { user: true } })
+      : null;
+    if (driverId && !driver) throw new BadRequestException('El conductor no existe.');
+    if (driver) {
+      const driverConflict = await this.firstAssignmentConflict(
+        manager,
+        period,
+        {
+          driverId: driver.id,
+        },
+        exceptAssignmentId,
+      );
+      throwProblem(
+        driverProblem(
+          driverUnavailableReasons(
+            {
+              isActive: driver.isActive && driver.user.isActive,
+              licenseExpiry: driver.licenseExpiry,
+              hasAssignment: driverConflict !== null,
+            },
+            period,
+          ),
+          { fullName: driver.user.fullName, licenseExpiry: driver.licenseExpiry },
+          driverConflict ?? undefined,
+        ),
+      );
+    }
+    return { resource, driver };
   }
 
   /**
@@ -480,6 +592,64 @@ export class ReservationsService {
   }
 
   /**
+   * Avisos de una reasignación (RN-10): a quien pidió, a quien conduce ahora y, si
+   * cambió la persona, a quien conducía. Si solo cambió el medio, quien conduce se
+   * entera de en qué medio va.
+   */
+  private async notifyReassignment(
+    manager: EntityManager,
+    request: ReservationRequest,
+    previous: ReservationAssignment,
+    resource: Resource,
+    driver: Driver | null,
+    actor: AuthenticatedUser,
+  ): Promise<void> {
+    const when = `${WHEN.format(request.startsAt)} – ${WHEN.format(request.endsAt)}`;
+    const data = { kind: 'RESERVATION_REASSIGNED', reservationId: request.id };
+    const driverChanged = previous.driverId !== (driver?.id ?? null);
+    const sent = new Set<string>([actor.id]);
+    const notify = async (
+      userId: string | undefined,
+      title: string,
+      body: string,
+    ): Promise<void> => {
+      if (!userId || sent.has(userId)) return;
+      sent.add(userId);
+      await this.notifications.notifyUsers(manager, [userId], { title, body, data });
+    };
+
+    const who =
+      driver && driver.userId === request.requesterId
+        ? 'conduces tú'
+        : driver
+          ? `conduce ${driver.user.fullName}`
+          : 'sin conductor';
+    await notify(
+      request.requesterId,
+      `Cambió tu viaje ${request.code}`,
+      `${request.destination} (${when}): ahora va en ${resource.name}; ${who}.`,
+    );
+    if (driverChanged) {
+      await notify(
+        driver?.userId,
+        `Tienes un viaje asignado: ${request.code}`,
+        `${request.destination} (${when}) en ${resource.name}.`,
+      );
+      await notify(
+        previous.driver?.userId,
+        `Ya no conduces el viaje ${request.code}`,
+        `La coordinación asignó a ${driver?.user.fullName ?? 'otra persona'} para ${request.destination} (${when}).`,
+      );
+    } else {
+      await notify(
+        driver?.userId,
+        `Cambió el medio del viaje ${request.code}`,
+        `${request.destination} (${when}): ahora va en ${resource.name}.`,
+      );
+    }
+  }
+
+  /**
    * Primera asignación activa del medio o del conductor que se cruza con el periodo,
    * como "SOL-2026-00042, El Rosario"; null si no hay. Semiabierto `[)` (RN-03).
    */
@@ -487,6 +657,7 @@ export class ReservationsService {
     manager: EntityManager,
     period: TimeRange,
     who: { resourceId: string } | { driverId: string },
+    exceptAssignmentId?: string,
   ): Promise<string | null> {
     const query = manager
       .createQueryBuilder(ReservationAssignment, 'assignment')
@@ -495,6 +666,9 @@ export class ReservationsService {
       .andWhere('assignment.period && CAST(:range AS tstzrange)', {
         range: toRangeLiteral(period),
       });
+    if (exceptAssignmentId) {
+      query.andWhere('assignment.id <> :exceptAssignmentId', { exceptAssignmentId });
+    }
     if ('resourceId' in who) {
       query.andWhere('assignment.resourceId = :resourceId', { resourceId: who.resourceId });
     } else {

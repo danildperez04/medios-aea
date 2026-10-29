@@ -146,3 +146,18 @@ export function useRejectReservation() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: KEY }),
   });
 }
+
+/** Reasigna el medio, quien conduce o ambos de una aprobada (HU-13); lo omitido se mantiene. */
+export function useReassignReservation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...body }: { id: string; resourceId?: string; driverId?: string }) =>
+      (await api.post<Reservation>(`/reservations/${id}/reassign`, body)).data,
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: KEY }),
+        queryClient.invalidateQueries({ queryKey: ['agenda'] }),
+        queryClient.invalidateQueries({ queryKey: ['approval-options'] }),
+      ]),
+  });
+}
