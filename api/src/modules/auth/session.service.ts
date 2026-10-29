@@ -1,8 +1,9 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { DataSource, IsNull, type EntityManager } from 'typeorm';
+import { UserRole } from '#common/enums/domain.enums.js';
 import { User } from '#modules/users/entities/user.entity.js';
 import { AuthService, type LoginResult } from './auth.service.js';
 import type { LoginCredentials } from './auth.types.js';
@@ -19,6 +20,10 @@ export interface SessionResult extends LoginResult {
   refreshToken: string;
   refreshExpiresAt: Date;
 }
+
+/** El panel es solo de la coordinación (RF-02): a nadie más se le abre sesión ahí. */
+export const PANEL_ONLY_MESSAGE =
+  'Este panel es para la coordinación logística. Para pedir un medio o registrar un viaje, usa la app en tu teléfono.';
 
 /** SHA-256 en hexadecimal: lo único que se guarda del refresh token. */
 export function hashRefreshToken(raw: string): string {
@@ -38,9 +43,13 @@ export class SessionService {
     @Inject(ConfigService) private readonly config: ConfigService,
   ) {}
 
-  /** Inicia sesión: mismas reglas que el login de la app (bcrypt, cuenta activa). */
+  /**
+   * Inicia sesión: mismas reglas que el login de la app (bcrypt, cuenta activa) y
+   * además rol ADMIN, para no dejar una cookie de sesión a quien no usa el panel.
+   */
   async start(credentials: LoginCredentials): Promise<SessionResult> {
     const user = await this.auth.authenticate(credentials);
+    if (user.role !== UserRole.ADMIN) throw new ForbiddenException(PANEL_ONLY_MESSAGE);
     return this.issue(this.dataSource.manager, user, randomUUID());
   }
 
@@ -74,6 +83,10 @@ export class SessionService {
             revoke: token.familyId,
             message: 'Tu cuenta fue desactivada o ya no existe. Inicia sesión de nuevo.',
           };
+        }
+        // Si le quitaron el rol con la sesión abierta, la sesión del panel termina.
+        if (user.role !== UserRole.ADMIN) {
+          return { revoke: token.familyId, message: PANEL_ONLY_MESSAGE };
         }
         if (!token.usedAt) await manager.update(RefreshToken, token.id, { usedAt: now });
         return this.issue(manager, user, token.familyId);

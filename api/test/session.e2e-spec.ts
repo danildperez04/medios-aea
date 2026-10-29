@@ -5,7 +5,7 @@ import request from 'supertest';
 import { UserRole } from '#common/enums/domain.enums.js';
 import type { User } from '#modules/users/entities/user.entity.js';
 import { durationSeconds } from '#modules/auth/auth.service.js';
-import { REUSE_GRACE_MS } from '#modules/auth/session.service.js';
+import { REUSE_GRACE_MS, SessionService } from '#modules/auth/session.service.js';
 import { createE2eContext, destroyE2eContext, runMigrations } from './e2e-context.js';
 import { createUser, PASSWORD } from './fixtures.js';
 
@@ -37,6 +37,17 @@ describe('Sesion del panel (integracion)', () => {
   };
   const valueOf = (cookie: string | undefined) => cookie?.split(';')[0];
 
+  /**
+   * Abre la sesión con el servicio, sin pasar por POST /auth/session: así las pruebas
+   * no consumen el límite de 10 inicios por minuto. Devuelve la cookie como la mandaría
+   * el navegador.
+   */
+  const session = async (user: User): Promise<string> => {
+    const result = await app.get(SessionService).start({ email: user.email, password: PASSWORD });
+    return `medios_aea_refresh=${encodeURIComponent(result.refreshToken)}`;
+  };
+
+  /** Inicio por HTTP: solo para las pruebas que revisan la respuesta y la cookie. */
   const start = async (user: User) => {
     const response = await request(app.getHttpServer())
       .post(`${api}/auth/session`)
@@ -71,7 +82,7 @@ describe('Sesion del panel (integracion)', () => {
 
   it('la base guarda solo el hash del refresh token', async () => {
     const user = await createUser(dataSource, UserRole.ADMIN);
-    const { cookie } = await start(user);
+    const cookie = await session(user);
     const raw = decodeURIComponent(cookie.split('=')[1]);
     const rows = await dataSource.query<{ token_hash: string }[]>(
       `SELECT token_hash FROM refresh_token WHERE user_id = $1`,
@@ -84,7 +95,7 @@ describe('Sesion del panel (integracion)', () => {
 
   it('refrescar rota la cookie y entrega otro token de acceso', async () => {
     const user = await createUser(dataSource, UserRole.ADMIN);
-    const { cookie } = await start(user);
+    const cookie = await session(user);
     const response = await refresh(cookie).expect(200);
     const next = valueOf(refreshCookie(response));
     expect(next).toBeDefined();
@@ -95,7 +106,7 @@ describe('Sesion del panel (integracion)', () => {
 
   it('sin el encabezado del panel responde 403 (CSRF)', async () => {
     const user = await createUser(dataSource, UserRole.ADMIN);
-    const { cookie } = await start(user);
+    const cookie = await session(user);
     await refresh(cookie, {}).expect(403);
     await request(app.getHttpServer())
       .post(`${api}/auth/session/logout`)
@@ -110,7 +121,7 @@ describe('Sesion del panel (integracion)', () => {
 
   it('dos pestanas que refrescan con el mismo token a la vez no se cierran la sesion', async () => {
     const user = await createUser(dataSource, UserRole.ADMIN);
-    const { cookie } = await start(user);
+    const cookie = await session(user);
     const [a, b] = await Promise.all([refresh(cookie), refresh(cookie)]);
     expect([a.status, b.status]).toEqual([200, 200]);
     await refresh(valueOf(refreshCookie(b))).expect(200);
@@ -118,7 +129,7 @@ describe('Sesion del panel (integracion)', () => {
 
   it('reutilizar un token rotado fuera del margen revoca toda la sesion', async () => {
     const user = await createUser(dataSource, UserRole.ADMIN);
-    const { cookie } = await start(user);
+    const cookie = await session(user);
     const rotated = await refresh(cookie).expect(200);
     const current = valueOf(refreshCookie(rotated));
 
@@ -136,7 +147,7 @@ describe('Sesion del panel (integracion)', () => {
 
   it('cerrar sesion revoca el refresh token y borra la cookie', async () => {
     const user = await createUser(dataSource, UserRole.ADMIN);
-    const { cookie } = await start(user);
+    const cookie = await session(user);
     const response = await request(app.getHttpServer())
       .post(`${api}/auth/session/logout`)
       .set(web)
@@ -148,7 +159,7 @@ describe('Sesion del panel (integracion)', () => {
 
   it('una cuenta desactivada no puede refrescar', async () => {
     const user = await createUser(dataSource, UserRole.ADMIN);
-    const { cookie } = await start(user);
+    const cookie = await session(user);
     await dataSource.query(`UPDATE "user" SET is_active = false WHERE id = $1`, [user.id]);
     const response = await refresh(cookie).expect(401);
     expect(response.body.message).toMatch(/desactivada/);
@@ -156,7 +167,7 @@ describe('Sesion del panel (integracion)', () => {
 
   it('un refresh token vencido responde 401', async () => {
     const user = await createUser(dataSource, UserRole.ADMIN);
-    const { cookie } = await start(user);
+    const cookie = await session(user);
     await dataSource.query(
       `UPDATE refresh_token SET expires_at = now() - interval '1 minute' WHERE user_id = $1`,
       [user.id],
@@ -174,5 +185,22 @@ describe('Sesion del panel (integracion)', () => {
     expect(response.body.expiresIn).toBe(durationSeconds(process.env.JWT_EXPIRES_IN ?? '8h'));
     expect(response.body.expiresIn).toBeGreaterThan(15 * 60);
     expect(refreshCookie(response)).toBeUndefined();
+  });
+
+  it('a quien no es ADMIN no se le abre sesion ni se le deja cookie (RF-02)', async () => {
+    const tech = await createUser(dataSource, UserRole.REQUESTER);
+    const response = await request(app.getHttpServer())
+      .post(`${api}/auth/session`)
+      .send({ email: tech.email, password: PASSWORD })
+      .expect(403);
+    expect(response.body.message).toMatch(/usa la app en tu teléfono/);
+    expect(refreshCookie(response)).toBeUndefined();
+  });
+
+  it('si le quitan el rol ADMIN con la sesion abierta, ya no refresca', async () => {
+    const user = await createUser(dataSource, UserRole.ADMIN);
+    const cookie = await session(user);
+    await dataSource.query(`UPDATE "user" SET role = 'REQUESTER' WHERE id = $1`, [user.id]);
+    await refresh(cookie).expect(401);
   });
 });
