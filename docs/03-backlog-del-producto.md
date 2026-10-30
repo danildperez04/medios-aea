@@ -44,19 +44,22 @@ referencia de producto: qué se construye y con qué criterios.
 | HU-10 | RF-11        | Como técnico, quiero cancelar mi solicitud                            | Solo el dueño o ADMIN; no si el viaje inició; libera la asignación                                              | TERMINADO |
 | HU-11 | RF-12, RF-14 | Como ADMIN, quiero aprobar asignando vehículo y conductor sin choques | Conductor propuesto por defecto (HU-26), cambiable con aviso; dos aprobaciones concurrentes → una OK y otra 409 | TERMINADO |
 | HU-12 | RF-13        | Como ADMIN, quiero rechazar con motivo                                | Motivo obligatorio; notifica al solicitante                                                                     | TERMINADO |
-| HU-13 | RF-15        | Como ADMIN, quiero reasignar vehículo o conductor                     | Desactiva la asignación previa y crea otra en una transacción; notifica                                         | EN CURSO  |
+| HU-13 | RF-15        | Como ADMIN, quiero reasignar vehículo o conductor                     | Desactiva la asignación previa y crea otra en una transacción; notifica                                         | TERMINADO |
 | HU-14 | RF-16        | Como ADMIN, quiero ver el calendario de la flota                      | Filas = vehículos; vista día/semana; colores por estado; bloqueos visibles                                      | PENDIENTE |
 | HU-15 | RF-17        | Como ADMIN, quiero saber quién aprobó o rechazó cada solicitud        | Registro en `audit_log` con usuario, acción y fecha                                                             | PENDIENTE |
 | HU-26 | RF-07, RF-10 | Como técnico, quiero indicar quién conduce al solicitar               | Perfil de conductor para cualquier usuario; "yo" por defecto; licencia vigente a la fecha (RN-15)               | TERMINADO |
+| HU-27 | RF-10, RF-12 | Como ADMIN, quiero registrar desde el panel una reserva ya aprobada   | Formulario en el panel; queda `APPROVED` en un paso; mismas validaciones que crear y aprobar; avisa             | PENDIENTE |
 
 ## Sprint 4 — App móvil del solicitante
 
-| HU    | RF           | Historia                                                              | Criterios de aceptación                                                  | Estado    |
-| ----- | ------------ | --------------------------------------------------------------------- | ------------------------------------------------------------------------ | --------- |
-| HU-16 | RF-18        | Como técnico, quiero iniciar sesión en la app                         | Token en `expo-secure-store`; sesión persiste; logout limpia             | PENDIENTE |
-| HU-17 | RF-18, RF-09 | Como técnico, quiero solicitar desde el celular viendo disponibilidad | Formulario con fecha/hora; indicador de vehículos libres antes de enviar | PENDIENTE |
-| HU-18 | RF-18        | Como técnico, quiero ver y cancelar mis solicitudes                   | Lista por estado; detalle con vehículo y conductor asignado              | PENDIENTE |
-| HU-19 | RF-19, RF-20 | Como técnico, quiero recibir notificaciones                           | Push al aprobar/rechazar/reasignar; bandeja in-app con leídas/no leídas  | PENDIENTE |
+| HU    | RF            | Historia                                                              | Criterios de aceptación                                                          | Estado    |
+| ----- | ------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------- |
+| HU-16 | RF-18         | Como técnico, quiero iniciar sesión en la app                         | Token en `expo-secure-store`; sesión persiste; logout limpia                     | PENDIENTE |
+| HU-17 | RF-18, RF-09  | Como técnico, quiero solicitar desde el celular viendo disponibilidad | Formulario con fecha/hora; indicador de vehículos libres antes de enviar         | PENDIENTE |
+| HU-18 | RF-18         | Como técnico, quiero ver y cancelar mis solicitudes                   | Lista por estado; detalle con vehículo y conductor asignado                      | PENDIENTE |
+| HU-19 | RF-19, RF-20  | Como técnico, quiero recibir notificaciones                           | Push al aprobar/rechazar/reasignar; bandeja in-app con leídas/no leídas          | PENDIENTE |
+| HU-28 | RF-18, RNF-01 | Como técnico o conductor, quiero que mi sesión en la app se mantenga  | Renovación automática; rota; 7 días sin uso; sin señal no cierra; antes de HU-21 | PENDIENTE |
+| HU-29 | RF-29         | Como ADMIN, quiero cerrar las sesiones de una persona desde el panel  | Sin desactivar la cuenta; panel y app; auditoría                                 | PENDIENTE |
 
 ## Sprint 5 — Bitácora y reportes
 

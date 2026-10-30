@@ -51,6 +51,20 @@ app) y cerrar sesión revoca de verdad en el servidor.
   `POST /logout` revoca la familia y borra la cookie.
 - **App móvil:** sin cambios. Sigue con `POST /auth/login`, token de 8 h en SecureStore.
 
+## Ampliación del 30/10/2026: la app móvil y el cierre de sesiones
+
+La app quedó fuera de esta decisión porque SecureStore no sufre el riesgo de XSS, pero
+su sesión tiene otros dos problemas: se corta a las 8 h, quizá a mitad de un viaje y sin
+señal, y un token robado no se puede cancelar. Se decide:
+
+- **App (HU-28):** token de acceso corto y refresh token rotativo en SecureStore, con la
+  misma tabla `refresh_token`, enviado en el cuerpo de la petición porque la app no usa
+  cookies. La sesión vence a los **7 días sin uso**. Sin conexión no se cierra: solo un
+  rechazo real del servidor la termina.
+- **Panel (HU-29):** la coordinación puede cerrar las sesiones de una persona sin
+  desactivar su cuenta, por ejemplo si pierde el teléfono. Revoca sus refresh tokens; el
+  token de acceso ya emitido vence solo, en 15 minutos como máximo. Queda en `audit_log`.
+
 ## Consecuencias
 
 - Migración `refresh_token` (usuario, familia, hash, vencimiento, uso, revocación).
