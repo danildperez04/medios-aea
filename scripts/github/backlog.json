@@ -140,6 +140,13 @@
       "milestone": "Sprint 3"
     },
     {
+      "key": "HU-27",
+      "title": "HU-27: Como ADMIN, quiero registrar desde el panel una reserva ya aprobada",
+      "body": "**Historia:** Como ADMIN, quiero registrar desde el panel una reserva ya aprobada.\n\n## Criterios de aceptación\n\n- [ ] Formulario \"Nueva reserva\" en el panel: para quién (persona activa), proyecto, destino, propósito, personas, horario, medio y quién conduce\n- [ ] Queda `APPROVED` en un solo paso, ocupando la agenda; no pasa por la bandeja\n- [ ] Mismas validaciones que crear (RN-06, RN-14, RN-15) y que aprobar (choques, bloqueos, mantenimiento, capacidad, licencia: RN-01 a RN-05, RN-09)\n- [ ] Solo ofrece medios y conductores libres en el horario\n- [ ] Avisa a quien viaja y a quien conduce; queda en `audit_log` como aprobación\n\n**Requisitos:** RF-10, RF-12, RN-14 · **Prioridad:** Must\n\nOrigen: pedido de la coordinación (28/10/2026): la administración reserva directamente; los técnicos piden desde el celular (HU-17). Rama: `feature/hu-27-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:api", "área:web"],
+      "milestone": "Sprint 3"
+    },
+    {
       "key": "HU-16",
       "title": "HU-16: Como técnico, quiero iniciar sesión en la app",
       "body": "**Historia:** Como técnico, quiero iniciar sesión en la app.\n\n## Criterios de aceptación\n\n- [ ] Token en `expo-secure-store`\n- [ ] sesión persiste\n- [ ] logout limpia\n\n**Requisitos:** RF-18 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 4). Rama: `feature/hu-16-<slug>` desde `develop`.",
@@ -165,6 +172,20 @@
       "title": "HU-19: Como técnico, quiero recibir notificaciones",
       "body": "**Historia:** Como técnico, quiero recibir notificaciones.\n\n## Criterios de aceptación\n\n- [ ] Push al aprobar/rechazar/reasignar\n- [ ] bandeja in-app con leídas/no leídas\n\n**Requisitos:** RF-19, RF-20 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 4). Rama: `feature/hu-19-<slug>` desde `develop`.",
       "labels": ["tipo:historia", "prioridad:must", "área:api", "área:móvil"],
+      "milestone": "Sprint 4"
+    },
+    {
+      "key": "HU-28",
+      "title": "HU-28: Como técnico o conductor, quiero que mi sesión en la app se mantenga mientras la use",
+      "body": "**Historia:** Como técnico o conductor, quiero que mi sesión en la app se mantenga mientras la use.\n\n## Criterios de aceptación\n\n- [ ] Iniciar sesión en la app entrega un token de acceso corto y un refresh token, guardados en SecureStore\n- [ ] Cuando el token vence, la app lo renueva y repite la petición sin que la persona lo note; varias peticiones a la vez comparten una sola renovación\n- [ ] El refresh token rota en cada uso y en la base solo se guarda su hash\n- [ ] Si vuelve un token ya usado, se revoca la sesión, con un margen para reintentos por mala señal\n- [ ] La sesión vence tras 7 días sin uso\n- [ ] Cerrar sesión revoca el token en el servidor; sin señal, la sesión local se cierra igual\n- [ ] Sin conexión la app no cierra la sesión: solo un rechazo real del servidor la termina\n- [ ] Una cuenta desactivada no puede renovar\n\n**Requisitos:** RF-18, RNF-01 · **Prioridad:** Should · **Decisión:** ADR 0003\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 4). Debe ir antes de HU-21. Reutiliza `SessionService` y `refresh_token`; `POST /auth/login` se mantiene mientras haya versiones instaladas que lo usen. Rama: `feature/hu-28-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:should", "área:api", "área:móvil"],
+      "milestone": "Sprint 4"
+    },
+    {
+      "key": "HU-29",
+      "title": "HU-29: Como ADMIN, quiero cerrar las sesiones de una persona desde el panel",
+      "body": "**Historia:** Como ADMIN, quiero cerrar las sesiones de una persona desde el panel.\n\n## Criterios de aceptación\n\n- [ ] En Usuarios, una acción \"Cerrar sesiones\" con confirmación, sin desactivar la cuenta\n- [ ] Revoca todas las sesiones de la persona (panel y app); no puede renovar más\n- [ ] El token de acceso ya emitido deja de servir como máximo cuando vence (15 min); la confirmación lo dice\n- [ ] Solo ADMIN (403 para el resto, validado en el servidor)\n- [ ] Queda en `audit_log` quién cerró las sesiones de quién y cuándo\n- [ ] La persona puede volver a iniciar sesión con su contraseña\n\n**Requisitos:** RF-29 · **Prioridad:** Should · **Decisión:** ADR 0003\n\nOrigen: pedido del 30/10/2026 (por ejemplo, un teléfono perdido). Para cubrir la app depende de HU-28. Rama: `feature/hu-29-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:should", "área:api", "área:web"],
       "milestone": "Sprint 4"
     },
     {

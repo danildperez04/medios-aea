@@ -152,7 +152,7 @@ Primera historia con el flujo de una rama por historia (`docs/05` §3).
 | HU-26 Indicar quién conduce         | `feature/hu-26-proposed-driver`  | TERMINADO (PR #52) |
 | HU-11 Aprobar sin choques           | `feature/hu-11-approve-request`  | TERMINADO (PR #61) |
 | HU-12 Rechazar con motivo           | `feature/hu-12-reject-request`   | TERMINADO (PR #67) |
-| HU-13 Reasignar medio o conductor   | `feature/hu-13-reassign-request` | Lista para PR      |
+| HU-13 Reasignar medio o conductor   | `feature/hu-13-reassign-request` | TERMINADO (PR #70) |
 | HU-14 y HU-15                       | —                                | Pendientes         |
 
 HU-09: `POST /reservations` (queda PENDING, código `SOL-AAAA-NNNNN`, aviso interno a la
@@ -214,5 +214,7 @@ Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`
 
 ## Siguiente en el Sprint 3
 
-HU-14 (calendario semanal de la flota) y HU-15 (vista de auditoría: los registros de
-aprobar, rechazar, reasignar y cancelar ya se guardan).
+HU-27 (reserva aprobada desde el panel), HU-14 (calendario semanal de la flota) y HU-15
+(vista de auditoría: los registros de aprobar, rechazar, reasignar y cancelar ya se
+guardan). En el Sprint 4 entran HU-28 (sesión de la app, 7 días) y HU-29 (cerrar
+sesiones desde el panel), según la ampliación del ADR 0003.
