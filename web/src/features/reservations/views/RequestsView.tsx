@@ -1,5 +1,5 @@
-import { Box, IconButton, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
-import { ArrowLeftRight, Ban, Check, ClipboardList, X } from 'lucide-react';
+import { Box, Button, IconButton, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
+import { ArrowLeftRight, Ban, Check, ClipboardList, Plus, X } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '@/app/services/api';
 import { useAuthStore } from '@/app/stores/auth.store';
@@ -19,6 +19,7 @@ import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { mono } from '@/design-system/theme/theme';
 import { formatRange } from '@/shared/lib/format';
 import { ApproveDialog } from '../components/ApproveDialog';
+import { BookDialog } from '../components/BookDialog';
 import { RejectDialog } from '../components/RejectDialog';
 import {
   useCancelReservation,
@@ -54,7 +55,8 @@ function cancelMessage(reservation: Reservation, currentUserId: string | undefin
 /**
  * Bandeja de solicitudes (HU-09). La coordinación aprueba una pendiente asignando
  * medio y conductor (HU-11), la rechaza con motivo (HU-12), reasigna una aprobada
- * (HU-13) y cancela una pendiente o aprobada (HU-10).
+ * (HU-13) y cancela una pendiente o aprobada (HU-10). También registra una reserva ya
+ * aprobada sin pasar por la bandeja (HU-27).
  */
 export function RequestsView() {
   const [page, setPage] = useState(1);
@@ -66,6 +68,9 @@ export function RequestsView() {
   const [approving, setApproving] = useState<Reservation | null>(null);
   const [rejecting, setRejecting] = useState<Reservation | null>(null);
   const [reassigning, setReassigning] = useState<Reservation | null>(null);
+  // Contador para montar el formulario vacío cada vez que se abre.
+  const [booking, setBooking] = useState(0);
+  const [bookingOpen, setBookingOpen] = useState(false);
   const cancel = useCancelReservation();
   const currentUserId = useAuthStore((state) => state.user?.id);
 
@@ -254,6 +259,18 @@ export function RequestsView() {
             ? 'Las más próximas primero: son las que hay que decidir antes'
             : 'Historial de solicitudes de medios'
         }
+        actions={
+          <Button
+            variant="contained"
+            startIcon={<Plus size={18} />}
+            onClick={() => {
+              setBooking((n) => n + 1);
+              setBookingOpen(true);
+            }}
+          >
+            Nueva reserva
+          </Button>
+        }
       />
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
@@ -333,6 +350,8 @@ export function RequestsView() {
         reservation={reassigning}
         onClose={() => setReassigning(null)}
       />
+
+      <BookDialog key={booking} open={bookingOpen} onClose={() => setBookingOpen(false)} />
 
       <RejectDialog
         key={rejecting?.id ?? 'closed'}

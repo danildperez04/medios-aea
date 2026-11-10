@@ -17,6 +17,7 @@ import { Roles } from '#common/decorators/roles.decorator.js';
 import type { PaginatedResponse } from '#common/dto/pagination.dto.js';
 import { UserRole } from '#common/enums/domain.enums.js';
 import { ApproveReservationDto } from './dto/approve-reservation.dto.js';
+import { BookReservationDto } from './dto/book-reservation.dto.js';
 import { CreateReservationDto } from './dto/create-reservation.dto.js';
 import { ReassignReservationDto } from './dto/reassign-reservation.dto.js';
 import { RejectReservationDto } from './dto/reject-reservation.dto.js';
@@ -43,6 +44,30 @@ export class ReservationsController {
     @CurrentUser() actor: AuthenticatedUser,
   ): Promise<ReservationView> {
     return this.service.create(dto, actor);
+  }
+
+  @Post('book')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Registrar una reserva ya aprobada, con medio y conductor (HU-27); avisa a ambos',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Horario, proyecto, persona, medio o conductor no válidos',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'El medio o el conductor chocan con otro viaje o bloqueo',
+  })
+  @ApiResponse({
+    status: 422,
+    description: 'Medio en mantenimiento, sin capacidad o licencia vencida',
+  })
+  book(
+    @Body() dto: BookReservationDto,
+    @CurrentUser() actor: AuthenticatedUser,
+  ): Promise<ReservationView> {
+    return this.service.book(dto, actor);
   }
 
   @Get()

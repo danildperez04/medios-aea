@@ -153,6 +153,7 @@ Primera historia con el flujo de una rama por historia (`docs/05` §3).
 | HU-11 Aprobar sin choques           | `feature/hu-11-approve-request`  | TERMINADO (PR #61) |
 | HU-12 Rechazar con motivo           | `feature/hu-12-reject-request`   | TERMINADO (PR #67) |
 | HU-13 Reasignar medio o conductor   | `feature/hu-13-reassign-request` | TERMINADO (PR #70) |
+| HU-27 Reserva desde el panel        | `feature/hu-27-book-from-panel`  | En revisión        |
 | HU-14 y HU-15                       | —                                | Pendientes         |
 
 HU-09: `POST /reservations` (queda PENDING, código `SOL-AAAA-NNNNN`, aviso interno a la
@@ -199,6 +200,14 @@ pidió, a quien conduce y a quien dejó de conducir; auditoría con el antes y e
 En la web, el diálogo de aprobación en modo "reasignar". Verificación: 137 unitarias,
 107 e2e y 45 web en verde; revisada en el navegador a 1366 y 390 px.
 
+HU-27: `POST /reservations/book` (ADMIN) registra una reserva ya aprobada en un paso, sin
+pasar por la bandeja. Valida lo mismo que crear (horario, proyecto activo, persona
+activa) y que aprobar (`checkAssignable`: choques, bloqueos, mantenimiento, capacidad y
+licencia); quien conduce queda como propuesto. Avisa a quien viaja y a quien conduce, no
+a la coordinación, y queda en `audit_log` como aprobación con `direct: true`. En la web,
+botón "Nueva reserva" en Solicitudes con un formulario que solo ofrece medios y
+conductores libres en el horario. Verificación: 147 unitarias, 124 e2e y 57 web en verde.
+
 ## Revisión de DevOps, calidad, seguridad y proceso · TERMINADO
 
 Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`:
@@ -214,7 +223,7 @@ Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`
 
 ## Siguiente en el Sprint 3
 
-HU-27 (reserva aprobada desde el panel), HU-14 (calendario semanal de la flota) y HU-15
-(vista de auditoría: los registros de aprobar, rechazar, reasignar y cancelar ya se
-guardan). En el Sprint 4 entran HU-28 (sesión de la app, 7 días) y HU-29 (cerrar
+HU-14 (calendario semanal de la flota) y HU-15 (vista de auditoría: los registros de
+aprobar, rechazar, reasignar y cancelar ya se guardan; las reservas directas de la HU-27
+llevan `direct: true`). En el Sprint 4 entran HU-28 (sesión de la app, 7 días) y HU-29 (cerrar
 sesiones desde el panel), según la ampliación del ADR 0003.

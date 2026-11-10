@@ -481,4 +481,103 @@ describe('Aprobacion de solicitudes (integracion)', () => {
       expect(results.map((r) => r.status).sort()).toEqual([200, 409]);
     });
   });
+
+  describe('reservar desde el panel (HU-27)', () => {
+    const book = (body: object, who = 'admin') =>
+      request(app.getHttpServer())
+        .post(`${api}/reservations/book`)
+        .set(as(who))
+        .send({
+          projectId: project.id,
+          purpose: 'Visita de seguimiento',
+          destination: 'Comunidad San José',
+          passengers: 2,
+          ...body,
+        });
+
+    it('queda aprobada en un paso, ocupa la agenda, avisa y se audita', async () => {
+      const vehicle = await createVehicle(dataSource);
+      const luis = await createDriver(dataSource);
+      const when = window(60);
+
+      const response = await book({
+        ...when,
+        requesterId: carlos.id,
+        resourceId: vehicle.id,
+        driverId: luis.id,
+      }).expect(201);
+      expect(response.body).toMatchObject({
+        status: 'APPROVED',
+        requester: { id: carlos.id },
+        proposedDriver: { id: luis.id },
+        assignment: { resource: { id: vehicle.id }, driver: { id: luis.id } },
+      });
+      expect(response.body.decidedAt).not.toBeNull();
+      const id = response.body.id as string;
+
+      // No pasa por la bandeja: la coordinación no recibe "Nueva solicitud".
+      expect(await notesFor(admin.id, id)).toHaveLength(0);
+      expect((await notesFor(carlos.id, id))[0].title).toMatch(/La coordinación reservó tu viaje/);
+      expect((await notesFor(luis.userId, id))[0].title).toMatch(/Tienes un viaje asignado/);
+
+      const audit = await dataSource
+        .getRepository(AuditLog)
+        .findOneByOrFail({ entityId: id, action: 'APPROVE' as never });
+      expect(audit).toMatchObject({
+        actorId: admin.id,
+        payload: { direct: true, resourceId: vehicle.id, driverId: luis.id },
+      });
+
+      // Ocupa la agenda: una solicitud del mismo medio en ese horario ya no se aprueba.
+      const other = await pending(when);
+      await approve(other.id, { resourceId: vehicle.id }).expect(409);
+    });
+
+    it('valida como aprobar: medio ocupado o conductor con licencia vencida', async () => {
+      const vehicle = await createVehicle(dataSource);
+      const when = window(61);
+      await book({ ...when, resourceId: vehicle.id, driverId: anaDriver.id }).expect(201);
+
+      const busy = await book({
+        ...when,
+        resourceId: vehicle.id,
+        driverId: (await createDriver(dataSource)).id,
+      }).expect(409);
+      expect(busy.body.message).toMatch(/ya tiene un viaje/);
+
+      const expired = await createDriver(dataSource, '2020-01-01');
+      await book({
+        ...when,
+        resourceId: (await createVehicle(dataSource)).id,
+        driverId: expired.id,
+      }).expect(422);
+    });
+
+    it('valida como crear: horario pasado, proyecto cerrado y vehiculo sin conductor', async () => {
+      const vehicle = await createVehicle(dataSource);
+      const past = window(-2);
+      const pastResponse = await book({ ...past, resourceId: vehicle.id, driverId: anaDriver.id });
+      expect(pastResponse.status).toBe(400);
+      expect(pastResponse.body.message).toMatch(/pasado/);
+
+      const closed = await createProject(dataSource);
+      await dataSource.query(`UPDATE project SET is_active = false WHERE id = $1`, [closed.id]);
+      await book({
+        ...window(62),
+        projectId: closed.id,
+        resourceId: vehicle.id,
+        driverId: anaDriver.id,
+      }).expect(400);
+
+      const noDriver = await book({ ...window(62), resourceId: vehicle.id }).expect(400);
+      expect(noDriver.body.message).toMatch(/quién conduce/);
+    });
+
+    it('solo la coordinacion reserva directo (403)', async () => {
+      const vehicle = await createVehicle(dataSource);
+      await book({ ...window(63), resourceId: vehicle.id, driverId: anaDriver.id }, 'ana').expect(
+        403,
+      );
+    });
+  });
 });

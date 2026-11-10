@@ -100,25 +100,69 @@ export interface ApprovalOptions {
   };
 }
 
+/** Medios y conductores libres en un horario, para cierta cantidad de personas. */
+async function fetchOptions(
+  range: { from: string; to: string },
+  passengers: number,
+  type: Reservation['resourceType'] = 'VEHICLE',
+): Promise<ApprovalOptions> {
+  const [resources, drivers] = await Promise.all([
+    api.get<ApprovalOptions['resources']>('/availability', {
+      params: { ...range, type, passengers },
+    }),
+    api.get<ApprovalOptions['drivers']>('/availability/drivers', { params: range }),
+  ]);
+  return { resources: resources.data, drivers: drivers.data };
+}
+
 /** Medios y conductores libres en el horario de la solicitud (sugerencias de HU-11). */
 export function useApprovalOptions(reservation: Reservation | null) {
-  const range = reservation ? { from: reservation.startsAt, to: reservation.endsAt } : null;
   return useQuery({
     queryKey: ['approval-options', reservation?.id],
     enabled: reservation !== null,
-    queryFn: async (): Promise<ApprovalOptions> => {
-      const [resources, drivers] = await Promise.all([
-        api.get<ApprovalOptions['resources']>('/availability', {
-          params: {
-            ...range,
-            type: reservation?.resourceType,
-            passengers: reservation?.passengers,
-          },
-        }),
-        api.get<ApprovalOptions['drivers']>('/availability/drivers', { params: range }),
-      ]);
-      return { resources: resources.data, drivers: drivers.data };
-    },
+    queryFn: () =>
+      fetchOptions(
+        { from: reservation!.startsAt, to: reservation!.endsAt },
+        reservation!.passengers,
+        reservation!.resourceType,
+      ),
+  });
+}
+
+/** Lo mismo para una reserva nueva (HU-27); espera a tener un horario válido. */
+export function useBookingOptions(range: { from: string; to: string } | null, passengers: number) {
+  return useQuery({
+    queryKey: ['approval-options', 'booking', range?.from, range?.to, passengers],
+    enabled: range !== null,
+    queryFn: () => fetchOptions(range!, passengers),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export interface BookingInput {
+  requesterId: string;
+  projectId: string;
+  destination: string;
+  purpose: string;
+  passengers: number;
+  startsAt: string;
+  endsAt: string;
+  resourceId: string;
+  driverId: string;
+}
+
+/** Registra una reserva ya aprobada desde el panel (HU-27); no pasa por la bandeja. */
+export function useBookReservation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: BookingInput) =>
+      (await api.post<Reservation>('/reservations/book', input)).data,
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: KEY }),
+        queryClient.invalidateQueries({ queryKey: ['agenda'] }),
+        queryClient.invalidateQueries({ queryKey: ['approval-options'] }),
+      ]),
   });
 }
 
