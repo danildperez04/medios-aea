@@ -10,6 +10,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { clearCacheOnSessionEnd } from '@/features/auth/session-cache';
 import { tokenStorage } from '@/lib/token-storage';
 import { useSession } from '@/store/session';
 
@@ -37,6 +38,8 @@ export default function RootLayout() {
       .then(markReady)
       .catch(() => markReady(null));
   }, [markReady]);
+
+  useEffect(() => clearCacheOnSessionEnd(queryClient), [queryClient]);
 
   // Si una fuente falla se sigue con la del sistema: nunca se bloquea el arranque.
   if (!fontsLoaded && !fontError) return null;

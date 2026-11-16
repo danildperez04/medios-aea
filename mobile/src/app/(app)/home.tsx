@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BrandLockup } from '@/components/BrandLockup';
@@ -19,10 +18,8 @@ export default function HomeScreen() {
   const { user, clearSession } = useSession();
   const isDriver = user?.role === 'DRIVER';
 
-  const logout = async () => {
-    await clearSession();
-    router.replace('/login');
-  };
+  // Al quedar sin token, el layout de la zona autenticada redirige al login.
+  const logout = () => void clearSession();
 
   return (
     <SafeAreaView style={styles.safe}>
