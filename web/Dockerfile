@@ -23,6 +23,11 @@ ENV PORT=8080 \
     API_UPSTREAM=http://api:3000
 # Solo se sustituyen estas dos variables: las de nginx ($uri, $host...) quedan intactas.
 ENV NGINX_ENVSUBST_FILTER="^(PORT|API_UPSTREAM)$"
+# Parches del sistema publicados después de la imagen base: sin esto, un paquete de
+# Alpine ya corregido sigue vulnerable hasta que nginx publique otra imagen, y el
+# escaneo del release bloquea la publicación. Necesita root; después se vuelve a 101.
+USER root
+RUN apk upgrade --no-cache
 COPY web/nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY web/nginx/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /repo/web/dist /usr/share/nginx/html

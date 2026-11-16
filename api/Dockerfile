@@ -19,7 +19,8 @@ RUN pnpm --filter @medios-aea/api deploy --prod --legacy /out \
 
 # ---------- Producción ----------
 FROM node:24-alpine AS production
-RUN apk add --no-cache dumb-init
+# `apk upgrade` trae los parches del sistema publicados después de la imagen base.
+RUN apk upgrade --no-cache && apk add --no-cache dumb-init
 ENV NODE_ENV=production \
     PORT=3000
 WORKDIR /app
