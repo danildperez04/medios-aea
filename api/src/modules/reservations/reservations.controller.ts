@@ -22,6 +22,8 @@ import { CreateReservationDto } from './dto/create-reservation.dto.js';
 import { ReassignReservationDto } from './dto/reassign-reservation.dto.js';
 import { RejectReservationDto } from './dto/reject-reservation.dto.js';
 import { ReservationFiltersDto } from './dto/reservation-filters.dto.js';
+import type { ReservationHistoryEntry } from './history.rules.js';
+import { ReservationHistoryService } from './reservation-history.service.js';
 import type { ReservationView } from './reservation.view.js';
 import { ReservationsService } from './reservations.service.js';
 
@@ -34,7 +36,10 @@ import { ReservationsService } from './reservations.service.js';
 @Roles(UserRole.REQUESTER, UserRole.ADMIN)
 @Controller('reservations')
 export class ReservationsController {
-  constructor(@Inject(ReservationsService) private readonly service: ReservationsService) {}
+  constructor(
+    @Inject(ReservationsService) private readonly service: ReservationsService,
+    @Inject(ReservationHistoryService) private readonly history: ReservationHistoryService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Crear una solicitud; queda pendiente y avisa a la coordinación' })
@@ -86,6 +91,18 @@ export class ReservationsController {
     @CurrentUser() actor: AuthenticatedUser,
   ): Promise<ReservationView> {
     return this.service.findOneOrFail(id, actor);
+  }
+
+  @Get(':id/history')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Quién aprobó, rechazó, canceló o reasignó la solicitud, y cuándo (HU-15)',
+  })
+  @ApiResponse({ status: 404, description: 'La solicitud no existe' })
+  findHistory(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ): Promise<ReservationHistoryEntry[]> {
+    return this.history.findFor(id);
   }
 
   @Post(':id/approve')
