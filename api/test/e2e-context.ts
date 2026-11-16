@@ -4,7 +4,10 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import request from 'supertest';
 import type { INestApplication } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from '../src/app.module.js';
+import { applyTrustProxy } from '#config/trust-proxy.js';
 import { entities } from '#database/entities.js';
 import { migrations } from '#database/migrations/index.js';
 
@@ -35,7 +38,9 @@ export function unique(prefix: string, max = 20): string {
 export async function createE2eContext(): Promise<E2eContext> {
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
 
-  const app = moduleRef.createNestApplication();
+  const app = moduleRef.createNestApplication<NestExpressApplication>();
+  // Igual que main.ts: sin TRUST_PROXY_HOPS en el entorno de pruebas no confía en nadie.
+  applyTrustProxy(app, moduleRef.get(ConfigService));
   app.setGlobalPrefix(process.env.API_PREFIX ?? 'api/v1');
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),

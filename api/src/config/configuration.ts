@@ -147,6 +147,17 @@ export const configValidationSchema = Joi.object({
     otherwise: Joi.boolean().default(false),
   }),
   BCRYPT_ROUNDS: Joi.number().integer().min(4).max(15).default(12),
+  // Proxies de confianza delante de la API (ver config/trust-proxy.ts). En producción
+  // siempre está nginx (1); con un proxy de HTTPS delante de nginx son 2.
+  TRUST_PROXY_HOPS: Joi.number()
+    .integer()
+    .min(0)
+    .max(5)
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.number().default(1),
+      otherwise: Joi.number().default(0),
+    }),
   CORS_ORIGIN: Joi.string().default('http://localhost:5173'),
   // La documentación interactiva expone todos los endpoints: apagada en producción
   // salvo que se pida expresamente.

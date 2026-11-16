@@ -6,6 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module.js';
+import { applyTrustProxy } from './config/trust-proxy.js';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -13,6 +14,8 @@ async function bootstrap(): Promise<void> {
   });
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
+
+  applyTrustProxy(app, config);
 
   // Cabeceras HTTP seguras. CSP se relaja lo justo para que Swagger UI cargue
   // sus estilos en línea.

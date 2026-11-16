@@ -31,17 +31,25 @@ La app móvil se distribuye como **APK** generado con EAS Build (§5).
 
 ### Variables de las imágenes
 
-| Imagen | Variable                                                                      | Uso                                                          |
-| ------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| api    | `DATABASE_URL`                                                                | `postgres://usuario:clave@host:5432/base`. Si existe, manda. |
-| api    | `DATABASE_HOST/PORT/NAME/USER/PASSWORD`                                       | Alternativa a la URL (la usa Docker Compose)                 |
-| api    | `JWT_SECRET`                                                                  | **Obligatoria**, ≥ 32 caracteres. `openssl rand -hex 32`     |
-| api    | `PORT`                                                                        | Puerto interno (3000 por defecto; los PaaS lo imponen)       |
-| api    | `SWAGGER_ENABLED`                                                             | `/api/docs`. Por defecto apagado en producción               |
-| api    | `CORS_ORIGIN`, `JWT_EXPIRES_IN`, `BCRYPT_ROUNDS`, `LOG_LEVEL`, `DATABASE_SSL` | Ver `.env.production.example`                                |
-| api    | `COOKIE_SECURE`                                                               | `false` mientras el panel vaya por HTTP; `true` con HTTPS    |
-| web    | `PORT`                                                                        | Puerto de nginx (8080 por defecto: corre sin privilegios)    |
-| web    | `API_UPSTREAM`                                                                | Dónde está la API (`http://api:3000` por defecto)            |
+| Imagen | Variable                                                                      | Uso                                                             |
+| ------ | ----------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| api    | `DATABASE_URL`                                                                | `postgres://usuario:clave@host:5432/base`. Si existe, manda.    |
+| api    | `DATABASE_HOST/PORT/NAME/USER/PASSWORD`                                       | Alternativa a la URL (la usa Docker Compose)                    |
+| api    | `JWT_SECRET`                                                                  | **Obligatoria**, ≥ 32 caracteres. `openssl rand -hex 32`        |
+| api    | `PORT`                                                                        | Puerto interno (3000 por defecto; los PaaS lo imponen)          |
+| api    | `SWAGGER_ENABLED`                                                             | `/api/docs`. Por defecto apagado en producción                  |
+| api    | `CORS_ORIGIN`, `JWT_EXPIRES_IN`, `BCRYPT_ROUNDS`, `LOG_LEVEL`, `DATABASE_SSL` | Ver `.env.production.example`                                   |
+| api    | `COOKIE_SECURE`                                                               | `false` mientras el panel vaya por HTTP; `true` con HTTPS       |
+| api    | `TRUST_PROXY_HOPS`                                                            | Proxies delante de la API: `1` solo nginx, `2` con Caddy o PaaS |
+| web    | `PORT`                                                                        | Puerto de nginx (8080 por defecto: corre sin privilegios)       |
+| web    | `API_UPSTREAM`                                                                | Dónde está la API (`http://api:3000` por defecto)               |
+
+**`TRUST_PROXY_HOPS` debe ser exacto.** La API cuenta el límite de intentos de inicio de
+sesión por la dirección de quien hace la petición, y la toma de `X-Forwarded-For` según
+cuántos proxies tenga delante. Con menos saltos de los reales, todas las personas
+comparten un mismo límite; con más, cualquiera puede inventarse la dirección. Solo nginx
+del panel (Compose sin dominio) es `1`, el valor por defecto en producción; con Caddy
+delante (§A.7) o en un PaaS (§4) son `2`.
 
 ## 2. Requisitos
 
@@ -141,7 +149,8 @@ Sin dominio el sistema funciona por HTTP en la red interna. Cuando exista un dom
 que obtiene y renueva el certificado de Let's Encrypt solo:
 
 1. En `.env.production`, `WEB_PORT=8080`, `CORS_ORIGIN=https://medios.ayudaenaccion.org` y
-   `COOKIE_SECURE=true` (la cookie de sesión del panel deja de viajar sin cifrar).
+   `COOKIE_SECURE=true` (la cookie de sesión del panel deja de viajar sin cifrar) y
+   `TRUST_PROXY_HOPS=2` (ahora hay dos proxies delante de la API: Caddy y nginx).
 2. Crear `Caddyfile`:
    ```
    medios.ayudaenaccion.org {
@@ -172,6 +181,7 @@ y una base PostgreSQL.
    - `DATABASE_URL` = la Internal Database URL
    - `JWT_SECRET` = `openssl rand -hex 32`
    - `NODE_ENV=production`
+   - `TRUST_PROXY_HOPS=2` (el borde de Render y nginx del panel)
    - _Health check path_: `/api/v1/health`
 3. **Web**: otro _Web Service_ Docker con `web/Dockerfile`, contexto `.`. Variables:
    - `API_UPSTREAM` = la URL interna de la API, con su puerto (Render la muestra como

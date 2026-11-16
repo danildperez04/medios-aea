@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsISO8601 } from 'class-validator';
 import type { TimeRange } from '#common/utils/time-range.js';
+import { IsDateTimeWithOffset } from '#common/validation/date-time.js';
 
 /** Rango máximo de una consulta de agenda o disponibilidad. */
 export const MAX_RANGE_DAYS = 31;
@@ -12,11 +12,11 @@ export const MAX_RANGE_DAYS = 31;
  */
 export class TimeRangeQueryDto {
   @ApiProperty({ example: '2026-10-20T08:00:00-06:00' })
-  @IsISO8601({ strict: true }, { message: 'from debe ser una fecha ISO-8601 con hora' })
+  @IsDateTimeWithOffset('from')
   from: string;
 
   @ApiProperty({ example: '2026-10-20T12:00:00-06:00' })
-  @IsISO8601({ strict: true }, { message: 'to debe ser una fecha ISO-8601 con hora' })
+  @IsDateTimeWithOffset('to')
   to: string;
 }
 
