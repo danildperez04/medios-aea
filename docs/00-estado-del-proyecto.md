@@ -153,8 +153,9 @@ Primera historia con el flujo de una rama por historia (`docs/05` §3).
 | HU-11 Aprobar sin choques           | `feature/hu-11-approve-request`  | TERMINADO (PR #61) |
 | HU-12 Rechazar con motivo           | `feature/hu-12-reject-request`   | TERMINADO (PR #67) |
 | HU-13 Reasignar medio o conductor   | `feature/hu-13-reassign-request` | TERMINADO (PR #70) |
-| HU-27 Reserva desde el panel        | `feature/hu-27-book-from-panel`  | En revisión        |
-| HU-14 y HU-15                       | —                                | Pendientes         |
+| HU-27 Reserva desde el panel        | `feature/hu-27-book-from-panel`  | TERMINADO (PR #91) |
+| HU-14 Calendario de la flota        | `feature/hu-14-fleet-calendar`   | En revisión        |
+| HU-15 Auditoría de decisiones       | —                                | Pendiente          |
 
 HU-09: `POST /reservations` (queda PENDING, código `SOL-AAAA-NNNNN`, aviso interno a la
 coordinación, RN-06 y RN-14), `GET /reservations` (cada técnico solo las suyas),
