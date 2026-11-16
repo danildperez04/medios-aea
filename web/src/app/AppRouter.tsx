@@ -4,6 +4,7 @@ import { LoginView } from '@/features/auth/views/LoginView';
 import { DashboardView } from '@/features/dashboard/views/DashboardView';
 import { NotFoundView } from './views/NotFoundView';
 import { ComingSoonView } from './views/ComingSoonView';
+import { AgendaView } from '@/features/agenda/views/AgendaView';
 import { RequestsView } from '@/features/reservations/views/RequestsView';
 import { DriversView } from '@/features/drivers/views/DriversView';
 import { VehiclesView } from '@/features/vehicles/views/VehiclesView';
@@ -27,15 +28,7 @@ export function AppRouter() {
           <Route element={<PrivateLayout />}>
             <Route index element={<DashboardView />} />
             <Route path="solicitudes" element={<RequestsView />} />
-            <Route
-              path="agenda"
-              element={
-                <ComingSoonView
-                  title="Agenda"
-                  description="Aquí verás la semana completa de cada medio y podrás moverte entre días."
-                />
-              }
-            />
+            <Route path="agenda" element={<AgendaView />} />
             <Route path="calendario" element={<Navigate to="/agenda" replace />} />
             <Route
               path="viajes"
