@@ -205,3 +205,23 @@ export function useReassignReservation() {
       ]),
   });
 }
+
+/** Un paso del historial de decisiones de una solicitud (HU-15). */
+export interface ReservationHistoryEntry {
+  id: string;
+  action: 'APPROVE' | 'REJECT' | 'CANCEL' | 'REASSIGN' | 'COMPLETE';
+  /** Quién lo hizo; null si su cuenta ya no existe. */
+  actor: { id: string; fullName: string } | null;
+  at: string;
+  detail: string | null;
+}
+
+/** Quién aprobó, rechazó, canceló o reasignó la solicitud, y cuándo (HU-15). */
+export function useReservationHistory(reservation: Reservation | null) {
+  return useQuery({
+    queryKey: [...KEY, 'history', reservation?.id],
+    enabled: reservation !== null,
+    queryFn: async () =>
+      (await api.get<ReservationHistoryEntry[]>(`/reservations/${reservation!.id}/history`)).data,
+  });
+}

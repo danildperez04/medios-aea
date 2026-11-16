@@ -1,5 +1,5 @@
 import { Box, Button, IconButton, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
-import { ArrowLeftRight, Ban, Check, ClipboardList, Plus, X } from 'lucide-react';
+import { ArrowLeftRight, Ban, Check, ClipboardList, History, Plus, X } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '@/app/services/api';
 import { useAuthStore } from '@/app/stores/auth.store';
@@ -20,6 +20,7 @@ import { mono } from '@/design-system/theme/theme';
 import { formatRange } from '@/shared/lib/format';
 import { ApproveDialog } from '../components/ApproveDialog';
 import { BookDialog } from '../components/BookDialog';
+import { HistoryDialog } from '../components/HistoryDialog';
 import { RejectDialog } from '../components/RejectDialog';
 import {
   useCancelReservation,
@@ -68,6 +69,7 @@ export function RequestsView() {
   const [approving, setApproving] = useState<Reservation | null>(null);
   const [rejecting, setRejecting] = useState<Reservation | null>(null);
   const [reassigning, setReassigning] = useState<Reservation | null>(null);
+  const [reviewing, setReviewing] = useState<Reservation | null>(null);
   // Contador para montar el formulario vacío cada vez que se abre.
   const [booking, setBooking] = useState(0);
   const [bookingOpen, setBookingOpen] = useState(false);
@@ -219,6 +221,18 @@ export function RequestsView() {
               </IconButton>
             </Tooltip>
           ) : null}
+          {/* Una pendiente todavía no tiene decisiones que mostrar. */}
+          {r.status !== 'PENDING' ? (
+            <Tooltip title="Quién la decidió y cuándo">
+              <IconButton
+                size="small"
+                aria-label={`Ver el historial de la solicitud ${r.code}`}
+                onClick={() => setReviewing(r)}
+              >
+                <History size={18} />
+              </IconButton>
+            </Tooltip>
+          ) : null}
           {CANCELLABLE.includes(r.status) ? (
             <Tooltip title="Cancelar solicitud">
               <IconButton
@@ -358,6 +372,8 @@ export function RequestsView() {
         reservation={rejecting}
         onClose={() => setRejecting(null)}
       />
+
+      <HistoryDialog reservation={reviewing} onClose={() => setReviewing(null)} />
 
       <ConfirmDialog
         open={cancelling !== null}
