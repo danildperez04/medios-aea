@@ -257,6 +257,55 @@
       "body": "**Por qué:** GitHub crea los paquetes `medios-aea-api` y `medios-aea-web` como privados aunque el repositorio sea público; el servidor no podría descargarlos sin credenciales.\n\n**Qué hacer:** tras el primer release publicado (0.4.0), cambiar su visibilidad en Packages → Package settings (`docs/11` §A.4).\n\n## Hecha cuando\n\n- [ ] `docker pull ghcr.io/danildperez04/medios-aea-api:0.4.0` funciona sin `docker login`",
       "labels": ["tipo:tarea", "área:infra", "prioridad:must"],
       "milestone": "Sprint 3"
+    },
+    {
+      "key": "T-ISO-OFFSET",
+      "title": "Tarea: rechazar fechas sin hora o sin zona horaria",
+      "body": "**Por qué:** `@IsISO8601({ strict: true })` acepta `2026-10-22T07:00:00` y `2026-10-22`. Sin desfase, `new Date()` las interpreta en la zona del servidor, que en el contenedor es UTC: la reserva quedaría corrida 6 horas respecto a Managua. Comprobado el 16/11/2026.\n\n**Qué hacer:** un decorador en `common/validation/` que exija fecha, hora y desfase (`Z` o `±hh:mm`) y usarlo en los DTO de reservas, bloqueos, disponibilidad y agenda en lugar de `@IsISO8601`.\n\n## Hecha cuando\n\n- [ ] Fecha sola y fecha sin desfase responden 400 con mensaje en español\n- [ ] Casos agregados a `common/validation/dto-contracts.spec.ts`\n- [ ] El panel y la app siguen enviando el desfase (revisado)",
+      "labels": ["tipo:bug", "área:api", "prioridad:must"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "T-RESERVATIONS-SPLIT",
+      "title": "Tarea: dividir `reservations.service.ts` antes de la bitácora de viajes",
+      "body": "**Por qué:** el servicio tiene 869 líneas y mezcla ciclo de vida, validación de asignaciones y redacción de avisos. HU-20 y HU-21 necesitan las mismas validaciones y candados y lo harían crecer más.\n\n**Qué hacer:** sin cambiar comportamiento: extraer la redacción de avisos y `checkAssignable` (con `firstAssignmentConflict` y `hasBlackout`) a piezas propias que el módulo de viajes pueda reutilizar. El orden de candados (solicitud, medio, conductor) no cambia.\n\n## Hecha cuando\n\n- [ ] Ningún archivo del módulo supera ~400 líneas\n- [ ] Las pruebas unitarias y e2e pasan sin modificarse\n- [ ] Hecha antes de empezar HU-21",
+      "labels": ["tipo:deuda", "área:api", "prioridad:should"],
+      "milestone": "Sprint 5"
+    },
+    {
+      "key": "T-MOBILE-NON-JSON",
+      "title": "Tarea: la app debe entender una respuesta que no es JSON",
+      "body": "**Por qué:** `mobile/src/lib/api.ts` hace `JSON.parse` de cualquier cuerpo. Si nginx responde un 502 o 504 en HTML, salta un `SyntaxError` sin traducir en lugar de un `ApiError` con mensaje en español.\n\n**Qué hacer:** envolver el `JSON.parse`; si falla, lanzar `ApiError` con el estado HTTP y un mensaje accionable (\"El servidor no responde…\").\n\n## Hecha cuando\n\n- [ ] Prueba en `api.test.ts` con un 502 en HTML\n- [ ] La pantalla muestra el mensaje en español",
+      "labels": ["tipo:bug", "área:móvil", "prioridad:should"],
+      "milestone": "Sprint 4"
+    },
+    {
+      "key": "T-DOCS-SYNC",
+      "title": "Tarea: poner al día la documentación de estado, backlog y arquitectura",
+      "body": "**Por qué:** `docs/00` dice 18/10/2026 y `v0.3.0`; `docs/03` marca HU-27 como pendiente aunque está en `develop` (#91); `docs/14` §3 describe rutas del panel que ya no existen (`src/lib/api.ts`, `components/ui`).\n\n**Qué hacer:** actualizar los tres documentos y `docs/09`; revisar que el estado de cada historia coincida con su issue.\n\n## Hecha cuando\n\n- [ ] `docs/00`, `docs/03` y `docs/09` reflejan lo que hay en `develop`\n- [ ] `docs/14` §3 describe la estructura real de `web/src`",
+      "labels": ["tipo:deuda", "área:docs", "prioridad:should"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "T-DEPENDABOT",
+      "title": "Tarea: atender los PR de Dependabot acumulados",
+      "body": "**Por qué:** al 16/11/2026 hay 9 ramas de Dependabot abiertas en el remoto (acciones, api, web, tooling, jest-expo) y `pnpm audit --prod` informa 6 avisos moderados y 2 bajos.\n\n**Qué hacer:** revisar, mergear o cerrar con motivo cada PR; acordar un momento fijo por sprint para hacerlo.\n\n## Hecha cuando\n\n- [ ] Ningún PR de Dependabot con más de dos semanas abierto\n- [ ] Avisos moderados revisados: corregidos o anotados en `SECURITY.md` §4",
+      "labels": ["tipo:deuda", "área:infra", "prioridad:should"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "T-CONFIG-SINGLE",
+      "title": "Tarea: dejar una sola definición de la configuración de la API",
+      "body": "**Por qué:** `buildConfig` (lo usa `database/data-source.ts`) y el esquema Joi describen las mismas variables por separado y ya divergen: `buildConfig` no conoce las de sesión (`WEB_ACCESS_TOKEN_TTL`, `REFRESH_TOKEN_TTL_HOURS`, `COOKIE_SECURE`).\n\n**Qué hacer:** que `buildConfig` valide con el mismo esquema Joi, o que la CLI de migraciones lea la configuración validada, de modo que una variable nueva se declare en un solo sitio.\n\n## Hecha cuando\n\n- [ ] Una variable nueva se declara una sola vez\n- [ ] `configuration.spec.ts` cubre el camino de la CLI",
+      "labels": ["tipo:deuda", "área:api", "prioridad:could"],
+      "milestone": "Sprint 5"
+    },
+    {
+      "key": "T-WEB-FLAKY",
+      "title": "Tarea: estabilizar `BookDialog.test.tsx` bajo carga",
+      "body": "**Por qué:** el 16/11/2026 la prueba \"pide los libres del horario y registra la reserva aprobada\" falló una vez al correr `pnpm test` con los tres workspaces en paralelo (casi 10 s el archivo) y pasó en las cuatro repeticiones siguientes (1,7 s sola). No se capturó el mensaje; apunta al tiempo límite de 5 s.\n\n**Qué hacer:** reproducir con carga, y aligerar la prueba (menos tecleo simulado) o subir su tiempo límite de forma justificada.\n\n## Hecha cuando\n\n- [ ] 20 ejecuciones seguidas de `pnpm test` sin fallos\n- [ ] Causa anotada en el PR",
+      "labels": ["tipo:deuda", "área:web", "prioridad:could"],
+      "milestone": "Sprint 3"
     }
   ]
 }
