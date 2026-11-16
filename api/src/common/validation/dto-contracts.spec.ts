@@ -5,6 +5,7 @@ import { LoginDto } from '#modules/auth/dto/login.dto.js';
 import { CreateProjectDto } from '#modules/projects/dto/create-project.dto.js';
 import { UpdateProjectDto } from '#modules/projects/dto/update-project.dto.js';
 import { ApproveReservationDto } from '#modules/reservations/dto/approve-reservation.dto.js';
+import { BookReservationDto } from '#modules/reservations/dto/book-reservation.dto.js';
 import { ReassignReservationDto } from '#modules/reservations/dto/reassign-reservation.dto.js';
 import { RejectReservationDto } from '#modules/reservations/dto/reject-reservation.dto.js';
 import { CreateUserDto } from '#modules/users/dto/create-user.dto.js';
@@ -175,6 +176,37 @@ describe('ReassignReservationDto — PartialType(ApproveReservationDto)', () => 
     );
     expect(await errorsOf(ReassignReservationDto, { resourceId: 'x' })).toContain(
       'Elige el medio que se asigna',
+    );
+  });
+});
+
+describe('BookReservationDto — OmitType(CreateReservationDto) + medio y conductor', () => {
+  const body = {
+    projectId: '0b0c6a1e-5a8d-4f0e-9c3b-2a6f1d7e8c90',
+    purpose: 'Visita de seguimiento',
+    destination: 'San José',
+    passengers: 2,
+    startsAt: '2026-12-01T08:00:00-06:00',
+    endsAt: '2026-12-01T12:00:00-06:00',
+    resourceId: '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f',
+  };
+
+  it('hereda los campos de crear y exige el medio', async () => {
+    expect(await errorsOf(BookReservationDto, body)).toEqual([]);
+    expect(await errorsOf(BookReservationDto, { ...body, resourceId: undefined })).toContain(
+      'Elige el medio que se asigna',
+    );
+    expect(await errorsOf(BookReservationDto, { ...body, passengers: 0 })).toContain(
+      'Debe viajar al menos 1 persona',
+    );
+  });
+
+  it('no acepta los campos de una solicitud ni un conductor null', async () => {
+    expect(
+      await errorsOf(BookReservationDto, { ...body, proposedDriverId: body.resourceId }),
+    ).toContain('property proposedDriverId should not exist');
+    expect(await errorsOf(BookReservationDto, { ...body, driverId: null })).toContain(
+      'El conductor no es válido',
     );
   });
 });
