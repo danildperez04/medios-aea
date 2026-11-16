@@ -59,7 +59,7 @@ referencia de producto: qué se construye y con qué criterios.
 | HU-18 | RF-18         | Como técnico, quiero ver y cancelar mis solicitudes                   | Lista por estado; detalle con vehículo y conductor asignado                      | PENDIENTE |
 | HU-19 | RF-19, RF-20  | Como técnico, quiero recibir notificaciones                           | Push al aprobar/rechazar/reasignar; bandeja in-app con leídas/no leídas          | PENDIENTE |
 | HU-28 | RF-18, RNF-01 | Como técnico o conductor, quiero que mi sesión en la app se mantenga  | Renovación automática; rota; 7 días sin uso; sin señal no cierra; antes de HU-21 | TERMINADO |
-| HU-29 | RF-29         | Como ADMIN, quiero cerrar las sesiones de una persona desde el panel  | Sin desactivar la cuenta; panel y app; auditoría                                 | PENDIENTE |
+| HU-29 | RF-29         | Como ADMIN, quiero cerrar las sesiones de una persona desde el panel  | Sin desactivar la cuenta; panel y app; auditoría                                 | TERMINADO |
 
 ## Sprint 5 — Bitácora y reportes
 

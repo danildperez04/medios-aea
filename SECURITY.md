@@ -63,6 +63,8 @@ compilación de Expo. `uuid` desapareció el 27/10/2026
 - Cambiar o restablecer una contraseña cierra todas las sesiones de la persona: revoca
   sus refresh tokens y deja sin efecto, en la siguiente petición, los tokens de acceso
   ya emitidos (`session_version`).
+- La coordinación puede cerrar las sesiones de una persona sin desactivar su cuenta
+  (HU-29), por ejemplo si pierde el teléfono; queda en `audit_log` quién lo hizo.
 - Límite de intentos de inicio de sesión (10 por minuto e IP) y límite global. La IP es
   la de quien hace la petición, no la del proxy (`TRUST_PROXY_HOPS`, `docs/11` §1).
 - `helmet` en la API; CORS restringido a la web.

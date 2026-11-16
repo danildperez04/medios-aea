@@ -89,6 +89,12 @@ señal, y un token robado no se puede cancelar. Se decide:
   los tokens de acceso ya emitidos se rechazan en la siguiente petición, no al vencer.
   Esto mejora lo previsto para la HU-29 (15 minutos como máximo).
 
+- **HU-29:** `POST /users/:id/sessions/revoke` (solo ADMIN) cierra las sesiones de una
+  persona sin desactivarla, con el mismo mecanismo, y deja en `audit_log` la acción
+  `REVOKE_SESSIONS` con quién la hizo. En el panel es la acción "Cerrar sesiones" de
+  Usuarios. El cierre es inmediato, no "en 15 minutos como máximo" como se previó el
+  30/10.
+
 ## Consecuencias
 
 - Migración `refresh_token` (usuario, familia, hash, vencimiento, uso, revocación).

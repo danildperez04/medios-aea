@@ -27,15 +27,15 @@ user ─1:n─ notification · user_device · audit_log
 
 ## 2. Tipos enumerados
 
-| Tipo              | Valores                                                     |
-| ----------------- | ----------------------------------------------------------- |
-| `user_role`       | `ADMIN`, `REQUESTER`, `DRIVER`                              |
-| `resource_type`   | `VEHICLE` (fase 2: `EQUIPMENT`)                             |
-| `resource_status` | `AVAILABLE`, `MAINTENANCE`, `INACTIVE`                      |
-| `fuel_type`       | `GASOLINE`, `DIESEL`                                        |
-| `request_status`  | `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`, `COMPLETED` |
-| `blackout_reason` | `MAINTENANCE`, `ADMINISTRATIVE`, `OTHER`                    |
-| `audit_action`    | `APPROVE`, `REJECT`, `CANCEL`, `REASSIGN`, `COMPLETE`       |
+| Tipo              | Valores                                                                  |
+| ----------------- | ------------------------------------------------------------------------ |
+| `user_role`       | `ADMIN`, `REQUESTER`, `DRIVER`                                           |
+| `resource_type`   | `VEHICLE` (fase 2: `EQUIPMENT`)                                          |
+| `resource_status` | `AVAILABLE`, `MAINTENANCE`, `INACTIVE`                                   |
+| `fuel_type`       | `GASOLINE`, `DIESEL`                                                     |
+| `request_status`  | `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED`, `COMPLETED`              |
+| `blackout_reason` | `MAINTENANCE`, `ADMINISTRATIVE`, `OTHER`                                 |
+| `audit_action`    | `APPROVE`, `REJECT`, `CANCEL`, `REASSIGN`, `COMPLETE`, `REVOKE_SESSIONS` |
 
 ## 3. Tablas
 
