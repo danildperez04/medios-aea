@@ -251,3 +251,24 @@ describe('niveles de log admitidos', () => {
     expect(error).toBeDefined();
   });
 });
+
+/** Proxies de confianza delante de la API (config/trust-proxy.ts). */
+describe('proxies de confianza', () => {
+  const hops = (extra: Record<string, string>) =>
+    configValidationSchema.validate({ ...BASE_ENV, ...extra });
+
+  it('en produccion confia en un salto (nginx) y fuera de ella en ninguno', () => {
+    expect(hops({ NODE_ENV: 'production' }).value.TRUST_PROXY_HOPS).toBe(1);
+    expect(hops({ NODE_ENV: 'development' }).value.TRUST_PROXY_HOPS).toBe(0);
+    expect(hops({ NODE_ENV: 'test' }).value.TRUST_PROXY_HOPS).toBe(0);
+  });
+
+  it('se puede subir a dos saltos cuando hay un proxy de HTTPS delante de nginx', () => {
+    expect(hops({ NODE_ENV: 'production', TRUST_PROXY_HOPS: '2' }).value.TRUST_PROXY_HOPS).toBe(2);
+  });
+
+  it('rechaza valores que no son un numero de saltos', () => {
+    expect(hops({ TRUST_PROXY_HOPS: '-1' }).error).toBeDefined();
+    expect(hops({ TRUST_PROXY_HOPS: 'true' }).error).toBeDefined();
+  });
+});
