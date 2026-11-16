@@ -1,17 +1,20 @@
 # Estado del Proyecto — Medios AeA
 
-**Última actualización:** 18 de octubre de 2026
+**Última actualización:** 16 de noviembre de 2026
 **Versión publicada:** `0.3.0` (etiqueta `v0.3.0`; ver `CHANGELOG.md`)
 
 ## Resumen
 
-| Bloque                                                        | Estado                     | Versión           |
-| ------------------------------------------------------------- | -------------------------- | ----------------- |
-| Sprint 0 — Documentación y andamiaje                          | TERMINADO                  | `v0.1.0`          |
-| Sprint 1 — Acceso y catálogos base                            | TERMINADO                  | `v0.2.0`          |
-| Sprint 2 — Flota y disponibilidad (+ despliegue, DTO, diseño) | TERMINADO                  | `v0.3.0`          |
-| Sprint 3 — Solicitudes y aprobación                           | EN CURSO (HU-09 terminada) | `0.4.0` al cerrar |
-| Revisión de DevOps, calidad, seguridad y proceso              | EN REVISIÓN (5 PR)         | —                 |
+| Bloque                                                        | Estado                                  | Versión           |
+| ------------------------------------------------------------- | --------------------------------------- | ----------------- |
+| Sprint 0 — Documentación y andamiaje                          | TERMINADO                               | `v0.1.0`          |
+| Sprint 1 — Acceso y catálogos base                            | TERMINADO                               | `v0.2.0`          |
+| Sprint 2 — Flota y disponibilidad (+ despliegue, DTO, diseño) | TERMINADO                               | `v0.3.0`          |
+| Sprint 3 — Solicitudes y aprobación                           | HISTORIAS TERMINADAS (falta el release) | `0.5.0` al cerrar |
+| Revisión de DevOps, calidad, seguridad y proceso              | TERMINADO (PR #8–#13)                   | `v0.4.0`          |
+
+La `v0.4.0` sale a mitad del Sprint 3: reúne la revisión de DevOps y las historias ya
+terminadas (HU-09, HU-10 y HU-26). El resto del sprint llega en la `0.5.0`.
 
 ---
 
@@ -138,21 +141,97 @@ vencer; sin scroll horizontal a 1366 px ni a 390 px. Se corrigieron en el camino
 texto oculto con `width: 1` (100% en MUI) que desbordaba la página, bloques de varios
 días mal ubicados en la agenda, y la petición fallida de la fuente Bogart.
 
-## Sprint 3 — Solicitudes y aprobación sin choques · EN CURSO
+## Sprint 3 — Solicitudes y aprobación sin choques · HISTORIAS TERMINADAS
 
 Primera historia con el flujo de una rama por historia (`docs/05` §3).
 
-| Historia                            | Rama                           | Estado                                      |
-| ----------------------------------- | ------------------------------ | ------------------------------------------- |
-| HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request` | TERMINADO (PR #7)                           |
-| HU-10 a HU-15                       | —                              | Pendientes; HU-10 a HU-13 dependen de HU-09 |
+| Historia                            | Rama                             | Estado              |
+| ----------------------------------- | -------------------------------- | ------------------- |
+| HU-09 Crear y consultar solicitudes | `feature/hu-09-create-request`   | TERMINADO (PR #7)   |
+| HU-10 Cancelar una solicitud        | `feature/hu-10-cancel-request`   | TERMINADO (PR #49)  |
+| HU-26 Indicar quién conduce         | `feature/hu-26-proposed-driver`  | TERMINADO (PR #52)  |
+| HU-11 Aprobar sin choques           | `feature/hu-11-approve-request`  | TERMINADO (PR #61)  |
+| HU-12 Rechazar con motivo           | `feature/hu-12-reject-request`   | TERMINADO (PR #67)  |
+| HU-13 Reasignar medio o conductor   | `feature/hu-13-reassign-request` | TERMINADO (PR #70)  |
+| HU-27 Reserva desde el panel        | `feature/hu-27-book-from-panel`  | TERMINADO (PR #91)  |
+| HU-14 Calendario de la flota        | `feature/hu-14-fleet-calendar`   | TERMINADO (PR #105) |
+| HU-15 Auditoría de decisiones       | `feature/hu-15-decision-history` | TERMINADO (PR #106) |
 
 HU-09: `POST /reservations` (queda PENDING, código `SOL-AAAA-NNNNN`, aviso interno a la
 coordinación, RN-06 y RN-14), `GET /reservations` (cada técnico solo las suyas),
 bandeja de solicitudes en la web con contador en el menú. Verificación: 113 unitarias,
 69 e2e y 30 web en verde; revisada en el navegador a 1366 y 390 px.
 
-## Revisión de DevOps, calidad, seguridad y proceso · EN REVISIÓN
+HU-10: `POST /reservations/:id/cancel` para el dueño o la coordinación (RN-13). Cancela
+pendientes y aprobadas mientras el viaje no inicie; las asignaciones pasan a
+`active = false` (RN-10), queda en `audit_log` y se avisa a la coordinación, a quien
+pidió y al conductor. Botón de cancelar con confirmación en la bandeja web.
+Verificación: 122 unitarias, 77 e2e y 33 web en verde; revisada en el navegador a 1366
+y 390 px.
+
+HU-26 (ADR 0004): cualquier usuario puede tener perfil de conductor; la solicitud
+guarda al conductor propuesto (`proposed_driver_id`, migración `AddProposedDriver`). Sin
+indicarlo conduce quien solicita, si tiene licencia; si no, hay que elegir a alguien de
+`GET /drivers/options`, cuya licencia debe cubrir el viaje (RN-15). La bandeja muestra
+quién conduce y el rol `DRIVER` pasa a llamarse "Chofer de planta". Verificación: 126
+unitarias, 83 e2e y 34 web en verde; revisada en el navegador a 1366 y 390 px.
+
+HU-11: `POST /reservations/:id/approve` (ADMIN) asigna el medio y, por defecto, al
+conductor propuesto; la coordinación puede elegir a otra persona y se avisa a quien
+pidió y a ambos conductores (ADR 0004). En una transacción bloquea la solicitud y el
+medio con FOR UPDATE (el mismo candado de los bloqueos) y valida choques (409),
+mantenimiento, capacidad y licencia (422); las restricciones de exclusión siguen siendo
+la garantía ante aprobaciones simultáneas. En la web, diálogo de aprobación que solo
+ofrece medios y conductores libres. Verificación: 135 unitarias, 96 e2e (PT-01 a PT-10)
+y 39 web en verde; revisada en el navegador a 1366 y 390 px.
+
+HU-12: `POST /reservations/:id/reject` (ADMIN) exige un motivo de 5 a 300 caracteres
+(PT-22), lo guarda con quién decidió y cuándo, deja registro en `audit_log` y avisa a
+quien pidió con el motivo. Comparte con la aprobación el candado de la solicitud: si
+alguien aprueba y otra persona rechaza a la vez, solo una decisión queda (409 la otra).
+En la web, diálogo de rechazo y el motivo bajo el estado de las rechazadas.
+Verificación: 136 unitarias, 101 e2e y 43 web en verde; revisada en el navegador a
+1366 y 390 px.
+
+HU-13: `POST /reservations/:id/reassign` (ADMIN) cambia el medio, quien conduce o ambos
+de una aprobada mientras el viaje no inicie. En una transacción la asignación vigente
+pasa a `active = false` y se crea otra (RN-10), con las mismas validaciones que al
+aprobar (`checkAssignable`), sin contar la asignación propia como choque. Avisa a quien
+pidió, a quien conduce y a quien dejó de conducir; auditoría con el antes y el después.
+En la web, el diálogo de aprobación en modo "reasignar". Verificación: 137 unitarias,
+107 e2e y 45 web en verde; revisada en el navegador a 1366 y 390 px.
+
+HU-27: `POST /reservations/book` (ADMIN) registra una reserva ya aprobada en un paso, sin
+pasar por la bandeja. Valida lo mismo que crear (horario, proyecto activo, persona
+activa) y que aprobar (`checkAssignable`: choques, bloqueos, mantenimiento, capacidad y
+licencia); quien conduce queda como propuesto. Avisa a quien viaja y a quien conduce, no
+a la coordinación, y queda en `audit_log` como aprobación con `direct: true`. En la web,
+botón "Nueva reserva" en Solicitudes con un formulario que solo ofrece medios y
+conductores libres en el horario. Verificación: 147 unitarias, 124 e2e y 57 web en verde.
+
+HU-14: la sección Agenda del panel (`/agenda`) muestra una fila por medio con sus viajes
+aprobados, viajes en curso, solicitudes pendientes con medio preferido y bloqueos, por día
+o por semana. `AgendaBoard` acepta `days`: con 7 dibuja una columna por día con la misma
+franja horaria, y un viaje de varios días sigue de una columna a la otra. Se navega con
+anterior, hoy, siguiente y un selector de fecha; la vista y el día van en la URL y el
+encabezado de un día en la semana lo abre hora por hora. `AgendaLegend` explica los
+colores. Verificación: 77 web en verde; revisada con datos de ejemplo a 1366 y 390 px.
+
+HU-15: `GET /reservations/:id/history` (ADMIN) lee lo que aprobar, rechazar, cancelar y
+reasignar dejaron en `audit_log` y devuelve cada paso en orden, con quién lo hizo, cuándo
+y una frase que lo explica (medio y conductor asignados, motivo del rechazo, qué cambió
+una reasignación). En la web, cada solicitud ya decidida abre su historial desde la
+bandeja. Verificación: 177 unitarias, 131 e2e y 62 web en verde.
+
+### Correcciones tras la revisión del 16/11/2026
+
+| PR   | Qué cambia                                                                                                                                         |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #102 | `TRUST_PROXY_HOPS`: el límite de peticiones cuenta por la dirección de quien las hace y no por la del proxy (`docs/11` §1)                         |
+| #103 | `@IsDateTimeWithOffset()`: reservas, bloqueos, disponibilidad y agenda rechazan fechas sin hora o sin zona horaria, que el servidor leería en UTC  |
+| #104 | La prueba del formulario de reserva directa tiene su propio tiempo límite: con cobertura pasaba de los 5 s y `pnpm test:cov` fallaba sin nada roto |
+
+## Revisión de DevOps, calidad, seguridad y proceso · TERMINADO
 
 Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`:
 
@@ -165,8 +244,14 @@ Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`
 | 4   | `docs/process-and-review`  | Plantillas de issues, `CONTRIBUTING.md`, guía de revisión, ADR, proceso con GitHub Issues/Projects                                                                                                                          |
 | 5   | `chore/github-setup`       | Script de configuración de GitHub (etiquetas, milestones, issues, protección de ramas, tablero)                                                                                                                             |
 
-## Siguiente en el Sprint 3
+## Siguiente
 
-HU-09 a HU-15: crear y cancelar solicitudes, aprobar asignando medio y conductor con la
-disponibilidad de este sprint (mismo candado que los bloqueos), rechazo con motivo,
-reasignación, calendario semanal y auditoría.
+**Para cerrar el Sprint 3** (`docs/05` §3.5): atender los PR de Dependabot acumulados
+(#98), hacer públicos los paquetes de GHCR tras el release (#33) y el PR
+`develop → main` con su etiqueta.
+
+**Sprint 4 — app móvil del solicitante y sesiones:** HU-16 a HU-19 (iniciar sesión,
+solicitar viendo disponibilidad, ver y cancelar solicitudes, notificaciones), HU-28
+(sesión de la app, 7 días) y HU-29 (cerrar sesiones desde el panel), según la ampliación
+del ADR 0003. Tareas técnicas del sprint: actualizar a Expo SDK 58 (#73) y que la app
+entienda una respuesta que no es JSON (#96).

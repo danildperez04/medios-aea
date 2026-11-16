@@ -17,12 +17,15 @@ import { UserRole } from '#common/enums/domain.enums.js';
 import { CreateDriverDto } from './dto/create-driver.dto.js';
 import { DriverFiltersDto } from './dto/driver-filters.dto.js';
 import { UpdateDriverDto } from './dto/update-driver.dto.js';
-import type { DriverView } from './driver.view.js';
+import type { DriverOption, DriverView } from './driver.view.js';
 import { DriversService } from './drivers.service.js';
 
 const uuid = new ParseUUIDPipe({ version: '4' });
 
-/** Conductores y sus licencias. Gestión exclusiva del ADMIN (RF-07). */
+/**
+ * Conductores y sus licencias. Gestión exclusiva del ADMIN (RF-07); quien solicita
+ * solo ve la lista de personas habilitadas para proponer quién conduce (RN-15).
+ */
 @ApiTags('Conductores')
 @ApiBearerAuth()
 @Roles(UserRole.ADMIN)
@@ -36,13 +39,21 @@ export class DriversController {
     return this.service.findAll(filters);
   }
 
+  // Antes de ':id' para que 'options' no se tome como un id.
+  @Get('options')
+  @Roles(UserRole.REQUESTER, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Personas habilitadas para conducir (sin datos de la licencia)' })
+  findOptions(): Promise<DriverOption[]> {
+    return this.service.findOptions();
+  }
+
   @Get(':id')
   findOne(@Param('id', uuid) id: string): Promise<DriverView> {
     return this.service.findOneOrFail(id);
   }
 
   @Post()
-  @ApiResponse({ status: 400, description: 'El usuario no tiene rol DRIVER o está desactivado' })
+  @ApiResponse({ status: 400, description: 'El usuario está desactivado' })
   @ApiResponse({ status: 409, description: 'El usuario ya es conductor o la licencia ya existe' })
   create(@Body() dto: CreateDriverDto): Promise<DriverView> {
     return this.service.create(dto);

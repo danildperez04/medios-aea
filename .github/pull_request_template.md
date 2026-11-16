@@ -8,6 +8,8 @@ Una historia por PR. Ver docs/05-versionado-commits-y-ramas.md §3.
 
 HU-XX — <!-- qué puede hacer ahora el usuario, en una frase -->
 
+Closes #<!-- número del issue; se cierra al mergear a develop -->
+
 ## Qué cambia
 
 -

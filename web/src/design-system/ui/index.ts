@@ -11,6 +11,7 @@ export { DataTable, type DataTableColumn, type DataTableProps } from './DataTabl
 export { ConfirmDialog, type ConfirmDialogProps } from './ConfirmDialog';
 export {
   AgendaBoard,
+  AgendaLegend,
   type AgendaBlock,
   type AgendaBlockState,
   type AgendaBoardProps,

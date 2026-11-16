@@ -134,7 +134,30 @@ export const configValidationSchema = Joi.object({
   DATABASE_SSL: Joi.boolean().default(false),
   JWT_SECRET: Joi.string().min(32).required(),
   JWT_EXPIRES_IN: Joi.string().default('8h'),
+  // Sesión del panel web (ADR 0003): token de acceso corto en memoria y refresh token
+  // en cookie HttpOnly que vence tras estas horas sin uso.
+  WEB_ACCESS_TOKEN_TTL: Joi.string()
+    .pattern(/^\d+[smhd]$/)
+    .default('15m'),
+  REFRESH_TOKEN_TTL_HOURS: Joi.number().integer().min(1).max(720).default(12),
+  // `Secure` en la cookie: siempre en producción (HTTPS detrás de nginx).
+  COOKIE_SECURE: Joi.boolean().when('NODE_ENV', {
+    is: 'production',
+    then: Joi.boolean().default(true),
+    otherwise: Joi.boolean().default(false),
+  }),
   BCRYPT_ROUNDS: Joi.number().integer().min(4).max(15).default(12),
+  // Proxies de confianza delante de la API (ver config/trust-proxy.ts). En producción
+  // siempre está nginx (1); con un proxy de HTTPS delante de nginx son 2.
+  TRUST_PROXY_HOPS: Joi.number()
+    .integer()
+    .min(0)
+    .max(5)
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.number().default(1),
+      otherwise: Joi.number().default(0),
+    }),
   CORS_ORIGIN: Joi.string().default('http://localhost:5173'),
   // La documentación interactiva expone todos los endpoints: apagada en producción
   // salvo que se pida expresamente.

@@ -119,7 +119,7 @@ export function UserFormDialog({ open, user, onClose }: UserFormDialogProps) {
               error={Boolean(errors.role)}
               helperText={
                 errors.role?.message ??
-                'Los conductores se completan con su licencia en Conductores.'
+                'Manejar no es un rol: la licencia se registra en Conductores.'
               }
             >
               {Object.entries(ROLE_LABELS).map(([value, label]) => (

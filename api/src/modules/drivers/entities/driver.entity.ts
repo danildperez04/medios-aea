@@ -11,8 +11,8 @@ import {
 import { User } from '#modules/users/entities/user.entity.js';
 
 /**
- * Conductor: un usuario con rol DRIVER y licencia. Un conductor con la licencia
- * vencida a la fecha del viaje no se puede asignar (RN-09).
+ * Perfil de conductor: la licencia de un usuario, tenga el rol que tenga (ADR 0004).
+ * Un conductor con la licencia vencida a la fecha del viaje no se puede asignar (RN-09).
  */
 @Entity('driver')
 export class Driver {

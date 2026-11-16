@@ -1,3 +1,4 @@
+import { Box, CircularProgress } from '@mui/material';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/app/stores/auth.store';
 import { AppLayout } from '@/design-system/layout/AppLayout';
@@ -5,14 +6,22 @@ import { AppLayout } from '@/design-system/layout/AppLayout';
 /**
  * Protege las rutas privadas.
  *
- * Sin token, manda a /login y recuerda de donde venia el usuario, para
- * devolverlo ahi tras autenticarse.
+ * Mientras se pregunta a la API si hay sesión (al abrir o recargar), muestra una
+ * espera en lugar de mandar a /login. Sin sesión, manda a /login y recuerda de donde
+ * venia el usuario, para devolverlo ahi tras autenticarse.
  */
 export function RequireAuth() {
-  const accessToken = useAuthStore((state) => state.accessToken);
+  const status = useAuthStore((state) => state.status);
   const location = useLocation();
 
-  if (!accessToken) {
+  if (status === 'checking') {
+    return (
+      <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
+        <CircularProgress aria-label="Recuperando la sesión" />
+      </Box>
+    );
+  }
+  if (status !== 'authenticated') {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
   return <Outlet />;

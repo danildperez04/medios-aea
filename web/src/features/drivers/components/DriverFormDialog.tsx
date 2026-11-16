@@ -35,11 +35,14 @@ export interface DriverFormDialogProps {
   onClose: () => void;
 }
 
-/** Registro de la licencia de un conductor (HU-06). El usuario se crea antes en Usuarios. */
+/**
+ * Registro de la licencia de quien conduce (HU-06, HU-26). Cualquier persona activa
+ * puede tenerla, sea técnica o de coordinación (ADR 0004). El usuario se crea antes.
+ */
 export function DriverFormDialog({ open, driver, onClose }: DriverFormDialogProps) {
   const save = useSaveDriver();
-  // Usuarios con rol de conductor que todavía no tienen licencia registrada.
-  const users = useUsers({ page: 1, limit: 100, role: 'DRIVER', isActive: true });
+  // Personas activas que todavía no tienen licencia registrada, tengan el rol que tengan.
+  const users = useUsers({ page: 1, limit: 100, isActive: true });
   const drivers = useDrivers({ page: 1, limit: 100 });
   const candidates = useMemo(() => {
     const taken = new Set((drivers.data?.data ?? []).map((d) => d.userId));
@@ -107,8 +110,8 @@ export function DriverFormDialog({ open, driver, onClose }: DriverFormDialogProp
           <Stack spacing={2} sx={{ pt: 1 }}>
             {driver ? null : noCandidates ? (
               <Typography variant="body2">
-                No hay usuarios con rol de conductor sin licencia registrada. Crea primero a la
-                persona en Usuarios con el rol Conductor/a.
+                Todas las personas activas ya tienen su licencia registrada. Si falta alguien,
+                créalo primero en Usuarios.
               </Typography>
             ) : (
               <TextField
@@ -119,7 +122,7 @@ export function DriverFormDialog({ open, driver, onClose }: DriverFormDialogProp
                   setValue('userId', event.target.value, { shouldValidate: true })
                 }
                 error={Boolean(errors.userId)}
-                helperText={errors.userId?.message ?? 'Usuarios con rol Conductor/a.'}
+                helperText={errors.userId?.message ?? 'Cualquier persona del equipo que maneje.'}
               >
                 {candidates.map((user) => (
                   <MenuItem key={user.id} value={user.id}>

@@ -4,7 +4,7 @@
 | ------------------------ | ------------------------------------------------------------------------------------------------------ | ------------------------ |
 | Medio / Recurso          | Cualquier bien que se presta para una actividad. En el MVP solo vehículos.                             | `resource`               |
 | Vehículo                 | Recurso de tipo `VEHICLE` con placa, capacidad y odómetro.                                             | `vehicle`                |
-| Conductor                | Usuario con rol `DRIVER` y licencia vigente.                                                           | `driver`                 |
+| Conductor                | Usuario con perfil de conductor y licencia vigente, sea técnico o chofer (ADR 0004).                   | `driver`                 |
 | Solicitud                | Petición de un técnico para usar un vehículo en un horario, para un proyecto.                          | `reservation_request`    |
 | Asignación               | Vínculo aprobado entre una solicitud, un recurso y (opcional) un conductor. Es lo que ocupa la agenda. | `reservation_assignment` |
 | Choque / Solape          | Dos asignaciones activas del mismo vehículo o conductor cuyos periodos se cruzan.                      | `period && period`       |

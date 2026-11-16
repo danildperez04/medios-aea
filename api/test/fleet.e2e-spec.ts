@@ -182,12 +182,21 @@ describe('Flota y disponibilidad (integracion)', () => {
       });
     });
 
-    it('rechaza a un usuario que no es DRIVER (400) y a un conductor repetido (409)', async () => {
+    it('registra la licencia de un tecnico: el personal tecnico conduce (ADR 0004)', async () => {
       const requester = await createUser(dataSource, UserRole.REQUESTER);
       await request(app.getHttpServer())
         .post(`${api}/drivers`)
         .set(asAdmin())
         .send({ userId: requester.id, licenseNumber: unique('L'), licenseExpiry: '2030-01-01' })
+        .expect(201);
+    });
+
+    it('rechaza a un usuario desactivado (400) y a un conductor repetido (409)', async () => {
+      const inactive = await createUser(dataSource, UserRole.REQUESTER, { isActive: false });
+      await request(app.getHttpServer())
+        .post(`${api}/drivers`)
+        .set(asAdmin())
+        .send({ userId: inactive.id, licenseNumber: unique('L'), licenseExpiry: '2030-01-01' })
         .expect(400);
       const driver = await createDriver(dataSource);
       await request(app.getHttpServer())
@@ -195,6 +204,28 @@ describe('Flota y disponibilidad (integracion)', () => {
         .set(asAdmin())
         .send({ userId: driver.userId, licenseNumber: unique('L'), licenseExpiry: '2030-01-01' })
         .expect(409);
+    });
+
+    it('quien solicita ve a las personas habilitadas para conducir, sin su licencia (RN-15)', async () => {
+      const valid = await createDriver(dataSource, '2035-01-01');
+      const expired = await createDriver(dataSource, '2020-01-01');
+      const inactive = await createDriver(dataSource, '2035-01-01');
+      await dataSource.query(`UPDATE driver SET is_active = false WHERE id = $1`, [inactive.id]);
+
+      const options = await request(app.getHttpServer())
+        .get(`${api}/drivers/options`)
+        .set(asRequester())
+        .expect(200);
+      const ids = options.body.map((o: { id: string }) => o.id);
+      expect(ids).toContain(valid.id);
+      expect(ids).not.toContain(expired.id);
+      expect(ids).not.toContain(inactive.id);
+      expect(Object.keys(options.body[0]).sort()).toEqual(
+        ['fullName', 'id', 'licenseExpiry', 'userId'].sort(),
+      );
+
+      // La gestión completa, con números de licencia, sigue siendo solo del ADMIN.
+      await request(app.getHttpServer()).get(`${api}/drivers`).set(asRequester()).expect(403);
     });
 
     it('lista las licencias vencidas o por vencer para el aviso del dashboard', async () => {

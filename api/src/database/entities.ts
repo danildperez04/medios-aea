@@ -1,4 +1,5 @@
 import { AuditLog } from '#modules/audit/entities/audit-log.entity.js';
+import { RefreshToken } from '#modules/auth/entities/refresh-token.entity.js';
 import { Blackout } from '#modules/blackouts/entities/blackout.entity.js';
 import { Driver } from '#modules/drivers/entities/driver.entity.js';
 import { Notification } from '#modules/notifications/entities/notification.entity.js';
@@ -12,7 +13,7 @@ import { TripLog } from '#modules/trips/entities/trip-log.entity.js';
 import { User } from '#modules/users/entities/user.entity.js';
 
 /**
- * Las 12 entidades de Medios AeA.
+ * Las 13 entidades de Medios AeA.
  * Ver docs/10-esquema-base-de-datos.md §3.
  */
 export const entities = [
@@ -28,6 +29,7 @@ export const entities = [
   Notification,
   UserDevice,
   AuditLog,
+  RefreshToken,
 ];
 
 export {
@@ -43,4 +45,5 @@ export {
   Notification,
   UserDevice,
   AuditLog,
+  RefreshToken,
 };

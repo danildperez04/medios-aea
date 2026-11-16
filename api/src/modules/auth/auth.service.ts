@@ -44,7 +44,16 @@ export class AuthService {
     @Inject(ConfigService) private readonly config: ConfigService,
   ) {}
 
+  /** Inicio de sesión de la app móvil: token de acceso de `JWT_EXPIRES_IN` (8 h). */
   async login(credentials: LoginCredentials): Promise<LoginResult> {
+    return this.issueAccessToken(await this.authenticate(credentials));
+  }
+
+  /**
+   * Verifica correo y contraseña y devuelve el usuario activo. Lo usan el login de la
+   * app y la sesión del panel (ADR 0003); registra `lastLoginAt`.
+   */
+  async authenticate(credentials: LoginCredentials): Promise<User> {
     const user = await this.users
       .createQueryBuilder('user')
       .addSelect('user.passwordHash')
@@ -60,19 +69,30 @@ export class AuthService {
     if (!user.isActive) throw new ForbiddenException('La cuenta está desactivada.');
 
     await this.users.update(user.id, { lastLoginAt: new Date() });
+    return user;
+  }
 
+  /**
+   * Firma un token de acceso. Sin `expiresIn` dura `JWT_EXPIRES_IN` (la app); el panel
+   * pide uno corto (`WEB_ACCESS_TOKEN_TTL`) porque lo renueva con su refresh token.
+   */
+  async issueAccessToken(
+    user: Pick<User, 'id' | 'email' | 'fullName' | 'role'>,
+    expiresIn: string = this.config.get<string>('JWT_EXPIRES_IN', '8h'),
+  ): Promise<LoginResult> {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       fullName: user.fullName,
       role: user.role,
     };
-    const accessToken = await this.jwt.signAsync(payload);
-
+    const accessToken = await this.jwt.signAsync(payload, {
+      expiresIn: expiresIn as `${number}${'s' | 'm' | 'h' | 'd'}`,
+    });
     return {
       accessToken,
       tokenType: 'Bearer',
-      expiresIn: this.expiresInSeconds(),
+      expiresIn: durationSeconds(expiresIn),
       user: this.toAuthenticatedUser(user),
     };
   }
@@ -111,7 +131,9 @@ export class AuthService {
     return hash(password, this.config.get<number>('BCRYPT_ROUNDS', 12));
   }
 
-  private toAuthenticatedUser(user: User): AuthenticatedUser {
+  private toAuthenticatedUser(
+    user: Pick<User, 'id' | 'email' | 'fullName' | 'role'>,
+  ): AuthenticatedUser {
     return {
       id: user.id,
       email: user.email,
@@ -119,14 +141,12 @@ export class AuthService {
       role: user.role,
     };
   }
+}
 
-  private expiresInSeconds(): number {
-    const raw = this.config.get<string>('JWT_EXPIRES_IN', '8h');
-    const match = /^(\d+)([smhd])$/.exec(raw);
-    if (!match) return 8 * 3600;
-    const value = Number(match[1]);
-    const unit = match[2];
-    const multipliers: Record<string, number> = { s: 1, m: 60, h: 3600, d: 86400 };
-    return value * (multipliers[unit] ?? 3600);
-  }
+/** Segundos de una duración como '8h' o '15m'; 8 h si no se entiende. */
+export function durationSeconds(raw: string): number {
+  const match = /^(\d+)([smhd])$/.exec(raw);
+  if (!match) return 8 * 3600;
+  const multipliers: Record<string, number> = { s: 1, m: 60, h: 3600, d: 86400 };
+  return Number(match[1]) * (multipliers[match[2]] ?? 3600);
 }

@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import { AgendaBoard, type AgendaRow } from './AgendaBoard';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
+import { AgendaBoard, AgendaLegend, type AgendaRow } from './AgendaBoard';
 
 /** 18 de octubre de 2026 a la hora indicada de Managua (UTC-6). */
 const at = (h: number, m = 0) => new Date(Date.UTC(2026, 9, 18, h + 6, m));
@@ -86,5 +87,83 @@ describe('AgendaBoard', () => {
     render(<AgendaBoard rows={rows} day={day} />);
     const tag = screen.getByTitle('Equipo INV-0042');
     expect(within(tag).getByText(/Equipo/)).toBeInTheDocument();
+  });
+});
+
+describe('AgendaBoard de varios días', () => {
+  /** Lunes 19 de octubre de 2026, a la hora de Managua indicada (puede pasar de 24). */
+  const week = (h: number) => new Date(Date.UTC(2026, 9, 19, h + 6));
+  const monday = week(0);
+  const row = (blocks: AgendaRow['blocks']): AgendaRow[] => [{ ...rows[0], blocks }];
+  const left = (el: HTMLElement) => Number.parseFloat(el.style.left || getComputedStyle(el).left);
+  const width = (el: HTMLElement) =>
+    Number.parseFloat(el.style.width || getComputedStyle(el).width);
+
+  it('encabeza cada día con su nombre y número', () => {
+    render(<AgendaBoard rows={rows} day={monday} days={7} />);
+    for (const label of ['lun 19', 'mar 20', 'mié 21', 'jue 22', 'vie 23', 'sáb 24', 'dom 25']) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+  });
+
+  it('ubica un viaje en la columna de su día, con la misma franja horaria', () => {
+    // Miércoles (tercer día) de 6 a 12, en una franja de 6 a 18: primera mitad de su columna.
+    const blocks = [
+      { id: 'w', start: week(48 + 6), end: week(48 + 12), state: 'ASSIGNED', label: 'Somoto' },
+    ] as const;
+    render(<AgendaBoard rows={row([...blocks])} day={monday} days={7} fromHour={6} toHour={18} />);
+    const block = screen.getByLabelText(/Somoto/);
+    expect(left(block)).toBeCloseTo((2 / 7) * 100, 1);
+    expect(width(block)).toBeCloseTo((0.5 / 7) * 100, 1);
+  });
+
+  it('un viaje de varios días sigue de largo de un día al otro', () => {
+    // Del lunes a las 12 al miércoles a las 12: media columna + una entera + media.
+    const blocks = [
+      { id: 'l', start: week(12), end: week(48 + 12), state: 'ASSIGNED', label: 'Gira' },
+    ] as const;
+    render(<AgendaBoard rows={row([...blocks])} day={monday} days={7} fromHour={6} toHour={18} />);
+    const block = screen.getByLabelText(/Gira/);
+    expect(left(block)).toBeCloseTo((0.5 / 7) * 100, 1);
+    expect(width(block)).toBeCloseTo((2 / 7) * 100, 1);
+  });
+
+  it('dice la fecha de cada bloque, porque la hora sola no basta', () => {
+    const blocks = [
+      { id: 'w', start: week(48 + 7), end: week(48 + 12), state: 'ASSIGNED', label: 'Somoto' },
+    ] as const;
+    render(<AgendaBoard rows={row([...blocks])} day={monday} days={7} />);
+    expect(
+      screen.getByLabelText('Hilux blanca M 123-456, 21/10/2026 07:00–12:00, Somoto, asignado'),
+    ).toBeInTheDocument();
+  });
+
+  it('no dibuja lo que cae fuera de la semana ni lo que ocurre solo de noche', () => {
+    const blocks = [
+      { id: 'p', start: week(-30), end: week(-20), state: 'ASSIGNED', label: 'Semana pasada' },
+      { id: 'n', start: week(20), end: week(23), state: 'ASSIGNED', label: 'De noche' },
+    ] as const;
+    render(<AgendaBoard rows={row([...blocks])} day={monday} days={7} />);
+    expect(screen.queryByLabelText(/Semana pasada/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/De noche/)).not.toBeInTheDocument();
+  });
+
+  it('el encabezado de un día lo abre cuando se puede elegir', async () => {
+    const onDaySelect = vi.fn();
+    render(<AgendaBoard rows={rows} day={monday} days={7} onDaySelect={onDaySelect} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Ver el día mié 21' }));
+    expect(onDaySelect).toHaveBeenCalledWith(week(48));
+  });
+});
+
+describe('AgendaLegend', () => {
+  it('nombra los cuatro estados que se ven en el tablero', () => {
+    render(<AgendaLegend />);
+    const legend = screen.getByRole('list', { name: 'Colores de la agenda' });
+    expect(
+      within(legend)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Asignado', 'En curso', 'Solicitud pendiente', 'No disponible']);
   });
 });

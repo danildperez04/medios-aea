@@ -2,7 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
   IsInt,
-  IsISO8601,
   IsOptional,
   IsString,
   IsUUID,
@@ -13,6 +12,7 @@ import {
 } from 'class-validator';
 import { ResourceType } from '#common/enums/domain.enums.js';
 import { Trim } from '#common/transformers/string.transformers.js';
+import { IsDateTimeWithOffset } from '#common/validation/date-time.js';
 
 /** Cuerpo de `POST /reservations` (RF-10, HU-09). */
 export class CreateReservationDto {
@@ -41,11 +41,11 @@ export class CreateReservationDto {
   passengers: number;
 
   @ApiProperty({ example: '2026-10-22T07:00:00-06:00' })
-  @IsISO8601({ strict: true }, { message: 'El inicio debe ser una fecha ISO-8601 con hora' })
+  @IsDateTimeWithOffset('El inicio')
   startsAt: string;
 
   @ApiProperty({ example: '2026-10-22T15:00:00-06:00' })
-  @IsISO8601({ strict: true }, { message: 'El fin debe ser una fecha ISO-8601 con hora' })
+  @IsDateTimeWithOffset('El fin')
   endsAt: string;
 
   @ApiPropertyOptional({
@@ -61,6 +61,14 @@ export class CreateReservationDto {
   @IsOptional()
   @IsUUID('4', { message: 'El medio preferido no es válido' })
   preferredResourceId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Conductor propuesto (RN-15). Si se omite en un vehículo, conduce quien solicita, si tiene licencia registrada',
+  })
+  @IsOptional()
+  @IsUUID('4', { message: 'El conductor propuesto no es válido' })
+  proposedDriverId?: string;
 
   @ApiPropertyOptional({
     description: 'Solo ADMIN: crear la solicitud en nombre de otra persona (RN-14)',

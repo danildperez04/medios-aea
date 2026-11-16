@@ -114,6 +114,7 @@ user ─1:n─ notification · user_device · audit_log
 | `project_id`            | uuid           | not null, FK → `project.id`             |
 | `resource_type`         | resource_type  | not null, default `VEHICLE`             |
 | `preferred_resource_id` | uuid           | FK → `resource.id`                      |
+| `proposed_driver_id`    | uuid           | FK → `driver.id` (quién conduce)        |
 | `purpose`               | varchar(300)   | not null                                |
 | `destination`           | varchar(200)   | not null                                |
 | `passengers`            | smallint       | not null, check > 0                     |
@@ -157,6 +158,20 @@ user ─1:n─ notification · user_device · audit_log
 - `notification(id, user_id, title, body, data jsonb, read_at)`
 - `user_device(id, user_id, expo_push_token unique, platform, last_seen_at)`
 - `audit_log(id, actor_id, action audit_action, entity varchar, entity_id uuid, payload jsonb)`
+
+### `refresh_token` — sesiones del panel web (ADR 0003)
+
+| Columna      | Tipo        | Restricciones                                     |
+| ------------ | ----------- | ------------------------------------------------- |
+| `id`         | uuid        | PK                                                |
+| `user_id`    | uuid        | not null, FK → `user.id` (cascade)                |
+| `family_id`  | uuid        | not null; las rotaciones de una misma sesión      |
+| `token_hash` | char(64)    | not null, unique: SHA-256, nunca el valor         |
+| `expires_at` | timestamptz | not null (12 h sin uso)                           |
+| `used_at`    | timestamptz | cuándo se rotó                                    |
+| `revoked_at` | timestamptz | cierre de sesión, reutilización o cuenta inactiva |
+
+Índices: `(family_id)`, `(user_id)`.
 
 ## 4. Regla anti-choque (RN-01, RN-02)
 

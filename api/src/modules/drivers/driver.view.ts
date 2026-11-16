@@ -30,3 +30,23 @@ export function toDriverView(driver: Driver, now = new Date()): DriverView {
     createdAt: driver.createdAt,
   };
 }
+
+/**
+ * Persona habilitada para conducir, tal como la ve quien solicita (RN-15): sin
+ * licencia ni datos de contacto, solo lo necesario para elegirla.
+ */
+export interface DriverOption {
+  id: string;
+  userId: string;
+  fullName: string;
+  licenseExpiry: string;
+}
+
+export function toDriverOption(driver: Driver): DriverOption {
+  return {
+    id: driver.id,
+    userId: driver.userId,
+    fullName: driver.user.fullName,
+    licenseExpiry: driver.licenseExpiry,
+  };
+}

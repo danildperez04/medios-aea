@@ -18,7 +18,7 @@ RUN pnpm --filter @medios-aea/web build
 # ---------- Producción ----------
 # Variante oficial sin privilegios: corre como el usuario nginx (uid 101) y escucha en
 # 8080, porque un proceso sin root no puede abrir puertos por debajo de 1024.
-FROM nginxinc/nginx-unprivileged:1.29-alpine AS production
+FROM nginxinc/nginx-unprivileged:1.31-alpine AS production
 ENV PORT=8080 \
     API_UPSTREAM=http://api:3000
 # Solo se sustituyen estas dos variables: las de nginx ($uri, $host...) quedan intactas.

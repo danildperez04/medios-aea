@@ -100,7 +100,7 @@
     {
       "key": "HU-11",
       "title": "HU-11: Como ADMIN, quiero aprobar asignando vehículo y conductor sin choques",
-      "body": "**Historia:** Como ADMIN, quiero aprobar asignando vehículo y conductor sin choques.\n\n## Criterios de aceptación\n\n- [ ] Sugiere vehículos/conductores libres\n- [ ] dos aprobaciones concurrentes del mismo vehículo/horario → una OK y otra 409\n\n**Requisitos:** RF-12, RF-14 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 3). Rama: `feature/hu-11-<slug>` desde `develop`.",
+      "body": "**Historia:** Como ADMIN, quiero aprobar asignando vehículo y conductor sin choques.\n\n## Criterios de aceptación\n\n- [ ] Sugiere vehículos libres\n- [ ] Conductor propuesto por quien solicita por defecto (HU-26); la coordinación puede cambiarlo y se avisa a quien pidió y a ambos conductores (ADR 0004)\n- [ ] dos aprobaciones concurrentes del mismo vehículo/horario → una OK y otra 409\n\n**Requisitos:** RF-12, RF-14 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 3). Depende de HU-26. Rama: `feature/hu-11-<slug>` desde `develop`.",
       "labels": ["tipo:historia", "prioridad:must", "área:api", "área:web"],
       "milestone": "Sprint 3"
     },
@@ -133,6 +133,20 @@
       "milestone": "Sprint 3"
     },
     {
+      "key": "HU-26",
+      "title": "HU-26: Como técnico, quiero indicar quién conduce al solicitar",
+      "body": "**Historia:** Como técnico, quiero indicar quién conduce al solicitar.\n\n## Criterios de aceptación\n\n- [ ] Perfil de conductor (licencia) para cualquier usuario activo, no solo rol `DRIVER`\n- [ ] La solicitud de vehículo exige un conductor propuesto; \"yo\" por defecto si tengo perfil\n- [ ] El conductor propuesto está activo y su licencia cubre la fecha del viaje (RN-15, RN-09)\n- [ ] Un técnico ve la lista de personas habilitadas, sin números de licencia\n- [ ] La bandeja web muestra quién conduce\n\n**Requisitos:** RF-07, RF-10 · **Prioridad:** Must · **Decisión:** ADR 0004\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 3). Va antes de HU-11. Rama: `feature/hu-26-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:api", "área:web"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "HU-27",
+      "title": "HU-27: Como ADMIN, quiero registrar desde el panel una reserva ya aprobada",
+      "body": "**Historia:** Como ADMIN, quiero registrar desde el panel una reserva ya aprobada.\n\n## Criterios de aceptación\n\n- [ ] Formulario \"Nueva reserva\" en el panel: para quién (persona activa), proyecto, destino, propósito, personas, horario, medio y quién conduce\n- [ ] Queda `APPROVED` en un solo paso, ocupando la agenda; no pasa por la bandeja\n- [ ] Mismas validaciones que crear (RN-06, RN-14, RN-15) y que aprobar (choques, bloqueos, mantenimiento, capacidad, licencia: RN-01 a RN-05, RN-09)\n- [ ] Solo ofrece medios y conductores libres en el horario\n- [ ] Avisa a quien viaja y a quien conduce; queda en `audit_log` como aprobación\n\n**Requisitos:** RF-10, RF-12, RN-14 · **Prioridad:** Must\n\nOrigen: pedido de la coordinación (28/10/2026): la administración reserva directamente; los técnicos piden desde el celular (HU-17). Rama: `feature/hu-27-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:must", "área:api", "área:web"],
+      "milestone": "Sprint 3"
+    },
+    {
       "key": "HU-16",
       "title": "HU-16: Como técnico, quiero iniciar sesión en la app",
       "body": "**Historia:** Como técnico, quiero iniciar sesión en la app.\n\n## Criterios de aceptación\n\n- [ ] Token en `expo-secure-store`\n- [ ] sesión persiste\n- [ ] logout limpia\n\n**Requisitos:** RF-18 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 4). Rama: `feature/hu-16-<slug>` desde `develop`.",
@@ -158,6 +172,20 @@
       "title": "HU-19: Como técnico, quiero recibir notificaciones",
       "body": "**Historia:** Como técnico, quiero recibir notificaciones.\n\n## Criterios de aceptación\n\n- [ ] Push al aprobar/rechazar/reasignar\n- [ ] bandeja in-app con leídas/no leídas\n\n**Requisitos:** RF-19, RF-20 · **Prioridad:** Must\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 4). Rama: `feature/hu-19-<slug>` desde `develop`.",
       "labels": ["tipo:historia", "prioridad:must", "área:api", "área:móvil"],
+      "milestone": "Sprint 4"
+    },
+    {
+      "key": "HU-28",
+      "title": "HU-28: Como técnico o conductor, quiero que mi sesión en la app se mantenga mientras la use",
+      "body": "**Historia:** Como técnico o conductor, quiero que mi sesión en la app se mantenga mientras la use.\n\n## Criterios de aceptación\n\n- [ ] Iniciar sesión en la app entrega un token de acceso corto y un refresh token, guardados en SecureStore\n- [ ] Cuando el token vence, la app lo renueva y repite la petición sin que la persona lo note; varias peticiones a la vez comparten una sola renovación\n- [ ] El refresh token rota en cada uso y en la base solo se guarda su hash\n- [ ] Si vuelve un token ya usado, se revoca la sesión, con un margen para reintentos por mala señal\n- [ ] La sesión vence tras 7 días sin uso\n- [ ] Cerrar sesión revoca el token en el servidor; sin señal, la sesión local se cierra igual\n- [ ] Sin conexión la app no cierra la sesión: solo un rechazo real del servidor la termina\n- [ ] Una cuenta desactivada no puede renovar\n\n**Requisitos:** RF-18, RNF-01 · **Prioridad:** Should · **Decisión:** ADR 0003\n\nOrigen: `docs/03-backlog-del-producto.md` (Sprint 4). Debe ir antes de HU-21. Reutiliza `SessionService` y `refresh_token`; `POST /auth/login` se mantiene mientras haya versiones instaladas que lo usen. Rama: `feature/hu-28-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:should", "área:api", "área:móvil"],
+      "milestone": "Sprint 4"
+    },
+    {
+      "key": "HU-29",
+      "title": "HU-29: Como ADMIN, quiero cerrar las sesiones de una persona desde el panel",
+      "body": "**Historia:** Como ADMIN, quiero cerrar las sesiones de una persona desde el panel.\n\n## Criterios de aceptación\n\n- [ ] En Usuarios, una acción \"Cerrar sesiones\" con confirmación, sin desactivar la cuenta\n- [ ] Revoca todas las sesiones de la persona (panel y app); no puede renovar más\n- [ ] El token de acceso ya emitido deja de servir como máximo cuando vence (15 min); la confirmación lo dice\n- [ ] Solo ADMIN (403 para el resto, validado en el servidor)\n- [ ] Queda en `audit_log` quién cerró las sesiones de quién y cuándo\n- [ ] La persona puede volver a iniciar sesión con su contraseña\n\n**Requisitos:** RF-29 · **Prioridad:** Should · **Decisión:** ADR 0003\n\nOrigen: pedido del 30/10/2026 (por ejemplo, un teléfono perdido). Para cubrir la app depende de HU-28. Rama: `feature/hu-29-<slug>` desde `develop`.",
+      "labels": ["tipo:historia", "prioridad:should", "área:api", "área:web"],
       "milestone": "Sprint 4"
     },
     {
@@ -228,6 +256,55 @@
       "title": "Tarea: hacer públicos los paquetes de GHCR tras el primer release",
       "body": "**Por qué:** GitHub crea los paquetes `medios-aea-api` y `medios-aea-web` como privados aunque el repositorio sea público; el servidor no podría descargarlos sin credenciales.\n\n**Qué hacer:** tras el primer release publicado (0.4.0), cambiar su visibilidad en Packages → Package settings (`docs/11` §A.4).\n\n## Hecha cuando\n\n- [ ] `docker pull ghcr.io/danildperez04/medios-aea-api:0.4.0` funciona sin `docker login`",
       "labels": ["tipo:tarea", "área:infra", "prioridad:must"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "T-ISO-OFFSET",
+      "title": "Tarea: rechazar fechas sin hora o sin zona horaria",
+      "body": "**Por qué:** `@IsISO8601({ strict: true })` acepta `2026-10-22T07:00:00` y `2026-10-22`. Sin desfase, `new Date()` las interpreta en la zona del servidor, que en el contenedor es UTC: la reserva quedaría corrida 6 horas respecto a Managua. Comprobado el 16/11/2026.\n\n**Qué hacer:** un decorador en `common/validation/` que exija fecha, hora y desfase (`Z` o `±hh:mm`) y usarlo en los DTO de reservas, bloqueos, disponibilidad y agenda en lugar de `@IsISO8601`.\n\n## Hecha cuando\n\n- [ ] Fecha sola y fecha sin desfase responden 400 con mensaje en español\n- [ ] Casos agregados a `common/validation/dto-contracts.spec.ts`\n- [ ] El panel y la app siguen enviando el desfase (revisado)",
+      "labels": ["tipo:bug", "área:api", "prioridad:must"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "T-RESERVATIONS-SPLIT",
+      "title": "Tarea: dividir `reservations.service.ts` antes de la bitácora de viajes",
+      "body": "**Por qué:** el servicio tiene 869 líneas y mezcla ciclo de vida, validación de asignaciones y redacción de avisos. HU-20 y HU-21 necesitan las mismas validaciones y candados y lo harían crecer más.\n\n**Qué hacer:** sin cambiar comportamiento: extraer la redacción de avisos y `checkAssignable` (con `firstAssignmentConflict` y `hasBlackout`) a piezas propias que el módulo de viajes pueda reutilizar. El orden de candados (solicitud, medio, conductor) no cambia.\n\n## Hecha cuando\n\n- [ ] Ningún archivo del módulo supera ~400 líneas\n- [ ] Las pruebas unitarias y e2e pasan sin modificarse\n- [ ] Hecha antes de empezar HU-21",
+      "labels": ["tipo:deuda", "área:api", "prioridad:should"],
+      "milestone": "Sprint 5"
+    },
+    {
+      "key": "T-MOBILE-NON-JSON",
+      "title": "Tarea: la app debe entender una respuesta que no es JSON",
+      "body": "**Por qué:** `mobile/src/lib/api.ts` hace `JSON.parse` de cualquier cuerpo. Si nginx responde un 502 o 504 en HTML, salta un `SyntaxError` sin traducir en lugar de un `ApiError` con mensaje en español.\n\n**Qué hacer:** envolver el `JSON.parse`; si falla, lanzar `ApiError` con el estado HTTP y un mensaje accionable (\"El servidor no responde…\").\n\n## Hecha cuando\n\n- [ ] Prueba en `api.test.ts` con un 502 en HTML\n- [ ] La pantalla muestra el mensaje en español",
+      "labels": ["tipo:bug", "área:móvil", "prioridad:should"],
+      "milestone": "Sprint 4"
+    },
+    {
+      "key": "T-DOCS-SYNC",
+      "title": "Tarea: poner al día la documentación de estado, backlog y arquitectura",
+      "body": "**Por qué:** `docs/00` dice 18/10/2026 y `v0.3.0`; `docs/03` marca HU-27 como pendiente aunque está en `develop` (#91); `docs/14` §3 describe rutas del panel que ya no existen (`src/lib/api.ts`, `components/ui`).\n\n**Qué hacer:** actualizar los tres documentos y `docs/09`; revisar que el estado de cada historia coincida con su issue.\n\n## Hecha cuando\n\n- [ ] `docs/00`, `docs/03` y `docs/09` reflejan lo que hay en `develop`\n- [ ] `docs/14` §3 describe la estructura real de `web/src`",
+      "labels": ["tipo:deuda", "área:docs", "prioridad:should"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "T-DEPENDABOT",
+      "title": "Tarea: atender los PR de Dependabot acumulados",
+      "body": "**Por qué:** al 16/11/2026 hay 9 ramas de Dependabot abiertas en el remoto (acciones, api, web, tooling, jest-expo) y `pnpm audit --prod` informa 6 avisos moderados y 2 bajos.\n\n**Qué hacer:** revisar, mergear o cerrar con motivo cada PR; acordar un momento fijo por sprint para hacerlo.\n\n## Hecha cuando\n\n- [ ] Ningún PR de Dependabot con más de dos semanas abierto\n- [ ] Avisos moderados revisados: corregidos o anotados en `SECURITY.md` §4",
+      "labels": ["tipo:deuda", "área:infra", "prioridad:should"],
+      "milestone": "Sprint 3"
+    },
+    {
+      "key": "T-CONFIG-SINGLE",
+      "title": "Tarea: dejar una sola definición de la configuración de la API",
+      "body": "**Por qué:** `buildConfig` (lo usa `database/data-source.ts`) y el esquema Joi describen las mismas variables por separado y ya divergen: `buildConfig` no conoce las de sesión (`WEB_ACCESS_TOKEN_TTL`, `REFRESH_TOKEN_TTL_HOURS`, `COOKIE_SECURE`).\n\n**Qué hacer:** que `buildConfig` valide con el mismo esquema Joi, o que la CLI de migraciones lea la configuración validada, de modo que una variable nueva se declare en un solo sitio.\n\n## Hecha cuando\n\n- [ ] Una variable nueva se declara una sola vez\n- [ ] `configuration.spec.ts` cubre el camino de la CLI",
+      "labels": ["tipo:deuda", "área:api", "prioridad:could"],
+      "milestone": "Sprint 5"
+    },
+    {
+      "key": "T-WEB-FLAKY",
+      "title": "Tarea: estabilizar `BookDialog.test.tsx` bajo carga",
+      "body": "**Por qué:** el 16/11/2026 la prueba \"pide los libres del horario y registra la reserva aprobada\" falló una vez al correr `pnpm test` con los tres workspaces en paralelo (casi 10 s el archivo) y pasó en las cuatro repeticiones siguientes (1,7 s sola). No se capturó el mensaje; apunta al tiempo límite de 5 s.\n\n**Qué hacer:** reproducir con carga, y aligerar la prueba (menos tecleo simulado) o subir su tiempo límite de forma justificada.\n\n## Hecha cuando\n\n- [ ] 20 ejecuciones seguidas de `pnpm test` sin fallos\n- [ ] Causa anotada en el PR",
+      "labels": ["tipo:deuda", "área:web", "prioridad:could"],
       "milestone": "Sprint 3"
     }
   ]

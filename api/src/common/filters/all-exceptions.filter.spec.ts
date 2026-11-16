@@ -126,6 +126,13 @@ describe('AllExceptionsFilter', () => {
     expect(result.body.message).toContain('vehículo');
   });
 
+  it('un deadlock entre aprobaciones simultaneas es 409, no 500', () => {
+    const result = invoke(filter, pgError('40P01'));
+
+    expect(result.statusCode).toBe(409);
+    expect(result.body.message).toMatch(/inténtalo de nuevo/);
+  });
+
   it('distingue el choque de conductor del choque de vehiculo', () => {
     const result = invoke(filter, pgError('23P01', 'ex_assignment_driver_overlap'));
 

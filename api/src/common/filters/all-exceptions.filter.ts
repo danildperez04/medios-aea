@@ -102,6 +102,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
           error: 'Conflict',
         };
       }
+      // 40P01 = deadlock_detected. Las aprobaciones bloquean medio y conductor en el
+      // mismo orden para evitarlo; si aun así ocurre, se perdió una carrera: 409.
+      if (driverError.code === '40P01') {
+        return {
+          status: HttpStatus.CONFLICT,
+          message:
+            'Otra persona estaba asignando el mismo medio o conductor a la vez. Recarga e inténtalo de nuevo.',
+          error: 'Conflict',
+        };
+      }
       if (driverError.code === '23505') {
         return {
           status: HttpStatus.CONFLICT,

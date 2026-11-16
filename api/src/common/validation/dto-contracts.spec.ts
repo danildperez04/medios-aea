@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { BadRequestException, ValidationPipe, type Type } from '@nestjs/common';
+import { TimeRangeQueryDto } from '#common/dto/time-range-query.dto.js';
 import { ChangePasswordDto } from '#modules/auth/dto/change-password.dto.js';
 import { LoginDto } from '#modules/auth/dto/login.dto.js';
+import { CreateBlackoutDto } from '#modules/blackouts/dto/create-blackout.dto.js';
 import { CreateProjectDto } from '#modules/projects/dto/create-project.dto.js';
 import { UpdateProjectDto } from '#modules/projects/dto/update-project.dto.js';
+import { ApproveReservationDto } from '#modules/reservations/dto/approve-reservation.dto.js';
+import { BookReservationDto } from '#modules/reservations/dto/book-reservation.dto.js';
+import { ReassignReservationDto } from '#modules/reservations/dto/reassign-reservation.dto.js';
+import { CreateReservationDto } from '#modules/reservations/dto/create-reservation.dto.js';
+import { RejectReservationDto } from '#modules/reservations/dto/reject-reservation.dto.js';
 import { CreateUserDto } from '#modules/users/dto/create-user.dto.js';
 import { ResetPasswordDto } from '#modules/users/dto/reset-password.dto.js';
 import { UpdateUserDto } from '#modules/users/dto/update-user.dto.js';
@@ -135,5 +142,120 @@ describe('DTO de autenticacion', () => {
     expect(errors).toContain(
       'La contraseña nueva debe incluir una minúscula, una mayúscula y un número',
     );
+  });
+});
+
+describe('ApproveReservationDto', () => {
+  const resourceId = '11111111-1111-4111-8111-111111111111';
+
+  it('exige el medio y deja el conductor opcional (por defecto, el propuesto)', async () => {
+    expect(await errorsOf(ApproveReservationDto, {})).toContain('Elige el medio que se asigna');
+    expect(await errorsOf(ApproveReservationDto, { resourceId })).toEqual([]);
+  });
+
+  it('un conductor null no salta la validacion', async () => {
+    expect(await errorsOf(ApproveReservationDto, { resourceId, driverId: null })).toContain(
+      'El conductor no es válido',
+    );
+  });
+});
+
+describe('RejectReservationDto', () => {
+  it('recorta el motivo y lo exige (PT-22)', async () => {
+    const dto = await validate(RejectReservationDto, { reason: '  Se cruza con la feria  ' });
+    expect(dto.reason).toBe('Se cruza con la feria');
+    expect(await errorsOf(RejectReservationDto, {})).toContain('Indica el motivo del rechazo');
+    expect(await errorsOf(RejectReservationDto, { reason: '   ' })).toContain(
+      'Explica el motivo con al menos 5 caracteres',
+    );
+  });
+});
+
+describe('ReassignReservationDto — PartialType(ApproveReservationDto)', () => {
+  it('todo es opcional, pero null no salta la validacion', async () => {
+    expect(await errorsOf(ReassignReservationDto, {})).toEqual([]);
+    expect(await errorsOf(ReassignReservationDto, { driverId: null })).toContain(
+      'El conductor no es válido',
+    );
+    expect(await errorsOf(ReassignReservationDto, { resourceId: 'x' })).toContain(
+      'Elige el medio que se asigna',
+    );
+  });
+});
+
+describe('BookReservationDto — OmitType(CreateReservationDto) + medio y conductor', () => {
+  const body = {
+    projectId: '0b0c6a1e-5a8d-4f0e-9c3b-2a6f1d7e8c90',
+    purpose: 'Visita de seguimiento',
+    destination: 'San José',
+    passengers: 2,
+    startsAt: '2026-12-01T08:00:00-06:00',
+    endsAt: '2026-12-01T12:00:00-06:00',
+    resourceId: '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f',
+  };
+
+  it('hereda los campos de crear y exige el medio', async () => {
+    expect(await errorsOf(BookReservationDto, body)).toEqual([]);
+    expect(await errorsOf(BookReservationDto, { ...body, resourceId: undefined })).toContain(
+      'Elige el medio que se asigna',
+    );
+    expect(await errorsOf(BookReservationDto, { ...body, passengers: 0 })).toContain(
+      'Debe viajar al menos 1 persona',
+    );
+  });
+
+  it('no acepta los campos de una solicitud ni un conductor null', async () => {
+    expect(
+      await errorsOf(BookReservationDto, { ...body, proposedDriverId: body.resourceId }),
+    ).toContain('property proposedDriverId should not exist');
+    expect(await errorsOf(BookReservationDto, { ...body, driverId: null })).toContain(
+      'El conductor no es válido',
+    );
+  });
+});
+
+describe('fechas con hora y zona horaria (RN-03)', () => {
+  const WITH_OFFSET = 'debe ser una fecha con hora y zona horaria, como 2026-10-22T07:00:00-06:00';
+  const reservation = {
+    projectId: '0b0c6a1e-5a8d-4f0e-9c3b-2a6f1d7e8c90',
+    purpose: 'Visita de seguimiento',
+    destination: 'San José',
+    passengers: 2,
+    startsAt: '2026-12-01T08:00:00-06:00',
+    endsAt: '2026-12-01T12:00:00-06:00',
+  };
+
+  it('una solicitud sin zona o sin hora se rechaza: el servidor la leeria en UTC', async () => {
+    expect(await errorsOf(CreateReservationDto, reservation)).toEqual([]);
+    expect(
+      await errorsOf(CreateReservationDto, { ...reservation, startsAt: '2026-12-01T08:00:00' }),
+    ).toEqual([`El inicio ${WITH_OFFSET}`]);
+    expect(await errorsOf(CreateReservationDto, { ...reservation, endsAt: '2026-12-01' })).toEqual([
+      `El fin ${WITH_OFFSET}`,
+    ]);
+  });
+
+  it('la reserva directa hereda la misma regla', async () => {
+    const resourceId = '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
+    expect(
+      await errorsOf(BookReservationDto, {
+        ...reservation,
+        resourceId,
+        startsAt: '2026-12-01T08:00:00',
+      }),
+    ).toEqual([`El inicio ${WITH_OFFSET}`]);
+  });
+
+  it('bloqueos y consultas de agenda tampoco aceptan fechas sin zona', async () => {
+    expect(
+      await errorsOf(CreateBlackoutDto, {
+        startsAt: '2026-12-01T08:00:00',
+        endsAt: '2026-12-02T08:00:00Z',
+        reason: 'MAINTENANCE',
+      }),
+    ).toEqual([`El inicio ${WITH_OFFSET}`]);
+    expect(
+      await errorsOf(TimeRangeQueryDto, { from: '2026-12-01', to: '2026-12-02T00:00:00-06:00' }),
+    ).toEqual([`from ${WITH_OFFSET}`]);
   });
 });

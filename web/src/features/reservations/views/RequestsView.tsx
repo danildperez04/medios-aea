@@ -1,8 +1,10 @@
-import { Box, MenuItem, Stack, Typography } from '@mui/material';
-import { ClipboardList } from 'lucide-react';
+import { Box, Button, IconButton, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
+import { ArrowLeftRight, Ban, Check, ClipboardList, History, Plus, X } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '@/app/services/api';
+import { useAuthStore } from '@/app/stores/auth.store';
 import {
+  ConfirmDialog,
   DataTable,
   EmptyState,
   FormError,
@@ -16,9 +18,20 @@ import {
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { mono } from '@/design-system/theme/theme';
 import { formatRange } from '@/shared/lib/format';
-import { useReservations, type Reservation } from '../services/reservations.service';
+import { ApproveDialog } from '../components/ApproveDialog';
+import { BookDialog } from '../components/BookDialog';
+import { HistoryDialog } from '../components/HistoryDialog';
+import { RejectDialog } from '../components/RejectDialog';
+import {
+  useCancelReservation,
+  useReservations,
+  type Reservation,
+} from '../services/reservations.service';
 
 type StatusFilter = RequestStatus | 'ALL';
+
+/** RN-13: solo pendientes y aprobadas; la API rechaza además un viaje ya iniciado. */
+const CANCELLABLE: RequestStatus[] = ['PENDING', 'APPROVED'];
 
 const STATUS_OPTIONS: [StatusFilter, string][] = [
   ['PENDING', 'Por decidir'],
@@ -29,9 +42,22 @@ const STATUS_OPTIONS: [StatusFilter, string][] = [
   ['ALL', 'Todas'],
 ];
 
+/** Qué pasa al cancelar; la API avisa a la persona solicitante si no es quien cancela. */
+function cancelMessage(reservation: Reservation, currentUserId: string | undefined): string {
+  const effect =
+    reservation.status === 'APPROVED'
+      ? `${reservation.code} quedará cancelada y el medio y el conductor asignados quedarán libres en ese horario.`
+      : `${reservation.code} quedará cancelada y saldrá de la lista por decidir.`;
+  return reservation.requester.id === currentUserId
+    ? effect
+    : `${effect} Se avisará a ${reservation.requester.fullName}.`;
+}
+
 /**
- * Bandeja de solicitudes (HU-09). Por ahora de consulta: aprobar y rechazar
- * llegan con HU-11 y HU-12.
+ * Bandeja de solicitudes (HU-09). La coordinación aprueba una pendiente asignando
+ * medio y conductor (HU-11), la rechaza con motivo (HU-12), reasigna una aprobada
+ * (HU-13) y cancela una pendiente o aprobada (HU-10). También registra una reserva ya
+ * aprobada sin pasar por la bandeja (HU-27).
  */
 export function RequestsView() {
   const [page, setPage] = useState(1);
@@ -39,6 +65,16 @@ export function RequestsView() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusFilter>('PENDING');
   const debouncedSearch = useDebouncedValue(search);
+  const [cancelling, setCancelling] = useState<Reservation | null>(null);
+  const [approving, setApproving] = useState<Reservation | null>(null);
+  const [rejecting, setRejecting] = useState<Reservation | null>(null);
+  const [reassigning, setReassigning] = useState<Reservation | null>(null);
+  const [reviewing, setReviewing] = useState<Reservation | null>(null);
+  // Contador para montar el formulario vacío cada vez que se abre.
+  const [booking, setBooking] = useState(0);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const cancel = useCancelReservation();
+  const currentUserId = useAuthStore((state) => state.user?.id);
 
   const reservations = useReservations({
     page,
@@ -81,6 +117,19 @@ export function RequestsView() {
     },
     { key: 'requester', header: 'Solicita', render: (r) => r.requester.fullName },
     {
+      key: 'driver',
+      header: 'Conduce',
+      // Aprobada: quien conduce de verdad; si no, quien se propuso (RN-15).
+      render: (r) =>
+        r.assignment?.driver || r.proposedDriver ? (
+          (r.assignment?.driver ?? r.proposedDriver)?.fullName
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            Sin indicar
+          </Typography>
+        ),
+    },
+    {
       key: 'project',
       header: 'Proyecto',
       render: (r) => (
@@ -96,10 +145,17 @@ export function RequestsView() {
       render: (r) => <span className="tabular">{r.passengers}</span>,
     },
     {
-      key: 'preferred',
-      header: 'Medio preferido',
+      key: 'resource',
+      header: 'Medio',
+      // Aprobada: el medio asignado; si no, el preferido por quien pide.
       render: (r) =>
-        r.preferredResource ? (
+        r.assignment ? (
+          <ResourceTag
+            kind={r.resourceType}
+            identifier={r.assignment.resource.identifier}
+            name={r.assignment.resource.name}
+          />
+        ) : r.preferredResource ? (
           <ResourceTag
             kind={r.resourceType}
             identifier={r.preferredResource.identifier}
@@ -111,8 +167,100 @@ export function RequestsView() {
           </Typography>
         ),
     },
-    { key: 'status', header: 'Estado', render: (r) => <StatusBadge status={r.status} /> },
+    {
+      key: 'status',
+      header: 'Estado',
+      // Una rechazada muestra el motivo: es lo que recibió quien pidió (HU-12).
+      render: (r) => (
+        <Box>
+          <StatusBadge status={r.status} />
+          {r.status === 'REJECTED' && r.rejectionReason ? (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              {r.rejectionReason}
+            </Typography>
+          ) : null}
+        </Box>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      align: 'right',
+      render: (r) => (
+        <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
+          {r.status === 'PENDING' ? (
+            <Tooltip title="Aprobar">
+              <IconButton
+                size="small"
+                aria-label={`Aprobar la solicitud ${r.code}`}
+                onClick={() => setApproving(r)}
+              >
+                <Check size={18} />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+          {r.status === 'APPROVED' && r.assignment ? (
+            <Tooltip title="Reasignar medio o conductor">
+              <IconButton
+                size="small"
+                aria-label={`Reasignar la solicitud ${r.code}`}
+                onClick={() => setReassigning(r)}
+              >
+                <ArrowLeftRight size={18} />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+          {r.status === 'PENDING' ? (
+            <Tooltip title="Rechazar">
+              <IconButton
+                size="small"
+                aria-label={`Rechazar la solicitud ${r.code}`}
+                onClick={() => setRejecting(r)}
+              >
+                <X size={18} />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+          {/* Una pendiente todavía no tiene decisiones que mostrar. */}
+          {r.status !== 'PENDING' ? (
+            <Tooltip title="Quién la decidió y cuándo">
+              <IconButton
+                size="small"
+                aria-label={`Ver el historial de la solicitud ${r.code}`}
+                onClick={() => setReviewing(r)}
+              >
+                <History size={18} />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+          {CANCELLABLE.includes(r.status) ? (
+            <Tooltip title="Cancelar solicitud">
+              <IconButton
+                size="small"
+                aria-label={`Cancelar la solicitud ${r.code}`}
+                onClick={() => {
+                  cancel.reset();
+                  setCancelling(r);
+                }}
+              >
+                <Ban size={18} />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+        </Stack>
+      ),
+    },
   ];
+
+  const confirmCancel = async () => {
+    if (!cancelling) return;
+    try {
+      await cancel.mutateAsync(cancelling.id);
+      setCancelling(null);
+    } catch {
+      // Se muestra en el diálogo.
+    }
+  };
 
   const pendingView = status === 'PENDING';
 
@@ -124,6 +272,18 @@ export function RequestsView() {
           pendingView
             ? 'Las más próximas primero: son las que hay que decidir antes'
             : 'Historial de solicitudes de medios'
+        }
+        actions={
+          <Button
+            variant="contained"
+            startIcon={<Plus size={18} />}
+            onClick={() => {
+              setBooking((n) => n + 1);
+              setBookingOpen(true);
+            }}
+          >
+            Nueva reserva
+          </Button>
         }
       />
 
@@ -190,6 +350,41 @@ export function RequestsView() {
             setPage(1);
           },
         }}
+      />
+
+      <ApproveDialog
+        key={approving?.id ?? 'closed'}
+        reservation={approving}
+        onClose={() => setApproving(null)}
+      />
+
+      <ApproveDialog
+        key={`reassign-${reassigning?.id ?? 'closed'}`}
+        mode="reassign"
+        reservation={reassigning}
+        onClose={() => setReassigning(null)}
+      />
+
+      <BookDialog key={booking} open={bookingOpen} onClose={() => setBookingOpen(false)} />
+
+      <RejectDialog
+        key={rejecting?.id ?? 'closed'}
+        reservation={rejecting}
+        onClose={() => setRejecting(null)}
+      />
+
+      <HistoryDialog reservation={reviewing} onClose={() => setReviewing(null)} />
+
+      <ConfirmDialog
+        open={cancelling !== null}
+        title="Cancelar solicitud"
+        message={cancelling ? cancelMessage(cancelling, currentUserId) : ''}
+        confirmLabel="Cancelar solicitud"
+        dismissLabel="Volver"
+        loading={cancel.isPending}
+        error={cancel.error instanceof ApiError ? cancel.error.message : null}
+        onConfirm={confirmCancel}
+        onClose={() => setCancelling(null)}
       />
     </>
   );

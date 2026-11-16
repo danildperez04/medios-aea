@@ -1,12 +1,24 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Reservation } from '../services/reservations.service';
 
 const get = vi.fn();
+const post = vi.fn();
 vi.mock('@/app/services/api', () => ({
-  api: { get: (...args: unknown[]) => get(...args) },
-  ApiError: class ApiError extends Error {},
+  api: {
+    get: (...args: unknown[]) => get(...args),
+    post: (...args: unknown[]) => post(...args),
+  },
+  ApiError: class ApiError extends Error {
+    constructor(
+      readonly status: number,
+      message: string,
+    ) {
+      super(message);
+    }
+  },
 }));
 
 const { RequestsView } = await import('./RequestsView');
@@ -24,6 +36,8 @@ const reservation = (overrides: Partial<Reservation> = {}): Reservation => ({
   project: { id: 'p1', code: 'PRY-AGUA', name: 'Agua segura' },
   requester: { id: 'u1', fullName: 'Ana Martínez' },
   preferredResource: null,
+  proposedDriver: { id: 'd1', fullName: 'Ana Martínez' },
+  assignment: null,
   rejectionReason: null,
   decidedAt: null,
   createdAt: '2026-10-18T13:00:00Z',
@@ -40,7 +54,14 @@ function renderView() {
 }
 
 describe('RequestsView', () => {
-  beforeEach(() => get.mockReset());
+  beforeEach(() => {
+    get.mockReset();
+    post.mockReset();
+  });
+
+  const page = (rows: Reservation[]) => ({
+    data: { data: rows, total: rows.length, page: 1, limit: 20, totalPages: 1 },
+  });
 
   it('pide por defecto las solicitudes por decidir', async () => {
     get.mockResolvedValue({ data: { data: [], total: 0, page: 1, limit: 20, totalPages: 0 } });
@@ -49,6 +70,41 @@ describe('RequestsView', () => {
     expect(get).toHaveBeenCalledWith('/reservations', {
       params: expect.objectContaining({ status: 'PENDING' }),
     });
+  });
+
+  it('una solicitud ya decidida abre su historial; una pendiente no lo ofrece (HU-15)', async () => {
+    get.mockImplementation((url: string) =>
+      Promise.resolve(
+        url === '/reservations/r2/history'
+          ? {
+              data: [
+                {
+                  id: 'h1',
+                  action: 'REJECT',
+                  actor: { id: 'a1', fullName: 'Marta Coordinación' },
+                  at: '2026-10-19T15:30:00Z',
+                  detail: 'Motivo: Se cruza con la feria',
+                },
+              ],
+            }
+          : page([
+              reservation(),
+              reservation({ id: 'r2', code: 'SOL-2026-00002', status: 'REJECTED' }),
+            ]),
+      ),
+    );
+    renderView();
+    await screen.findByText('SOL-2026-00002');
+    expect(
+      screen.queryByRole('button', { name: 'Ver el historial de la solicitud SOL-2026-00001' }),
+    ).not.toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Ver el historial de la solicitud SOL-2026-00002' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    expect(await within(dialog).findByText('Rechazó Marta Coordinación')).toBeInTheDocument();
+    expect(within(dialog).getByText('Motivo: Se cruza con la feria')).toBeInTheDocument();
   });
 
   it('muestra horario en hora de Managua, solicitante, proyecto y medio preferido', async () => {
@@ -60,6 +116,7 @@ describe('RequestsView', () => {
             id: 'r2',
             code: 'SOL-2026-00002',
             requester: { id: 'u2', fullName: 'Carlos Rivera' },
+            proposedDriver: { id: 'd2', fullName: 'José Gutiérrez' },
             preferredResource: { id: 'v1', name: 'Hilux blanca', identifier: 'M 123-456' },
           }),
         ],
@@ -70,11 +127,77 @@ describe('RequestsView', () => {
       },
     });
     renderView();
-    expect(await screen.findByText('Ana Martínez')).toBeInTheDocument();
+    // Ana pide y conduce; Carlos pide y conduce José (HU-26).
+    expect(await screen.findAllByText('Ana Martínez')).toHaveLength(2);
+    expect(screen.getByText('José Gutiérrez')).toBeInTheDocument();
     expect(screen.getAllByText('22/10/2026 07:00–11:00')).toHaveLength(2);
     expect(screen.getAllByText('PRY-AGUA')).toHaveLength(2);
     expect(screen.getByText('Cualquiera')).toBeInTheDocument();
     expect(screen.getByText('M 123-456')).toBeInTheDocument();
     expect(screen.getAllByText('Pendiente')).toHaveLength(2);
+  });
+
+  it('solo ofrece cancelar las pendientes y aprobadas (HU-10)', async () => {
+    get.mockResolvedValue(
+      page([
+        reservation(),
+        reservation({ id: 'r2', code: 'SOL-2026-00002', status: 'APPROVED' }),
+        reservation({ id: 'r3', code: 'SOL-2026-00003', status: 'COMPLETED' }),
+      ]),
+    );
+    renderView();
+    await screen.findAllByText('Ana Martínez');
+    expect(screen.getByLabelText('Cancelar la solicitud SOL-2026-00001')).toBeInTheDocument();
+    expect(screen.getByLabelText('Cancelar la solicitud SOL-2026-00002')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Cancelar la solicitud SOL-2026-00003')).toBeNull();
+  });
+
+  it('confirma antes de cancelar y avisa que se libera el medio de una aprobada', async () => {
+    get.mockResolvedValue(page([reservation({ status: 'APPROVED' })]));
+    post.mockResolvedValue({ data: reservation({ status: 'CANCELLED' }) });
+    const user = userEvent.setup();
+    renderView();
+
+    await user.click(await screen.findByLabelText('Cancelar la solicitud SOL-2026-00001'));
+    const dialog = await screen.findByRole('dialog');
+    expect(
+      within(dialog).getByText(/quedarán libres.*Se avisará a Ana Martínez/),
+    ).toBeInTheDocument();
+    expect(post).not.toHaveBeenCalled();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar solicitud' }));
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/reservations/r1/cancel'));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('muestra en el dialogo el motivo si la API no deja cancelar', async () => {
+    const { ApiError } = await import('@/app/services/api');
+    get.mockResolvedValue(page([reservation({ status: 'APPROVED' })]));
+    post.mockRejectedValue(new ApiError(409, 'El viaje ya inició; no se puede cancelar.'));
+    const user = userEvent.setup();
+    renderView();
+
+    await user.click(await screen.findByLabelText('Cancelar la solicitud SOL-2026-00001'));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar solicitud' }));
+    expect(await within(dialog).findByText(/ya inició/)).toBeInTheDocument();
+  });
+
+  it('una rechazada muestra el motivo y una pendiente ofrece rechazar (HU-12)', async () => {
+    get.mockResolvedValue(
+      page([
+        reservation(),
+        reservation({
+          id: 'r2',
+          code: 'SOL-2026-00002',
+          status: 'REJECTED',
+          rejectionReason: 'Se cruza con la feria',
+        }),
+      ]),
+    );
+    renderView();
+    expect(await screen.findByText('Se cruza con la feria')).toBeInTheDocument();
+    expect(screen.getByLabelText('Rechazar la solicitud SOL-2026-00001')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Rechazar la solicitud SOL-2026-00002')).toBeNull();
   });
 });

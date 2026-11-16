@@ -18,7 +18,7 @@ import { useDrivers, useSaveDriver, type Driver } from '../services/drivers.serv
 
 type Filter = 'active' | 'expiring' | 'inactive' | 'all';
 
-/** Conductores y vencimiento de sus licencias (HU-06). */
+/** Quienes pueden conducir y el vencimiento de sus licencias (HU-06, HU-26). */
 export function DriversView() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -148,7 +148,7 @@ export function DriversView() {
             description={
               filter === 'expiring'
                 ? 'Todas las licencias activas están vigentes.'
-                : 'Para registrar uno, crea primero a la persona en Usuarios con el rol Conductor/a.'
+                : 'Registra la licencia de cada persona del equipo que maneje, sea técnica o de coordinación.'
             }
           />
         }

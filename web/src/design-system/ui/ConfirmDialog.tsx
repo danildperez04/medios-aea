@@ -14,6 +14,8 @@ export interface ConfirmDialogProps {
   title: string;
   message: string;
   confirmLabel?: string;
+  /** Texto del botón que cierra sin hacer nada; cámbialo si la acción ya es "cancelar". */
+  dismissLabel?: string;
   loading?: boolean;
   error?: string | null;
   /** Acción destructiva (rojo) o neutra (color primario). */
@@ -28,6 +30,7 @@ export function ConfirmDialog({
   title,
   message,
   confirmLabel = 'Confirmar',
+  dismissLabel = 'Cancelar',
   loading = false,
   error,
   destructive = true,
@@ -45,7 +48,7 @@ export function ConfirmDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancelar
+          {dismissLabel}
         </Button>
         <LoadingButton
           variant="contained"

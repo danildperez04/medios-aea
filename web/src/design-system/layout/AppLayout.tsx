@@ -12,6 +12,7 @@ import {
 import { KeyRound, LogOut, Menu } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useAuthStore } from '@/app/stores/auth.store';
+import { useLogout } from '@/features/auth/services/auth.service';
 import { BrandLockup } from '@/design-system/ui';
 import { brand } from '@/design-system/theme/theme';
 import { ChangePasswordDialog } from '@/features/auth/components/ChangePasswordDialog';
@@ -65,15 +66,18 @@ export interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
-  const { user, clearSession } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
+  const logout = useLogout();
   const navigate = useNavigate();
   const pending = usePendingCount(user?.role === 'ADMIN');
   /** Contadores junto al nombre de una sección: lo que espera acción. */
   const counts: Record<string, number | undefined> = { '/solicitudes': pending.data };
 
+  // Revoca la sesión en la API; aunque falle la red, la sesión local se cierra igual.
   const handleLogout = () => {
-    clearSession();
-    navigate('/login', { replace: true });
+    logout.mutate(undefined, {
+      onSettled: () => navigate('/login', { replace: true }),
+    });
   };
 
   const navigation = (
