@@ -78,7 +78,8 @@ El filtro global `PostgresExceptionFilter` convierte `23P01` (exclusión) y `235
 
 ### 2.4 Convenciones
 
-- DTOs de entrada en `dto/`, respuestas tipadas; fechas ISO-8601 con zona.
+- DTOs de entrada en `dto/`, respuestas tipadas; fechas ISO-8601 con hora y zona
+  (`@IsDateTimeWithOffset()`; sin zona responden 400).
 - Rutas en plural e inglés: `/reservations/:id/approve`.
 - Errores en español en `message` (los ve el usuario final).
 - Paginación `?page&limit` con respuesta `{ data, meta: { page, limit, total } }`.
