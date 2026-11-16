@@ -44,4 +44,23 @@ describe('LoginScreen', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Entrar' }));
     await waitFor(() => expect(screen.getByText('Correo o contraseña incorrectos.')).toBeTruthy());
   });
+
+  it('si el servidor está caído lo dice en español, no con un error técnico', async () => {
+    (globalThis.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      status: 502,
+      text: () => Promise.resolve('<html><h1>502 Bad Gateway</h1></html>'),
+    });
+    await renderLogin();
+    await fireEvent.changeText(screen.getByLabelText('Correo'), 'ana@aea.org');
+    await fireEvent.changeText(screen.getByLabelText('Contraseña'), 'Clave12345');
+    await fireEvent.press(screen.getByRole('button', { name: 'Entrar' }));
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          'El servidor no responde en este momento. Intenta de nuevo en unos minutos.',
+        ),
+      ).toBeTruthy(),
+    );
+  });
 });

@@ -14,6 +14,13 @@ const respond = (status: number, body?: unknown) =>
     text: () => Promise.resolve(body === undefined ? '' : JSON.stringify(body)),
   } as Response);
 
+const respondHtml = (status: number) =>
+  Promise.resolve({
+    ok: status >= 200 && status < 300,
+    status,
+    text: () => Promise.resolve('<html><body><h1>502 Bad Gateway</h1></body></html>'),
+  } as Response);
+
 describe('apiRequest', () => {
   beforeEach(() => {
     globalThis.fetch = jest.fn();
@@ -48,6 +55,26 @@ describe('apiRequest', () => {
     await expect(apiRequest('/auth/me')).rejects.toMatchObject({
       status: 0,
       message: expect.stringContaining('No hay conexión'),
+    });
+  });
+
+  it('un 502 en HTML del proxy se explica en español, sin error de sintaxis', async () => {
+    (globalThis.fetch as jest.Mock).mockReturnValue(respondHtml(502));
+    const error = await apiRequest('/auth/me').catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({
+      status: 502,
+      message: 'El servidor no responde en este momento. Intenta de nuevo en unos minutos.',
+    });
+    // Un fallo del proxy no dice nada sobre la sesión: no se cierra.
+    expect(useSession.getState().token).toBe('token-de-prueba');
+  });
+
+  it('un 200 que no es JSON no se toma como respuesta de la API', async () => {
+    (globalThis.fetch as jest.Mock).mockReturnValue(respondHtml(200));
+    await expect(apiRequest('/auth/me')).rejects.toMatchObject({
+      status: 200,
+      message: expect.stringContaining('no vino del servidor'),
     });
   });
 });
