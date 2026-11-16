@@ -40,10 +40,11 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     throw new ApiError(0, 'No hay conexión con el servidor. Revisa tu red e intenta de nuevo.');
   }
 
-  const text = await response.text();
-  const data: unknown = text ? JSON.parse(text) : undefined;
+  const data = parseBody(await response.text());
 
   if (!response.ok) {
+    // Sin cuerpo JSON el error no es de la API: no dice nada sobre la sesión.
+    if (data === NOT_JSON) throw new ApiError(response.status, messageWithoutBody(response.status));
     if (response.status === 401 && token) await useSession.getState().clearSession();
     const body = data as { message?: string; details?: unknown } | undefined;
     throw new ApiError(
@@ -52,5 +53,35 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       body?.details,
     );
   }
+  // Un 200 que no es JSON no viene de la API: suele ser el portal de una red wifi.
+  if (data === NOT_JSON) {
+    throw new ApiError(
+      response.status,
+      'La respuesta no vino del servidor de Medios AeA. Revisa tu conexión e intenta de nuevo.',
+    );
+  }
   return data as T;
+}
+
+const NOT_JSON = Symbol('not-json');
+
+/** El cuerpo como JSON; `NOT_JSON` si es otra cosa (la página de error de un proxy). */
+function parseBody(text: string): unknown {
+  if (!text) return undefined;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return NOT_JSON;
+  }
+}
+
+/**
+ * Mensaje para un error sin cuerpo JSON. Los 502, 503 y 504 los responde el proxy
+ * cuando la API está caída o reiniciándose: reintentar más tarde sí sirve.
+ */
+function messageWithoutBody(status: number): string {
+  if (status === 502 || status === 503 || status === 504) {
+    return 'El servidor no responde en este momento. Intenta de nuevo en unos minutos.';
+  }
+  return 'Ocurrió un error inesperado. Intenta de nuevo.';
 }
