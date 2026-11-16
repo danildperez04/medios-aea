@@ -52,11 +52,13 @@ export enum BlackoutReason {
   OTHER = 'OTHER',
 }
 
-/** Acciones que quedan en el registro de auditoría (RF-17). */
+/** Acciones que quedan en el registro de auditoría (RF-17, RF-29). */
 export enum AuditAction {
   APPROVE = 'APPROVE',
   REJECT = 'REJECT',
   CANCEL = 'CANCEL',
   REASSIGN = 'REASSIGN',
   COMPLETE = 'COMPLETE',
+  /** La coordinación cerró las sesiones de una persona (HU-29). */
+  REVOKE_SESSIONS = 'REVOKE_SESSIONS',
 }

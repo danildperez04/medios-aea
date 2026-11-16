@@ -8,12 +8,16 @@ import {
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaginatedResponse } from '#common/dto/pagination.dto.js';
-import { UserRole } from '#common/enums/domain.enums.js';
+import { AuditAction, UserRole } from '#common/enums/domain.enums.js';
+import { AuditLog } from '#modules/audit/entities/audit-log.entity.js';
 import { AuthService } from '#modules/auth/auth.service.js';
 import type { CreateUserDto } from './dto/create-user.dto.js';
 import type { UpdateUserDto } from './dto/update-user.dto.js';
 import type { UserFiltersDto } from './dto/user-filters.dto.js';
 import { User } from './entities/user.entity.js';
+
+/** Valor de `audit_log.entity` para las acciones sobre un usuario. */
+export const USER_AUDIT_ENTITY = 'user';
 
 /**
  * Gestión de usuarios (RF-03, HU-02).
@@ -110,6 +114,26 @@ export class UsersService {
     await this.findOneOrFail(id);
     // Cierra sus sesiones: quien tuviera un token copiado no sigue dentro.
     await this.auth.setPassword(id, password);
+  }
+
+  /**
+   * Cierra todas las sesiones de una persona, en el panel y en la app, sin desactivar
+   * su cuenta: por ejemplo, si perdió el teléfono (HU-29). Puede volver a entrar con su
+   * contraseña. Queda en la auditoría quién lo hizo, en la misma transacción.
+   */
+  async revokeSessions(id: string, actorId: string): Promise<User> {
+    const user = await this.findOneOrFail(id);
+    await this.users.manager.transaction(async (manager) => {
+      await this.auth.revokeSessions(id, manager);
+      await manager.insert(AuditLog, {
+        actorId,
+        action: AuditAction.REVOKE_SESSIONS,
+        entity: USER_AUDIT_ENTITY,
+        entityId: id,
+        payload: null,
+      });
+    });
+    return user;
   }
 
   private async assertEmailFree(email: string, exceptId?: string): Promise<void> {

@@ -276,4 +276,107 @@ describe('Sesion de la app movil (integracion)', () => {
       await me(login.body.accessToken).expect(401);
     });
   });
+
+  describe('la coordinacion cierra las sesiones de una persona (HU-29)', () => {
+    const revoke = (userId: string, accessToken: string) =>
+      request(app.getHttpServer())
+        .post(`${api}/users/${userId}/sessions/revoke`)
+        .set('Authorization', `Bearer ${accessToken}`);
+    const panelRefresh = (refreshToken: string) =>
+      request(app.getHttpServer())
+        .post(`${api}/auth/session/refresh`)
+        .set('X-Medios-Client', 'web')
+        .set('Cookie', `medios_aea_refresh=${encodeURIComponent(refreshToken)}`);
+
+    it('cierra la app y el panel de esa persona de inmediato, sin desactivarla', async () => {
+      const admin = await createUser(dataSource, UserRole.ADMIN);
+      const adminSession = await open(admin, 'web');
+      const other = await createUser(dataSource, UserRole.ADMIN);
+      const phone = await open(other, 'mobile');
+      const panel = await open(other, 'web');
+
+      const response = await revoke(other.id, adminSession.accessToken).expect(200);
+      expect(response.body.message).toBe(`Se cerraron las sesiones de ${other.fullName}.`);
+
+      // Los tokens de acceso ya emitidos dejan de servir y ninguno puede renovar.
+      await me(phone.accessToken).expect(401);
+      await me(panel.accessToken).expect(401);
+      await refresh(phone.refreshToken).expect(401);
+      await panelRefresh(panel.refreshToken).expect(401);
+
+      // La cuenta sigue activa: vuelve a entrar con su contraseña.
+      const rows = await dataSource.query<{ is_active: boolean }[]>(
+        `SELECT is_active FROM "user" WHERE id = $1`,
+        [other.id],
+      );
+      expect(rows[0].is_active).toBe(true);
+      const again = await open(other, 'mobile');
+      await me(again.accessToken).expect(200);
+      await refresh(again.refreshToken).expect(200);
+
+      // Las sesiones de quien lo hizo no se tocan.
+      await me(adminSession.accessToken).expect(200);
+    });
+
+    it('queda en la auditoria quien cerro las sesiones de quien y cuando', async () => {
+      const admin = await createUser(dataSource, UserRole.ADMIN);
+      const adminSession = await open(admin, 'web');
+      const driver = await createUser(dataSource, UserRole.DRIVER);
+      const before = Date.now();
+
+      await revoke(driver.id, adminSession.accessToken).expect(200);
+
+      const rows = await dataSource.query<
+        { actor_id: string; action: string; entity: string; created_at: Date }[]
+      >(`SELECT actor_id, action, entity, created_at FROM audit_log WHERE entity_id = $1`, [
+        driver.id,
+      ]);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({
+        actor_id: admin.id,
+        action: 'REVOKE_SESSIONS',
+        entity: 'user',
+      });
+      expect(new Date(rows[0].created_at).getTime()).toBeGreaterThanOrEqual(before - 1000);
+    });
+
+    it.each([UserRole.REQUESTER, UserRole.DRIVER])(
+      'un %s no puede cerrar las sesiones de nadie (403)',
+      async (role) => {
+        const actor = await createUser(dataSource, role);
+        const actorSession = await open(actor);
+        const victim = await createUser(dataSource, UserRole.REQUESTER);
+        const victimSession = await open(victim);
+
+        await revoke(victim.id, actorSession.accessToken).expect(403);
+        // Ni las ajenas ni las propias por esta ruta.
+        await revoke(actor.id, actorSession.accessToken).expect(403);
+
+        await me(victimSession.accessToken).expect(200);
+        await refresh(victimSession.refreshToken).expect(200);
+      },
+    );
+
+    it('sin sesion responde 401 y con un usuario que no existe, 404', async () => {
+      const admin = await createUser(dataSource, UserRole.ADMIN);
+      const adminSession = await open(admin, 'web');
+      await request(app.getHttpServer())
+        .post(`${api}/users/${admin.id}/sessions/revoke`)
+        .expect(401);
+      await revoke('0b9c7f0e-6d2a-4c3e-9a51-6f7e2b1d9999', adminSession.accessToken).expect(404);
+      await revoke('no-es-un-uuid', adminSession.accessToken).expect(400);
+    });
+
+    it('si la persona no tenia sesiones abiertas, tambien responde bien y queda registrado', async () => {
+      const admin = await createUser(dataSource, UserRole.ADMIN);
+      const adminSession = await open(admin, 'web');
+      const idle = await createUser(dataSource, UserRole.REQUESTER);
+      await revoke(idle.id, adminSession.accessToken).expect(200);
+      const rows = await dataSource.query<{ n: string }[]>(
+        `SELECT count(*) AS n FROM audit_log WHERE entity_id = $1`,
+        [idle.id],
+      );
+      expect(Number(rows[0].n)).toBe(1);
+    });
+  });
 });

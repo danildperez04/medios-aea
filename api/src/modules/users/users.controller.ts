@@ -1,4 +1,6 @@
 import {
+  HttpStatus,
+  HttpCode,
   Body,
   Controller,
   Delete,
@@ -70,6 +72,19 @@ export class UsersController {
   ): Promise<{ message: string }> {
     await this.service.resetPassword(id, dto.password);
     return { message: 'La contraseña se restableció correctamente.' };
+  }
+
+  @Post(':id/sessions/revoke')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Cerrar las sesiones de una persona en el panel y en la app, sin desactivarla',
+  })
+  async revokeSessions(
+    @Param('id', uuid) id: string,
+    @CurrentUser() actor: AuthenticatedUser,
+  ): Promise<{ message: string }> {
+    const user = await this.service.revokeSessions(id, actor.id);
+    return { message: `Se cerraron las sesiones de ${user.fullName}.` };
   }
 
   @Delete(':id')
