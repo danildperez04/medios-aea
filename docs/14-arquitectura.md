@@ -1,7 +1,7 @@
 # Arquitectura — Medios AeA
 
-**Versión:** 1.0.0
-**Fecha:** 16 de octubre de 2026
+**Versión:** 1.1.0
+**Fecha:** 16 de noviembre de 2026
 
 ---
 
@@ -82,13 +82,24 @@ El filtro global `PostgresExceptionFilter` convierte `23P01` (exclusión) y `235
   (`@IsDateTimeWithOffset()`; sin zona responden 400).
 - Rutas en plural e inglés: `/reservations/:id/approve`.
 - Errores en español en `message` (los ve el usuario final).
-- Paginación `?page&limit` con respuesta `{ data, meta: { page, limit, total } }`.
+- Paginación `?page&limit` con respuesta `{ data, total, page, limit, totalPages }`.
 
 ## 3. Web
 
-Organización por funcionalidad (`src/features/<feature>/{api,components,pages,schemas}`),
-componentes compartidos en `src/components/ui`, cliente HTTP en `src/lib/api.ts`
-con interceptor de token. Rutas protegidas por rol `ADMIN`.
+```
+web/src/
+├── app/                    rutas (AppRouter), guards, proveedores, sesión
+│   ├── services/           api.ts (cliente HTTP único) · session.ts · api-error.ts
+│   └── stores/             auth.store.ts (token de acceso solo en memoria)
+├── design-system/          theme · layout (AppLayout) · ui (DataTable, AgendaBoard, …)
+├── features/<feature>/     views · components · services (hooks de TanStack Query) · schemas (zod)
+│                           agenda, auth, dashboard, drivers, projects, reservations, users, vehicles
+└── shared/                 hooks · lib/format.ts (fechas en hora de Managua) · types
+```
+
+Cada vista habla con la API solo a través de los hooks de `features/<feature>/services`,
+que usan el cliente de `app/services/api.ts`. Todo el panel es exclusivo del rol `ADMIN`
+(`app/guards/RequireAuth.tsx`); la API lo valida de nuevo en cada ruta.
 
 Sesión (ADR 0003): el token de acceso vive solo en memoria (`app/stores/auth.store.ts`).
 Al abrir o recargar, `restoreSession` pide uno nuevo a `POST /auth/session/refresh` con
@@ -98,17 +109,17 @@ por todas las peticiones) y repite la petición.
 ## 4. Móvil
 
 ```
-mobile/
-├── app/(auth)/login.tsx
-├── app/(app)/(requester)/…   nueva solicitud, mis solicitudes, detalle
-├── app/(app)/(driver)/…      mis viajes, iniciar, finalizar
-├── app/(app)/notifications.tsx
-├── features/<feature>/       api, hooks, componentes
-├── lib/api.ts                cliente HTTP + token en expo-secure-store
-└── store/                    sesión
+mobile/src/
+├── app/(auth)/login.tsx      inicio de sesión
+├── app/(app)/                zona autenticada: hoy, solo `home.tsx`
+├── features/<feature>/       llamadas a la API por funcionalidad (hoy, `auth`)
+├── lib/                      api.ts (cliente HTTP) · token-storage.ts (expo-secure-store) · config.ts · theme.ts
+└── store/session.ts          sesión
 ```
 
-El layout `(app)` redirige al grupo según el rol del usuario.
+Las pantallas de quien solicita (nueva solicitud, mis solicitudes, avisos) llegan en el
+Sprint 4 y las de quien conduce (mis viajes, salida y llegada) en el Sprint 5, como grupos
+de rutas dentro de `app/(app)/`; el layout `(app)` redirigirá según el rol.
 
 ## 5. Seguridad
 
@@ -121,6 +132,7 @@ restringido a los orígenes de la web, validación estricta (`whitelist`,
 
 ## Historial
 
-| Versión | Fecha       | Autor        | Cambio                         |
-| ------- | ----------- | ------------ | ------------------------------ |
-| 1.0.0   | 16 oct 2026 | Danild Pérez | Creación inicial del documento |
+| Versión | Fecha       | Autor        | Cambio                                                        |
+| ------- | ----------- | ------------ | ------------------------------------------------------------- |
+| 1.0.0   | 16 oct 2026 | Danild Pérez | Creación inicial del documento                                |
+| 1.1.0   | 16 nov 2026 | Danild Pérez | Estructura real del panel y de la app; forma de la paginación |
