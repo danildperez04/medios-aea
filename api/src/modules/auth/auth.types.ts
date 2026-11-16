@@ -18,4 +18,9 @@ export interface JwtPayload {
   email: string;
   fullName: string;
   role: UserRole;
+  /**
+   * `session_version` del usuario al emitir el token. Si ya no coincide, el token se
+   * rechaza. Los tokens anteriores a este campo no lo traen y cuentan como 0.
+   */
+  ver?: number;
 }

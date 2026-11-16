@@ -8,11 +8,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository, type EntityManager } from 'typeorm';
 import { compare, hash } from 'bcrypt';
 import { User } from '#modules/users/entities/user.entity.js';
 import type { AuthenticatedUser } from '#common/decorators/current-user.decorator.js';
 import type { JwtPayload, LoginCredentials } from './auth.types.js';
+import { RefreshToken } from './entities/refresh-token.entity.js';
 
 /**
  * Hash señuelo, para que el login tarde lo mismo exista o no el usuario
@@ -44,7 +45,10 @@ export class AuthService {
     @Inject(ConfigService) private readonly config: ConfigService,
   ) {}
 
-  /** Inicio de sesión de la app móvil: token de acceso de `JWT_EXPIRES_IN` (8 h). */
+  /**
+   * Inicio de sesión sin renovación: un token de acceso de `JWT_EXPIRES_IN`. Lo usan
+   * Swagger y las herramientas; la app usa `/auth/mobile-session` desde la HU-28.
+   */
   async login(credentials: LoginCredentials): Promise<LoginResult> {
     return this.issueAccessToken(await this.authenticate(credentials));
   }
@@ -77,7 +81,7 @@ export class AuthService {
    * pide uno corto (`WEB_ACCESS_TOKEN_TTL`) porque lo renueva con su refresh token.
    */
   async issueAccessToken(
-    user: Pick<User, 'id' | 'email' | 'fullName' | 'role'>,
+    user: Pick<User, 'id' | 'email' | 'fullName' | 'role' | 'sessionVersion'>,
     expiresIn: string = this.config.get<string>('JWT_EXPIRES_IN', '8h'),
   ): Promise<LoginResult> {
     const payload: JwtPayload = {
@@ -85,6 +89,7 @@ export class AuthService {
       email: user.email,
       fullName: user.fullName,
       role: user.role,
+      ver: user.sessionVersion,
     };
     const accessToken = await this.jwt.signAsync(payload, {
       expiresIn: expiresIn as `${number}${'s' | 'm' | 'h' | 'd'}`,
@@ -122,8 +127,30 @@ export class AuthService {
     // Con 401 el cliente creería que la sesión venció y la cerraría.
     if (!matches) throw new BadRequestException('La contraseña actual no es correcta.');
 
-    const passwordHash = await this.hash(newPassword);
-    await this.users.update(userId, { passwordHash });
+    await this.setPassword(userId, newPassword);
+  }
+
+  /**
+   * Guarda una contraseña nueva y cierra todas las sesiones de la persona, también la
+   * que hizo el cambio: quien tuviera un token copiado no sigue dentro, y la persona
+   * vuelve a entrar con la contraseña nueva.
+   */
+  async setPassword(userId: string, password: string): Promise<void> {
+    const passwordHash = await this.hash(password);
+    await this.users.manager.transaction(async (manager) => {
+      await manager.update(User, userId, { passwordHash });
+      await this.revokeSessions(userId, manager);
+    });
+  }
+
+  /**
+   * Cierra todas las sesiones de una persona, en el panel y en la app: revoca sus
+   * refresh tokens y sube `session_version`, con lo que los tokens de acceso ya
+   * emitidos se rechazan en la siguiente petición.
+   */
+  async revokeSessions(userId: string, manager: EntityManager = this.users.manager): Promise<void> {
+    await manager.update(RefreshToken, { userId, revokedAt: IsNull() }, { revokedAt: new Date() });
+    await manager.increment(User, { id: userId }, 'sessionVersion', 1);
   }
 
   /** Genera un hash bcrypt con las rondas configuradas (RNF-01). */

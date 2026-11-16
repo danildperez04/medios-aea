@@ -27,7 +27,7 @@ import { SessionService, type SessionResult } from './session.service.js';
 /**
  * Sesión del panel web (ADR 0003). El token de acceso va en el cuerpo y el panel lo
  * guarda solo en memoria; el refresh token va en una cookie HttpOnly que JavaScript no
- * puede leer. La app móvil no usa estas rutas: sigue con `POST /auth/login`.
+ * puede leer. La app móvil tiene las suyas en `MobileSessionController`.
  */
 @ApiTags('Autenticación')
 @Public()

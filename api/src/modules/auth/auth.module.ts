@@ -8,6 +8,7 @@ import { User } from '#modules/users/entities/user.entity.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { RefreshToken } from './entities/refresh-token.entity.js';
+import { MobileSessionController } from './mobile-session.controller.js';
 import { SessionController } from './session.controller.js';
 import { SessionService } from './session.service.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
@@ -35,7 +36,7 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
     // Límite global de peticiones; el login lo endurece a 10 por minuto.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
   ],
-  controllers: [AuthController, SessionController],
+  controllers: [AuthController, SessionController, MobileSessionController],
   providers: [AuthService, SessionService, JwtStrategy],
   exports: [AuthService, JwtModule, PassportModule, ThrottlerModule],
 })

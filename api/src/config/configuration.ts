@@ -134,12 +134,16 @@ export const configValidationSchema = Joi.object({
   DATABASE_SSL: Joi.boolean().default(false),
   JWT_SECRET: Joi.string().min(32).required(),
   JWT_EXPIRES_IN: Joi.string().default('8h'),
-  // Sesión del panel web (ADR 0003): token de acceso corto en memoria y refresh token
+  // Sesiones (ADR 0003). `WEB_ACCESS_TOKEN_TTL` es la duración del token de acceso del
+  // panel y de la app. Panel: token de acceso solo en memoria y refresh token
   // en cookie HttpOnly que vence tras estas horas sin uso.
   WEB_ACCESS_TOKEN_TTL: Joi.string()
     .pattern(/^\d+[smhd]$/)
     .default('15m'),
   REFRESH_TOKEN_TTL_HOURS: Joi.number().integer().min(1).max(720).default(12),
+  // Sesión de la app móvil (HU-28): mismo token de acceso corto; su refresh token va en
+  // SecureStore y vence tras estos días sin uso.
+  MOBILE_REFRESH_TOKEN_TTL_DAYS: Joi.number().integer().min(1).max(90).default(7),
   // `Secure` en la cookie: siempre en producción (HTTPS detrás de nginx).
   COOKIE_SECURE: Joi.boolean().when('NODE_ENV', {
     is: 'production',

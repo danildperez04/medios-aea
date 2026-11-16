@@ -14,7 +14,8 @@ import type { JwtPayload } from '../auth.types.js';
  * Además de la firma y la caducidad, en cada petición comprueba en la base que el
  * usuario siga activo y toma de ahí su rol. Sin esto, una cuenta desactivada seguía
  * entrando hasta que vencía su token (8 h) y un cambio de rol no se aplicaba hasta
- * entonces. Es una consulta por clave primaria con cuatro columnas: barata a la
+ * entonces. También compara la versión de sesión del token con la del usuario, para
+ * que cerrar las sesiones tenga efecto de inmediato. Es una consulta por clave primaria con pocas columnas: barata a la
  * escala de la fundación.
  */
 @Injectable()
@@ -33,13 +34,24 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
     if (!payload.sub) throw new UnauthorizedException('Sesión no válida.');
     const user = await this.users.findOne({
-      select: { id: true, email: true, fullName: true, role: true, isActive: true },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        role: true,
+        isActive: true,
+        sessionVersion: true,
+      },
       where: { id: payload.sub },
     });
     if (!user?.isActive) {
       throw new UnauthorizedException(
         'Tu cuenta fue desactivada o ya no existe. Inicia sesión de nuevo.',
       );
+    }
+    // Cambió la contraseña o la coordinación cerró sus sesiones después de emitirlo.
+    if ((payload.ver ?? 0) !== user.sessionVersion) {
+      throw new UnauthorizedException('Tu sesión se cerró. Inicia sesión de nuevo.');
     }
     return { id: user.id, email: user.email, fullName: user.fullName, role: user.role };
   }

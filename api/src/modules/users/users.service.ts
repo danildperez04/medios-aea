@@ -108,7 +108,8 @@ export class UsersService {
 
   async resetPassword(id: string, password: string): Promise<void> {
     await this.findOneOrFail(id);
-    await this.users.update(id, { passwordHash: await this.auth.hash(password) });
+    // Cierra sus sesiones: quien tuviera un token copiado no sigue dentro.
+    await this.auth.setPassword(id, password);
   }
 
   private async assertEmailFree(email: string, exceptId?: string): Promise<void> {
