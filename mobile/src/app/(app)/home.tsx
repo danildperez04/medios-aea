@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BrandLockup } from '@/components/BrandLockup';
+import { logout } from '@/features/auth/api';
 import { colors, fonts, spacing, touchTarget, type } from '@/lib/theme';
 import { useSession } from '@/store/session';
 
@@ -15,11 +16,11 @@ const ROLE_LABEL = {
  * Mientras esas pantallas no existan, se explica qué aparecerá aquí.
  */
 export default function HomeScreen() {
-  const { user, clearSession } = useSession();
+  const { user } = useSession();
   const isDriver = user?.role === 'DRIVER';
 
   // Al quedar sin token, el layout de la zona autenticada redirige al login.
-  const logout = () => void clearSession();
+  const onLogout = () => void logout();
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -41,7 +42,7 @@ export default function HomeScreen() {
           </Text>
         </View>
 
-        <Pressable onPress={logout} style={styles.logout} accessibilityRole="button">
+        <Pressable onPress={onLogout} style={styles.logout} accessibilityRole="button">
           <Text style={styles.logoutText}>Cerrar sesión</Text>
         </Pressable>
       </View>

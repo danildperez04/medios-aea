@@ -30,7 +30,7 @@ const respond = (status: number, body: unknown) =>
   Promise.resolve({
     ok: status >= 200 && status < 300,
     status,
-    text: () => Promise.resolve(JSON.stringify(body)),
+    text: () => Promise.resolve(body === undefined ? '' : JSON.stringify(body)),
   } as Response);
 
 function renderWithClient(ui: React.ReactElement) {
@@ -42,12 +42,12 @@ describe('sesión de la app (HU-16)', () => {
   beforeEach(() => {
     globalThis.fetch = jest.fn();
     jest.mocked(SecureStore.deleteItemAsync).mockClear();
-    useSession.setState({ token: null, user: null, ready: true });
+    useSession.setState({ token: null, refreshToken: null, user: null, ready: true });
   });
 
   describe('al abrir la app', () => {
     it('con un token guardado entra directo, sin pedir la contraseña', async () => {
-      useSession.setState({ token: 'guardado' });
+      useSession.setState({ token: 'guardado', refreshToken: 'refresh' });
       await render(<Index />);
       expect(screen.getByText('redirige a /home')).toBeTruthy();
     });
@@ -66,15 +66,32 @@ describe('sesión de la app (HU-16)', () => {
 
   describe('zona autenticada', () => {
     it('pide el perfil con el token guardado y muestra la app', async () => {
-      useSession.setState({ token: 'guardado' });
+      useSession.setState({ token: 'guardado', refreshToken: 'refresh' });
       (globalThis.fetch as jest.Mock).mockReturnValue(respond(200, user));
       await renderWithClient(<AppLayout />);
       expect(await screen.findByText('pantallas de la app')).toBeTruthy();
       expect(useSession.getState().user).toEqual(user);
     });
 
-    it('si el servidor rechaza el token, borra la sesión y vuelve al login', async () => {
-      useSession.setState({ token: 'vencido' });
+    it('si el token de acceso venció, renueva la sesión y muestra la app', async () => {
+      useSession.setState({ token: 'vencido', refreshToken: 'refresh' });
+      (globalThis.fetch as jest.Mock).mockImplementation(
+        (url: string, init: { headers: Record<string, string> }) => {
+          if (url.endsWith('/auth/mobile-session/refresh')) {
+            return respond(200, { accessToken: 'nuevo', refreshToken: 'refresh-2' });
+          }
+          return init.headers.Authorization === 'Bearer nuevo'
+            ? respond(200, user)
+            : respond(401, { message: 'Sesión no válida.' });
+        },
+      );
+      await renderWithClient(<AppLayout />);
+      expect(await screen.findByText('pantallas de la app')).toBeTruthy();
+      expect(useSession.getState()).toMatchObject({ token: 'nuevo', refreshToken: 'refresh-2' });
+    });
+
+    it('si el servidor rechaza la sesión, la borra y vuelve al login', async () => {
+      useSession.setState({ token: 'vencido', refreshToken: 'revocado' });
       (globalThis.fetch as jest.Mock).mockReturnValue(
         respond(401, { message: 'Sesión no válida.' }),
       );
@@ -84,7 +101,7 @@ describe('sesión de la app (HU-16)', () => {
     });
 
     it('sin señal no cierra la sesión: explica y deja reintentar', async () => {
-      useSession.setState({ token: 'guardado' });
+      useSession.setState({ token: 'guardado', refreshToken: 'refresh' });
       (globalThis.fetch as jest.Mock).mockRejectedValueOnce(
         new TypeError('Network request failed'),
       );
@@ -98,12 +115,32 @@ describe('sesión de la app (HU-16)', () => {
     });
   });
 
-  it('cerrar sesión borra el token del teléfono y el perfil en memoria', async () => {
-    useSession.setState({ token: 'guardado', user });
-    await render(<HomeScreen />);
-    await fireEvent.press(screen.getByRole('button', { name: 'Cerrar sesión' }));
-    await waitFor(() => expect(useSession.getState().token).toBeNull());
-    expect(useSession.getState().user).toBeNull();
-    expect(SecureStore.deleteItemAsync).toHaveBeenCalled();
+  describe('cerrar sesión', () => {
+    const logoutCalls = () =>
+      (globalThis.fetch as jest.Mock).mock.calls.filter(([url]: [string]) =>
+        url.endsWith('/auth/mobile-session/logout'),
+      );
+
+    it('borra los tokens del teléfono y revoca el refresh token en el servidor', async () => {
+      useSession.setState({ token: 'guardado', refreshToken: 'refresh', user });
+      (globalThis.fetch as jest.Mock).mockReturnValue(respond(204, undefined));
+      await render(<HomeScreen />);
+      await fireEvent.press(screen.getByRole('button', { name: 'Cerrar sesión' }));
+
+      await waitFor(() => expect(logoutCalls()).toHaveLength(1));
+      expect(JSON.parse(logoutCalls()[0][1].body)).toEqual({ refreshToken: 'refresh' });
+      expect(useSession.getState()).toMatchObject({ token: null, refreshToken: null, user: null });
+      expect(SecureStore.deleteItemAsync).toHaveBeenCalled();
+    });
+
+    it('sin señal la sesión local se cierra igual', async () => {
+      useSession.setState({ token: 'guardado', refreshToken: 'refresh', user });
+      (globalThis.fetch as jest.Mock).mockRejectedValue(new TypeError('Network request failed'));
+      await render(<HomeScreen />);
+      await fireEvent.press(screen.getByRole('button', { name: 'Cerrar sesión' }));
+
+      await waitFor(() => expect(logoutCalls()).toHaveLength(1));
+      expect(useSession.getState()).toMatchObject({ token: null, refreshToken: null, user: null });
+    });
   });
 });
