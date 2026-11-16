@@ -76,50 +76,59 @@ describe('BookDialog', () => {
     post.mockReset();
   });
 
-  it('pide los libres del horario y registra la reserva aprobada', async () => {
-    respond();
-    post.mockResolvedValue({ data: { id: 'r9', status: 'APPROVED' } });
-    const onClose = renderDialog();
-    const user = userEvent.setup({ delay: null });
+  // Recorre el formulario entero: cuatro listas de MUI, cada una con su menú animado en
+  // jsdom. Sola tarda ~2 s, pero con cobertura o con la máquina ocupada pasa de los 5 s
+  // por defecto y fallaba sin que nada estuviera roto.
+  it(
+    'pide los libres del horario y registra la reserva aprobada',
+    { timeout: 20_000 },
+    async () => {
+      respond();
+      post.mockResolvedValue({ data: { id: 'r9', status: 'APPROVED' } });
+      const onClose = renderDialog();
+      const user = userEvent.setup({ delay: null });
 
-    expect(screen.getByRole('combobox', { name: 'Medio' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
-    await fillTrip(user);
+      expect(screen.getByRole('combobox', { name: 'Medio' })).toHaveAttribute(
+        'aria-disabled',
+        'true',
+      );
+      await fillTrip(user);
 
-    await waitFor(() =>
-      expect(get).toHaveBeenCalledWith('/availability', {
-        params: {
-          from: '2026-12-01T08:00:00-06:00',
-          to: '2026-12-01T12:00:00-06:00',
-          type: 'VEHICLE',
+      await waitFor(() =>
+        expect(get).toHaveBeenCalledWith('/availability', {
+          params: {
+            from: '2026-12-01T08:00:00-06:00',
+            to: '2026-12-01T12:00:00-06:00',
+            type: 'VEHICLE',
+            passengers: 3,
+          },
+        }),
+      );
+      await waitFor(() =>
+        expect(screen.getByRole('combobox', { name: 'Medio' })).not.toHaveAttribute(
+          'aria-disabled',
+        ),
+      );
+      await pick(user, 'Medio', 'Hilux blanca · M 123-456 · 4 pasajeros');
+      await pick(user, 'Conduce', 'José Gutiérrez');
+      await user.click(screen.getByRole('button', { name: 'Reservar' }));
+
+      await waitFor(() =>
+        expect(post).toHaveBeenCalledWith('/reservations/book', {
+          requesterId: carlos.id,
+          projectId: project.id,
+          destination: 'Comunidad El Rosario',
+          purpose: 'Taller de liderazgo',
           passengers: 3,
-        },
-      }),
-    );
-    await waitFor(() =>
-      expect(screen.getByRole('combobox', { name: 'Medio' })).not.toHaveAttribute('aria-disabled'),
-    );
-    await pick(user, 'Medio', 'Hilux blanca · M 123-456 · 4 pasajeros');
-    await pick(user, 'Conduce', 'José Gutiérrez');
-    await user.click(screen.getByRole('button', { name: 'Reservar' }));
-
-    await waitFor(() =>
-      expect(post).toHaveBeenCalledWith('/reservations/book', {
-        requesterId: carlos.id,
-        projectId: project.id,
-        destination: 'Comunidad El Rosario',
-        purpose: 'Taller de liderazgo',
-        passengers: 3,
-        startsAt: '2026-12-01T08:00:00-06:00',
-        endsAt: '2026-12-01T12:00:00-06:00',
-        resourceId: hilux.id,
-        driverId: jose.id,
-      }),
-    );
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
-  });
+          startsAt: '2026-12-01T08:00:00-06:00',
+          endsAt: '2026-12-01T12:00:00-06:00',
+          resourceId: hilux.id,
+          driverId: jose.id,
+        }),
+      );
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+    },
+  );
 
   it('no envia sin medio ni conductor', async () => {
     respond();
