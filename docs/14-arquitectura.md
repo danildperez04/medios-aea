@@ -114,7 +114,8 @@ El layout `(app)` redirige al grupo según el rol del usuario.
 
 JWT de acceso de 8 h para la app (`/auth/login`) y de 15 min para el panel
 (`/auth/session`, con refresh token rotativo en cookie `HttpOnly`, ADR 0003), bcrypt,
-throttler en ambos inicios de sesión, helmet, CORS
+throttler en ambos inicios de sesión (por la dirección real del cliente:
+`TRUST_PROXY_HOPS`), helmet, CORS
 restringido a los orígenes de la web, validación estricta (`whitelist`,
 `forbidNonWhitelisted`).
 
