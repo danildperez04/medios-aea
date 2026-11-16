@@ -45,10 +45,10 @@ referencia de producto: qué se construye y con qué criterios.
 | HU-11 | RF-12, RF-14 | Como ADMIN, quiero aprobar asignando vehículo y conductor sin choques | Conductor propuesto por defecto (HU-26), cambiable con aviso; dos aprobaciones concurrentes → una OK y otra 409 | TERMINADO |
 | HU-12 | RF-13        | Como ADMIN, quiero rechazar con motivo                                | Motivo obligatorio; notifica al solicitante                                                                     | TERMINADO |
 | HU-13 | RF-15        | Como ADMIN, quiero reasignar vehículo o conductor                     | Desactiva la asignación previa y crea otra en una transacción; notifica                                         | TERMINADO |
-| HU-14 | RF-16        | Como ADMIN, quiero ver el calendario de la flota                      | Filas = vehículos; vista día/semana; colores por estado; bloqueos visibles                                      | PENDIENTE |
+| HU-14 | RF-16        | Como ADMIN, quiero ver el calendario de la flota                      | Filas = vehículos; vista día/semana; colores por estado; bloqueos visibles                                      | TERMINADO |
 | HU-15 | RF-17        | Como ADMIN, quiero saber quién aprobó o rechazó cada solicitud        | Registro en `audit_log` con usuario, acción y fecha                                                             | PENDIENTE |
 | HU-26 | RF-07, RF-10 | Como técnico, quiero indicar quién conduce al solicitar               | Perfil de conductor para cualquier usuario; "yo" por defecto; licencia vigente a la fecha (RN-15)               | TERMINADO |
-| HU-27 | RF-10, RF-12 | Como ADMIN, quiero registrar desde el panel una reserva ya aprobada   | Formulario en el panel; queda `APPROVED` en un paso; mismas validaciones que crear y aprobar; avisa             | PENDIENTE |
+| HU-27 | RF-10, RF-12 | Como ADMIN, quiero registrar desde el panel una reserva ya aprobada   | Formulario en el panel; queda `APPROVED` en un paso; mismas validaciones que crear y aprobar; avisa             | TERMINADO |
 
 ## Sprint 4 — App móvil del solicitante
 

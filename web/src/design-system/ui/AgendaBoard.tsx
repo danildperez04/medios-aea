@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 import type { ReactNode } from 'react';
 import { brand } from '@/design-system/theme/theme';
-import { formatTime, managuaMidnight } from '@/shared/lib/format';
+import { formatRange, formatTime, formatWeekday, managuaMidnight } from '@/shared/lib/format';
 import { ResourceTag, type ResourceKind } from './ResourceTag';
 
 /**
@@ -41,6 +41,13 @@ export interface AgendaBoardProps {
    * antes de `fromHour` se recorta al borde del tablero en lugar de deformarse.
    */
   day?: Date;
+  /**
+   * Cuántos días seguidos se muestran desde `day` (1 = un día; 7 = una semana). Con
+   * varios días, cada uno ocupa una columna con la misma franja `fromHour`–`toHour`.
+   */
+  days?: number;
+  /** Con varios días: al elegir el encabezado de uno (para abrirlo en la vista de día). */
+  onDaySelect?: (day: Date) => void;
   /** Hora actual para la línea de "ahora"; solo se dibuja si cae dentro del día. */
   now?: Date | null;
   /** Qué mostrar dentro del tablero cuando no hay filas. */
@@ -85,18 +92,36 @@ export function AgendaBoard({
   fromHour = 6,
   toHour = 19,
   day,
+  days = 1,
+  onDaySelect,
   now = null,
   empty,
 }: AgendaBoardProps) {
   const midnight = managuaMidnight(day ?? now ?? new Date()).getTime();
-  /** Horas desde la medianoche del día mostrado: puede ser < 0 o > 24. */
+  /** Horas desde la medianoche del primer día mostrado: puede ser < 0 o > 24 × días. */
   const hourOf = (value: string | Date) => (new Date(value).getTime() - midnight) / 3_600_000;
   const span = toHour - fromHour;
-  const hours = Array.from({ length: span + 1 }, (_, i) => fromHour + i);
-  const toPercent = (hour: number) =>
-    ((Math.min(Math.max(hour, fromHour), toHour) - fromHour) / span) * 100;
+  const multiDay = days > 1;
+  /**
+   * Posición horizontal de una hora. Cada día ocupa una columna del mismo ancho con la
+   * franja `fromHour`–`toHour`; la noche no ocupa espacio, así que lo que cae fuera de
+   * la franja se pega al borde de su día y un bloque de varios días sigue de largo.
+   */
+  const toPercent = (hour: number) => {
+    if (hour <= 0) return 0;
+    if (hour >= days * 24) return 100;
+    const dayIndex = Math.floor(hour / 24);
+    const inDay = Math.min(Math.max(hour - dayIndex * 24, fromHour), toHour) - fromHour;
+    return ((dayIndex * span + inDay) / (days * span)) * 100;
+  };
+  /** Marcas de la escala, en horas desde la primera medianoche: horas o inicios de día. */
+  const ticks = multiDay
+    ? Array.from({ length: days + 1 }, (_, i) => (i === days ? days * 24 : i * 24 + fromHour))
+    : Array.from({ length: span + 1 }, (_, i) => fromHour + i);
   const nowHour = now ? hourOf(now) : Number.NaN;
-  const showNow = nowHour >= fromHour && nowHour <= toHour;
+  const nowInDay = nowHour - Math.floor(nowHour / 24) * 24;
+  const showNow = nowHour >= 0 && nowHour < days * 24 && nowInDay >= fromHour && nowInDay <= toHour;
+  const todayIndex = nowHour >= 0 && nowHour < days * 24 ? Math.floor(nowHour / 24) : -1;
 
   return (
     <Box
@@ -112,29 +137,70 @@ export function AgendaBoard({
         {/* Escala de horas */}
         <Box sx={{ display: 'grid', gridTemplateColumns: COLUMNS }}>
           <Box sx={{ position: 'sticky', left: 0, bgcolor: brand.crema, zIndex: 2 }} />
-          <Box sx={{ position: 'relative', height: 30 }} aria-hidden>
-            {hours.map((hour) => (
-              <Box
-                key={hour}
-                className="tabular"
-                sx={{
-                  position: 'absolute',
-                  left: `${toPercent(hour)}%`,
-                  transform:
-                    hour === fromHour
-                      ? 'none'
-                      : hour === toHour
-                        ? 'translateX(-100%)'
-                        : 'translateX(-50%)',
-                  top: 8,
+          {multiDay ? (
+            <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${days}, 1fr)`, height: 30 }}>
+              {Array.from({ length: days }, (_, index) => {
+                const date = new Date(midnight + index * 86_400_000);
+                const label = formatWeekday(date);
+                const sx = {
                   fontSize: '0.75rem',
-                  color: 'text.secondary',
-                }}
-              >
-                {hour}
-              </Box>
-            ))}
-          </Box>
+                  fontFamily: 'inherit',
+                  textAlign: 'left',
+                  pl: 0.75,
+                  pt: 1,
+                  color: index === todayIndex ? brand.negroLavado : 'text.secondary',
+                  fontWeight: index === todayIndex ? 700 : 400,
+                } as const;
+                return onDaySelect ? (
+                  <Box
+                    key={index}
+                    component="button"
+                    type="button"
+                    className="tabular"
+                    onClick={() => onDaySelect(date)}
+                    aria-label={`Ver el día ${label}`}
+                    sx={{
+                      ...sx,
+                      border: 0,
+                      bgcolor: 'transparent',
+                      cursor: 'pointer',
+                      '&:hover, &:focus-visible': { textDecoration: 'underline' },
+                    }}
+                  >
+                    {label}
+                  </Box>
+                ) : (
+                  <Box key={index} className="tabular" sx={sx}>
+                    {label}
+                  </Box>
+                );
+              })}
+            </Box>
+          ) : (
+            <Box sx={{ position: 'relative', height: 30 }} aria-hidden>
+              {ticks.map((hour) => (
+                <Box
+                  key={hour}
+                  className="tabular"
+                  sx={{
+                    position: 'absolute',
+                    left: `${toPercent(hour)}%`,
+                    transform:
+                      hour === fromHour
+                        ? 'none'
+                        : hour === toHour
+                          ? 'translateX(-100%)'
+                          : 'translateX(-50%)',
+                    top: 8,
+                    fontSize: '0.75rem',
+                    color: 'text.secondary',
+                  }}
+                >
+                  {hour}
+                </Box>
+              ))}
+            </Box>
+          )}
         </Box>
 
         {rows.length === 0 ? (
@@ -146,7 +212,7 @@ export function AgendaBoard({
             }}
           >
             <Box />
-            <Box sx={{ py: 5, pr: 3, ...gridLines(hours, toPercent) }}>
+            <Box sx={{ py: 5, pr: 3, ...gridLines(ticks, toPercent) }}>
               <Box sx={{ display: 'inline-block', bgcolor: brand.crema, py: 1, pr: 2 }}>
                 {empty}
               </Box>
@@ -191,18 +257,23 @@ export function AgendaBoard({
                     m: 0,
                     p: 0,
                     position: 'relative',
-                    ...gridLines(hours, toPercent),
+                    ...gridLines(ticks, toPercent),
                   }}
                 >
                   {row.blocks
                     // Lo que no toca la franja visible no se dibuja (ni como rayita en el borde).
-                    .filter((block) => hourOf(block.end) > fromHour && hourOf(block.start) < toHour)
+                    .filter(
+                      (block) => toPercent(hourOf(block.end)) > toPercent(hourOf(block.start)),
+                    )
                     .map((block) => {
                       const start = hourOf(block.start);
                       const end = hourOf(block.end);
                       const left = toPercent(start);
                       const width = Math.max(toPercent(end) - left, 1.5);
-                      const range = `${formatTime(block.start)}–${formatTime(block.end)}`;
+                      // Con varios días la hora sola no dice de qué día es: va la fecha.
+                      const range = multiDay
+                        ? formatRange(block.start, block.end)
+                        : `${formatTime(block.start)}–${formatTime(block.end)}`;
                       return (
                         <Box
                           component="li"
@@ -228,7 +299,7 @@ export function AgendaBoard({
                           }}
                         >
                           {/* Si empezó antes de la franja visible, su hora de inicio no ayuda a leer el tablero. */}
-                          {start >= fromHour ? (
+                          {!multiDay && start >= fromHour ? (
                             <Box component="span" className="tabular" sx={{ fontSize: '0.75rem' }}>
                               {formatTime(block.start)}
                             </Box>
@@ -255,8 +326,8 @@ export function AgendaBoard({
 }
 
 /** Filetes verticales de cada hora, dibujados como fondo para no crear un nodo por línea. */
-function gridLines(hours: number[], toPercent: (hour: number) => number) {
-  const stops = hours
+function gridLines(ticks: number[], toPercent: (hour: number) => number) {
+  const stops = ticks
     .slice(1, -1)
     .map(
       (hour) =>
@@ -283,5 +354,39 @@ function NowLine({ left }: { left: number }) {
         pointerEvents: 'none',
       }}
     />
+  );
+}
+
+const LEGEND: AgendaBlockState[] = ['ASSIGNED', 'IN_PROGRESS', 'PENDING', 'UNAVAILABLE'];
+
+/** Qué significa cada color de la agenda. Va debajo del tablero. */
+export function AgendaLegend() {
+  return (
+    <Box
+      component="ul"
+      aria-label="Colores de la agenda"
+      sx={{
+        listStyle: 'none',
+        m: 0,
+        mt: 1.5,
+        p: 0,
+        display: 'flex',
+        flexWrap: 'wrap',
+        columnGap: 3,
+        rowGap: 1,
+        fontSize: '0.825rem',
+        color: 'text.secondary',
+      }}
+    >
+      {LEGEND.map((state) => (
+        <Box component="li" key={state} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            aria-hidden
+            sx={{ width: 22, height: 14, borderRadius: '3px', ...STATE_STYLE[state] }}
+          />
+          {STATE_LABEL[state].charAt(0).toUpperCase() + STATE_LABEL[state].slice(1)}
+        </Box>
+      ))}
+    </Box>
   );
 }

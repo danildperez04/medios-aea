@@ -130,3 +130,63 @@ export function managuaDayRange(value: string | Date): { from: string; to: strin
 export function managuaMidnight(value: string | Date): Date {
   return new Date(managuaDayRange(value).from);
 }
+
+/** Día de calendario en Managua como `2026-10-20`: la forma de nombrar un día en la URL. */
+export function managuaDateKey(value: string | Date): string {
+  return (toDate(value) ?? new Date()).toLocaleDateString('en-CA', { timeZone: TIME_ZONE });
+}
+
+/** True si es un día de calendario real con forma `aaaa-mm-dd`. */
+export function isDateKey(value: string | null | undefined): value is string {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const time = Date.parse(`${value}T12:00:00Z`);
+  return !Number.isNaN(time) && new Date(time).toISOString().slice(0, 10) === value;
+}
+
+/** Suma (o resta) días a un día de calendario. Se calcula a mediodía UTC: sin saltos. */
+export function shiftDateKey(key: string, days: number): string {
+  return new Date(Date.parse(`${key}T12:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
+}
+
+/** Lunes de la semana que contiene el día. */
+export function mondayOf(key: string): string {
+  const weekday = new Date(Date.parse(`${key}T12:00:00Z`)).getUTCDay();
+  return shiftDateKey(key, -((weekday + 6) % 7));
+}
+
+/** Instante de la medianoche de Managua con que empieza el día. */
+export function dateKeyToDate(key: string): Date {
+  return new Date(`${key}T00:00:00${MANAGUA_OFFSET}`);
+}
+
+/** `days` días completos de Managua desde `key`: `[00:00, 00:00 del último día + 1)`. */
+export function managuaRangeFrom(key: string, days: number): { from: string; to: string } {
+  return {
+    from: `${key}T00:00:00${MANAGUA_OFFSET}`,
+    to: `${shiftDateKey(key, days)}T00:00:00${MANAGUA_OFFSET}`,
+  };
+}
+
+const DAY_MONTH = new Intl.DateTimeFormat('es-NI', {
+  timeZone: TIME_ZONE,
+  day: 'numeric',
+  month: 'long',
+});
+
+/** "Del 16 al 22 de noviembre de 2026"; si cruza de mes, nombra los dos. */
+export function formatWeek(mondayKey: string): string {
+  const sundayKey = shiftDateKey(mondayKey, 6);
+  const start = DAY_MONTH.format(dateKeyToDate(mondayKey));
+  const end = DAY_MONTH.format(dateKeyToDate(sundayKey));
+  const sameMonth = mondayKey.slice(0, 7) === sundayKey.slice(0, 7);
+  return `Del ${sameMonth ? Number(mondayKey.slice(8)) : start} al ${end} de ${sundayKey.slice(0, 4)}`;
+}
+
+const WEEKDAY_SHORT = new Intl.DateTimeFormat('es-NI', { timeZone: TIME_ZONE, weekday: 'short' });
+
+/** "lun 16": encabezado de un día en la agenda semanal. */
+export function formatWeekday(value: string | Date): string {
+  const date = toDate(value);
+  if (!date) return '—';
+  return `${WEEKDAY_SHORT.format(date).replace('.', '')} ${Number(managuaDateKey(date).slice(8))}`;
+}

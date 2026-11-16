@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { api } from '@/app/services/api';
 import type { AgendaBlockState, AgendaRow, ResourceKind } from '@/design-system/ui';
 
@@ -28,6 +28,8 @@ export function useAgenda(range: { from: string; to: string }) {
         name: row.name,
         blocks: row.blocks,
       })),
+    // Al cambiar de día o de semana se sigue viendo la anterior hasta que llega la nueva.
+    placeholderData: keepPreviousData,
     // La agenda cambia cuando otra persona aprueba o bloquea: se refresca sola.
     refetchInterval: 60_000,
   });
