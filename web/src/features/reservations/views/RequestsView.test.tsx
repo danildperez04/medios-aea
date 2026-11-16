@@ -72,6 +72,41 @@ describe('RequestsView', () => {
     });
   });
 
+  it('una solicitud ya decidida abre su historial; una pendiente no lo ofrece (HU-15)', async () => {
+    get.mockImplementation((url: string) =>
+      Promise.resolve(
+        url === '/reservations/r2/history'
+          ? {
+              data: [
+                {
+                  id: 'h1',
+                  action: 'REJECT',
+                  actor: { id: 'a1', fullName: 'Marta Coordinación' },
+                  at: '2026-10-19T15:30:00Z',
+                  detail: 'Motivo: Se cruza con la feria',
+                },
+              ],
+            }
+          : page([
+              reservation(),
+              reservation({ id: 'r2', code: 'SOL-2026-00002', status: 'REJECTED' }),
+            ]),
+      ),
+    );
+    renderView();
+    await screen.findByText('SOL-2026-00002');
+    expect(
+      screen.queryByRole('button', { name: 'Ver el historial de la solicitud SOL-2026-00001' }),
+    ).not.toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Ver el historial de la solicitud SOL-2026-00002' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    expect(await within(dialog).findByText('Rechazó Marta Coordinación')).toBeInTheDocument();
+    expect(within(dialog).getByText('Motivo: Se cruza con la feria')).toBeInTheDocument();
+  });
+
   it('muestra horario en hora de Managua, solicitante, proyecto y medio preferido', async () => {
     get.mockResolvedValue({
       data: {

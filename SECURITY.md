@@ -57,7 +57,8 @@ compilación de Expo. `uuid` desapareció el 27/10/2026
   rota en cada uso, vence a las 12 h sin uso y, si vuelve un token ya rotado, se revoca
   toda la sesión. Refrescar y salir exigen el encabezado `X-Medios-Client` (CSRF). Solo
   la coordinación abre sesión en el panel. La app móvil sigue con su token en SecureStore.
-- Límite de intentos de inicio de sesión (10 por minuto e IP) y límite global.
+- Límite de intentos de inicio de sesión (10 por minuto e IP) y límite global. La IP es
+  la de quien hace la petición, no la del proxy (`TRUST_PROXY_HOPS`, `docs/11` §1).
 - `helmet` en la API; CORS restringido a la web.
 - Panel con Content-Security-Policy (`web/nginx/security-headers.conf`): solo scripts y
   conexiones del propio origen, sin `<object>`, sin ser embebido en otros sitios.

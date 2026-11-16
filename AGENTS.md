@@ -67,6 +67,8 @@ Siguen la documentación de NestJS (_Validation_ y _Mapped types_):
   no `@IsOptional()`.
 - Reglas compartidas: `@IsStrongPassword()` (`common/validation/password.policy.ts`),
   `@Trim()` / `@TrimUpperCase()` (`common/transformers/string.transformers.ts`).
+- Fechas con hora: `@IsDateTimeWithOffset()` (`common/validation/date-time.ts`), nunca
+  `@IsISO8601()`: este acepta fechas sin zona y el servidor las leería en UTC.
 - Cada DTO nuevo con reglas propias se agrega a `common/validation/dto-contracts.spec.ts`.
 
 ## 5. Interfaz (web y móvil)

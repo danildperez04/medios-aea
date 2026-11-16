@@ -38,6 +38,7 @@
 | RF-26 | Dashboard con pendientes, viajes de hoy, licencias por vencer          | Should      | S5     |
 | RF-27 | Gestión de otros medios (proyector, laptop, sonido)                    | Won't (MVP) | Fase 2 |
 | RF-28 | Rastreo GPS                                                            | Won't       | —      |
+| RF-29 | Cerrar las sesiones de una persona desde el panel (ADMIN)              | Should      | S4     |
 
 ## 2. Reglas de negocio
 

@@ -1,16 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsISO8601, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { BlackoutReason } from '#common/enums/domain.enums.js';
 import { Trim } from '#common/transformers/string.transformers.js';
+import { IsDateTimeWithOffset } from '#common/validation/date-time.js';
 
 /** Cuerpo de `POST /resources/:id/blackouts` (RF-08). */
 export class CreateBlackoutDto {
   @ApiProperty({ example: '2026-10-22T07:00:00-06:00' })
-  @IsISO8601({ strict: true }, { message: 'El inicio debe ser una fecha ISO-8601 con hora' })
+  @IsDateTimeWithOffset('El inicio')
   startsAt: string;
 
   @ApiProperty({ example: '2026-10-23T17:00:00-06:00' })
-  @IsISO8601({ strict: true }, { message: 'El fin debe ser una fecha ISO-8601 con hora' })
+  @IsDateTimeWithOffset('El fin')
   endsAt: string;
 
   @ApiProperty({ enum: BlackoutReason, enumName: 'BlackoutReason' })

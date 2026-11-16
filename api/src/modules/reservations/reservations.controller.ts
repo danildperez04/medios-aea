@@ -17,10 +17,13 @@ import { Roles } from '#common/decorators/roles.decorator.js';
 import type { PaginatedResponse } from '#common/dto/pagination.dto.js';
 import { UserRole } from '#common/enums/domain.enums.js';
 import { ApproveReservationDto } from './dto/approve-reservation.dto.js';
+import { BookReservationDto } from './dto/book-reservation.dto.js';
 import { CreateReservationDto } from './dto/create-reservation.dto.js';
 import { ReassignReservationDto } from './dto/reassign-reservation.dto.js';
 import { RejectReservationDto } from './dto/reject-reservation.dto.js';
 import { ReservationFiltersDto } from './dto/reservation-filters.dto.js';
+import type { ReservationHistoryEntry } from './history.rules.js';
+import { ReservationHistoryService } from './reservation-history.service.js';
 import type { ReservationView } from './reservation.view.js';
 import { ReservationsService } from './reservations.service.js';
 
@@ -33,7 +36,10 @@ import { ReservationsService } from './reservations.service.js';
 @Roles(UserRole.REQUESTER, UserRole.ADMIN)
 @Controller('reservations')
 export class ReservationsController {
-  constructor(@Inject(ReservationsService) private readonly service: ReservationsService) {}
+  constructor(
+    @Inject(ReservationsService) private readonly service: ReservationsService,
+    @Inject(ReservationHistoryService) private readonly history: ReservationHistoryService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Crear una solicitud; queda pendiente y avisa a la coordinación' })
@@ -43,6 +49,30 @@ export class ReservationsController {
     @CurrentUser() actor: AuthenticatedUser,
   ): Promise<ReservationView> {
     return this.service.create(dto, actor);
+  }
+
+  @Post('book')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Registrar una reserva ya aprobada, con medio y conductor (HU-27); avisa a ambos',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Horario, proyecto, persona, medio o conductor no válidos',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'El medio o el conductor chocan con otro viaje o bloqueo',
+  })
+  @ApiResponse({
+    status: 422,
+    description: 'Medio en mantenimiento, sin capacidad o licencia vencida',
+  })
+  book(
+    @Body() dto: BookReservationDto,
+    @CurrentUser() actor: AuthenticatedUser,
+  ): Promise<ReservationView> {
+    return this.service.book(dto, actor);
   }
 
   @Get()
@@ -61,6 +91,18 @@ export class ReservationsController {
     @CurrentUser() actor: AuthenticatedUser,
   ): Promise<ReservationView> {
     return this.service.findOneOrFail(id, actor);
+  }
+
+  @Get(':id/history')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Quién aprobó, rechazó, canceló o reasignó la solicitud, y cuándo (HU-15)',
+  })
+  @ApiResponse({ status: 404, description: 'La solicitud no existe' })
+  findHistory(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ): Promise<ReservationHistoryEntry[]> {
+    return this.history.findFor(id);
   }
 
   @Post(':id/approve')

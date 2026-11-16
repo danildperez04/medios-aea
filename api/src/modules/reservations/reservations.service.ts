@@ -34,6 +34,7 @@ import { Vehicle } from '#modules/resources/entities/vehicle.entity.js';
 import { User } from '#modules/users/entities/user.entity.js';
 import { driverProblem, resourceProblem, type ApprovalProblem } from './approval.rules.js';
 import type { ApproveReservationDto } from './dto/approve-reservation.dto.js';
+import type { BookReservationDto } from './dto/book-reservation.dto.js';
 import type { CreateReservationDto } from './dto/create-reservation.dto.js';
 import type { ReassignReservationDto } from './dto/reassign-reservation.dto.js';
 import type { RejectReservationDto } from './dto/reject-reservation.dto.js';
@@ -77,18 +78,7 @@ export class ReservationsService {
     const resourceType = dto.resourceType ?? ResourceType.VEHICLE;
 
     const id = await this.dataSource.transaction(async (manager) => {
-      const requester = await this.resolveRequester(
-        manager.getRepository(User),
-        dto.requesterId,
-        actor,
-      );
-
-      const project = await manager.findOneBy(Project, { id: dto.projectId });
-      if (!project || !project.isActive) {
-        throw new BadRequestException(
-          'El proyecto no existe o ya está cerrado. Elige un proyecto activo.',
-        );
-      }
+      const { requester, project } = await this.resolveRequestParties(manager, dto, actor);
 
       if (dto.preferredResourceId) {
         const preferred = await manager.findOneBy(Resource, { id: dto.preferredResourceId });
@@ -108,13 +98,7 @@ export class ReservationsService {
         endsAt,
       );
 
-      const [{ nextval }] = await manager.query<{ nextval: string }[]>(
-        `SELECT nextval('reservation_request_code_seq')`,
-      );
-      const code = formatRequestCode(
-        Number(calendarDateIn(new Date()).slice(0, 4)),
-        Number(nextval),
-      );
+      const code = await this.nextCode(manager);
 
       const saved = await manager.save(
         manager.create(ReservationRequest, {
@@ -142,6 +126,83 @@ export class ReservationsService {
         data: { kind: 'RESERVATION_CREATED', reservationId: saved.id },
       });
 
+      return saved.id;
+    });
+
+    return this.findOneOrFail(id, actor);
+  }
+
+  /**
+   * La coordinación registra una reserva ya aprobada (HU-27, RF-10, RF-12): no pasa
+   * por la bandeja. Valida lo mismo que crear (RN-06, RN-14) y que aprobar (RN-01 a
+   * RN-05, RN-09) con `checkAssignable`, en una sola transacción. La solicitud es
+   * nueva, así que nadie más la bloquea; el orden de candados sigue siendo medio y
+   * luego conductor, y la restricción de exclusión es la garantía final (409).
+   */
+  async book(dto: BookReservationDto, actor: AuthenticatedUser): Promise<ReservationView> {
+    const startsAt = new Date(dto.startsAt);
+    const endsAt = new Date(dto.endsAt);
+    const windowError = requestWindowError(startsAt, endsAt);
+    if (windowError) throw new BadRequestException(windowError);
+
+    const id = await this.dataSource.transaction(async (manager) => {
+      const { requester, project } = await this.resolveRequestParties(manager, dto, actor);
+      const draft = manager.create(ReservationRequest, {
+        requesterId: requester.id,
+        projectId: project.id,
+        resourceType: dto.resourceType ?? ResourceType.VEHICLE,
+        preferredResourceId: null,
+        purpose: dto.purpose,
+        destination: dto.destination,
+        passengers: dto.passengers,
+        startsAt,
+        endsAt,
+      });
+      const { resource, driver } = await this.checkAssignable(
+        manager,
+        draft,
+        dto.resourceId,
+        dto.driverId ?? null,
+      );
+
+      // Quien conduce queda también como propuesto: así la vista y los avisos no lo
+      // tratan como un cambio de la coordinación.
+      const saved = await manager.save(
+        Object.assign(draft, {
+          code: await this.nextCode(manager),
+          proposedDriverId: driver?.id ?? null,
+          status: RequestStatus.APPROVED,
+          decidedById: actor.id,
+          decidedAt: new Date(),
+        }),
+      );
+      const { identifiers } = await manager.insert(ReservationAssignment, {
+        requestId: saved.id,
+        resourceId: resource.id,
+        driverId: driver?.id ?? null,
+        period: { start: startsAt, end: endsAt },
+        active: true,
+      });
+
+      // En la auditoría es una aprobación (HU-15 la mostrará igual), marcada como directa.
+      await manager.save(
+        manager.create(AuditLog, {
+          actorId: actor.id,
+          action: AuditAction.APPROVE,
+          entity: 'reservation_request',
+          entityId: saved.id,
+          payload: {
+            direct: true,
+            assignmentId: identifiers[0]?.id as string,
+            resourceId: resource.id,
+            driverId: driver?.id ?? null,
+            proposedDriverId: null,
+            driverChanged: false,
+          },
+        }),
+      );
+
+      await this.notifyApproval(manager, saved, resource, driver, false, actor, true);
       return saved.id;
     });
 
@@ -557,6 +618,7 @@ export class ReservationsService {
     driver: Driver | null,
     driverChanged: boolean,
     actor: AuthenticatedUser,
+    booked = false,
   ): Promise<void> {
     const when = `${WHEN.format(request.startsAt)} – ${WHEN.format(request.endsAt)}`;
     const data = { kind: 'RESERVATION_APPROVED', reservationId: request.id };
@@ -578,7 +640,9 @@ export class ReservationsService {
 
     await notify(
       request.requesterId,
-      `Solicitud ${request.code} aprobada`,
+      booked
+        ? `La coordinación reservó tu viaje ${request.code}`
+        : `Solicitud ${request.code} aprobada`,
       `Tu viaje a ${request.destination} (${when}) va en ${resource.name}; ${who}.` +
         (driverChanged ? ' La coordinación cambió a quien conduce.' : ''),
     );
@@ -751,6 +815,34 @@ export class ReservationsService {
     const error = proposedDriverError(driver, endsAt);
     if (error) throw new BadRequestException(error);
     return driver;
+  }
+
+  /** Para quién y a qué proyecto se carga: comunes a crear y reservar (RN-14). */
+  private async resolveRequestParties(
+    manager: EntityManager,
+    dto: { requesterId?: string; projectId: string },
+    actor: AuthenticatedUser,
+  ): Promise<{ requester: User; project: Project }> {
+    const requester = await this.resolveRequester(
+      manager.getRepository(User),
+      dto.requesterId,
+      actor,
+    );
+    const project = await manager.findOneBy(Project, { id: dto.projectId });
+    if (!project || !project.isActive) {
+      throw new BadRequestException(
+        'El proyecto no existe o ya está cerrado. Elige un proyecto activo.',
+      );
+    }
+    return { requester, project };
+  }
+
+  /** `SOL-2026-00042`, del correlativo global. */
+  private async nextCode(manager: EntityManager): Promise<string> {
+    const [{ nextval }] = await manager.query<{ nextval: string }[]>(
+      `SELECT nextval('reservation_request_code_seq')`,
+    );
+    return formatRequestCode(Number(calendarDateIn(new Date()).slice(0, 4)), Number(nextval));
   }
 
   /** RN-14: solo la coordinación puede pedir en nombre de otra persona. */

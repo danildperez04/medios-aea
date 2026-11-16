@@ -5,7 +5,7 @@ import { ApiError } from '@/app/services/api';
 import { AgendaBoard, FormError } from '@/design-system/ui';
 import { useDrivers } from '@/features/drivers/services/drivers.service';
 import { formatDate, formatLongDate, managuaDayRange } from '@/shared/lib/format';
-import { useAgenda } from '../services/agenda.service';
+import { useAgenda } from '@/features/agenda/services/agenda.service';
 
 /**
  * "Hoy": la agenda del día de todos los medios (RF-16) y los avisos que piden

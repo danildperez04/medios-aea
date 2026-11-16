@@ -1,5 +1,5 @@
-import { Box, IconButton, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
-import { ArrowLeftRight, Ban, Check, ClipboardList, X } from 'lucide-react';
+import { Box, Button, IconButton, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
+import { ArrowLeftRight, Ban, Check, ClipboardList, History, Plus, X } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '@/app/services/api';
 import { useAuthStore } from '@/app/stores/auth.store';
@@ -19,6 +19,8 @@ import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { mono } from '@/design-system/theme/theme';
 import { formatRange } from '@/shared/lib/format';
 import { ApproveDialog } from '../components/ApproveDialog';
+import { BookDialog } from '../components/BookDialog';
+import { HistoryDialog } from '../components/HistoryDialog';
 import { RejectDialog } from '../components/RejectDialog';
 import {
   useCancelReservation,
@@ -54,7 +56,8 @@ function cancelMessage(reservation: Reservation, currentUserId: string | undefin
 /**
  * Bandeja de solicitudes (HU-09). La coordinación aprueba una pendiente asignando
  * medio y conductor (HU-11), la rechaza con motivo (HU-12), reasigna una aprobada
- * (HU-13) y cancela una pendiente o aprobada (HU-10).
+ * (HU-13) y cancela una pendiente o aprobada (HU-10). También registra una reserva ya
+ * aprobada sin pasar por la bandeja (HU-27).
  */
 export function RequestsView() {
   const [page, setPage] = useState(1);
@@ -66,6 +69,10 @@ export function RequestsView() {
   const [approving, setApproving] = useState<Reservation | null>(null);
   const [rejecting, setRejecting] = useState<Reservation | null>(null);
   const [reassigning, setReassigning] = useState<Reservation | null>(null);
+  const [reviewing, setReviewing] = useState<Reservation | null>(null);
+  // Contador para montar el formulario vacío cada vez que se abre.
+  const [booking, setBooking] = useState(0);
+  const [bookingOpen, setBookingOpen] = useState(false);
   const cancel = useCancelReservation();
   const currentUserId = useAuthStore((state) => state.user?.id);
 
@@ -214,6 +221,18 @@ export function RequestsView() {
               </IconButton>
             </Tooltip>
           ) : null}
+          {/* Una pendiente todavía no tiene decisiones que mostrar. */}
+          {r.status !== 'PENDING' ? (
+            <Tooltip title="Quién la decidió y cuándo">
+              <IconButton
+                size="small"
+                aria-label={`Ver el historial de la solicitud ${r.code}`}
+                onClick={() => setReviewing(r)}
+              >
+                <History size={18} />
+              </IconButton>
+            </Tooltip>
+          ) : null}
           {CANCELLABLE.includes(r.status) ? (
             <Tooltip title="Cancelar solicitud">
               <IconButton
@@ -253,6 +272,18 @@ export function RequestsView() {
           pendingView
             ? 'Las más próximas primero: son las que hay que decidir antes'
             : 'Historial de solicitudes de medios'
+        }
+        actions={
+          <Button
+            variant="contained"
+            startIcon={<Plus size={18} />}
+            onClick={() => {
+              setBooking((n) => n + 1);
+              setBookingOpen(true);
+            }}
+          >
+            Nueva reserva
+          </Button>
         }
       />
 
@@ -334,11 +365,15 @@ export function RequestsView() {
         onClose={() => setReassigning(null)}
       />
 
+      <BookDialog key={booking} open={bookingOpen} onClose={() => setBookingOpen(false)} />
+
       <RejectDialog
         key={rejecting?.id ?? 'closed'}
         reservation={rejecting}
         onClose={() => setRejecting(null)}
       />
+
+      <HistoryDialog reservation={reviewing} onClose={() => setReviewing(null)} />
 
       <ConfirmDialog
         open={cancelling !== null}
