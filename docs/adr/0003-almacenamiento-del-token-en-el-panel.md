@@ -65,11 +65,36 @@ señal, y un token robado no se puede cancelar. Se decide:
   desactivar su cuenta, por ejemplo si pierde el teléfono. Revoca sus refresh tokens; el
   token de acceso ya emitido vence solo, en 15 minutos como máximo. Queda en `audit_log`.
 
+## Ampliación del 17/11/2026: lo que se implementó en la HU-28
+
+- **Rutas de la app** (`/auth/mobile-session`, públicas): `POST` inicia sesión, `POST
+/refresh` rota y `POST /logout` revoca. El refresh token va en el cuerpo y la app lo
+  guarda en SecureStore. Entra cualquier rol: la bitácora de un viaje la registra quien
+  conduce, tenga el rol que tenga (RN-16). `POST /auth/login` se mantiene, sin
+  renovación, para Swagger y las herramientas.
+- **Un token solo sirve en las rutas de su cliente.** `refresh_token.client` (`web` o
+  `mobile`) separa las sesiones: el refresh token de la app no renueva la sesión del
+  panel ni al revés.
+- **Margen de reintento de la app: 2 minutos** (30 s en el panel). Con mala señal la
+  respuesta de una renovación se pierde y la app reintenta con el token que ya rotó.
+  Pasado el margen, un token repetido cierra la sesión.
+- **Sin conexión la app no cierra la sesión.** Solo la cierra una respuesta 400, 401 o
+  403 de la API a la renovación. Un error de red, un 5xx o un 429 la conservan.
+- **Cambiar o restablecer una contraseña cierra todas las sesiones de la persona**,
+  también la que hizo el cambio: el panel lo explica y lleva a iniciar sesión. Se
+  decidió no conservar esa sesión porque el token de acceso no identifica a cuál de las
+  sesiones pertenece, y pedir la contraseña nueva una vez es un costo pequeño.
+- **Cierre inmediato.** `user.session_version` viaja en cada token de acceso (`ver`) y
+  `JwtStrategy`, que ya consultaba al usuario en cada petición, la compara. Al subirla,
+  los tokens de acceso ya emitidos se rechazan en la siguiente petición, no al vencer.
+  Esto mejora lo previsto para la HU-29 (15 minutos como máximo).
+
 ## Consecuencias
 
 - Migración `refresh_token` (usuario, familia, hash, vencimiento, uso, revocación).
 - Una cuenta desactivada no puede refrescar: se revoca su familia.
 - El panel deja de usar `localStorage` y borra la clave anterior al arrancar.
-- Pendiente fuera de este cambio: limpiar periódicamente los refresh tokens vencidos y
-  revocar las sesiones abiertas al cambiar la contraseña.
+- Migración `AddSessionClientAndVersion`: `refresh_token.client` y
+  `user.session_version`.
+- Pendiente fuera de este cambio: limpiar periódicamente los refresh tokens vencidos.
 - `SECURITY.md` §5 y `docs/14-arquitectura.md` describen el nuevo flujo.

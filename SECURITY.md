@@ -56,7 +56,13 @@ compilación de Expo. `uuid` desapareció el 27/10/2026
   limitada a `/api/v1/auth/session` y `Secure` con HTTPS. La base guarda solo su SHA-256;
   rota en cada uso, vence a las 12 h sin uso y, si vuelve un token ya rotado, se revoca
   toda la sesión. Refrescar y salir exigen el encabezado `X-Medios-Client` (CSRF). Solo
-  la coordinación abre sesión en el panel. La app móvil sigue con su token en SecureStore.
+  la coordinación abre sesión en el panel.
+- Sesión de la app móvil (HU-28): el mismo mecanismo, con los dos tokens en SecureStore
+  (Keychain o Keystore) y el refresh token en el cuerpo de la petición. Vence a los 7
+  días sin uso y un token solo sirve en las rutas de su cliente (panel o app).
+- Cambiar o restablecer una contraseña cierra todas las sesiones de la persona: revoca
+  sus refresh tokens y deja sin efecto, en la siguiente petición, los tokens de acceso
+  ya emitidos (`session_version`).
 - Límite de intentos de inicio de sesión (10 por minuto e IP) y límite global. La IP es
   la de quien hace la petición, no la del proxy (`TRUST_PROXY_HOPS`, `docs/11` §1).
 - `helmet` en la API; CORS restringido a la web.
@@ -69,8 +75,7 @@ compilación de Expo. `uuid` desapareció el 27/10/2026
 - Contenedores sin root: la API corre como `node` y el panel como `nginx` (uid 101).
 - Solo el contenedor web publica un puerto; la API y PostgreSQL quedan en la red interna.
 
-Pendiente: limpiar los refresh tokens vencidos y revocar las sesiones al cambiar la
-contraseña (ADR 0003, consecuencias).
+Pendiente: limpiar los refresh tokens vencidos (ADR 0003, consecuencias).
 
 ## 6. Manejo de secretos
 

@@ -41,15 +41,16 @@ user ─1:n─ notification · user_device · audit_log
 
 ### `user`
 
-| Columna         | Tipo         | Restricciones            |
-| --------------- | ------------ | ------------------------ |
-| `id`            | uuid         | PK                       |
-| `full_name`     | varchar(120) | not null                 |
-| `email`         | varchar(160) | not null, unique (lower) |
-| `phone`         | varchar(30)  |                          |
-| `password_hash` | varchar(100) | not null                 |
-| `role`          | user_role    | not null                 |
-| `is_active`     | boolean      | not null, default true   |
+| Columna           | Tipo         | Restricciones                                              |
+| ----------------- | ------------ | ---------------------------------------------------------- |
+| `id`              | uuid         | PK                                                         |
+| `full_name`       | varchar(120) | not null                                                   |
+| `email`           | varchar(160) | not null, unique (lower)                                   |
+| `phone`           | varchar(30)  |                                                            |
+| `password_hash`   | varchar(100) | not null                                                   |
+| `role`            | user_role    | not null                                                   |
+| `is_active`       | boolean      | not null, default true                                     |
+| `session_version` | integer      | not null, default 0; va en cada token de acceso (ADR 0003) |
 
 ### `project`
 
@@ -159,17 +160,18 @@ user ─1:n─ notification · user_device · audit_log
 - `user_device(id, user_id, expo_push_token unique, platform, last_seen_at)`
 - `audit_log(id, actor_id, action audit_action, entity varchar, entity_id uuid, payload jsonb)`
 
-### `refresh_token` — sesiones del panel web (ADR 0003)
+### `refresh_token` — sesiones del panel web y de la app (ADR 0003)
 
-| Columna      | Tipo        | Restricciones                                     |
-| ------------ | ----------- | ------------------------------------------------- |
-| `id`         | uuid        | PK                                                |
-| `user_id`    | uuid        | not null, FK → `user.id` (cascade)                |
-| `family_id`  | uuid        | not null; las rotaciones de una misma sesión      |
-| `token_hash` | char(64)    | not null, unique: SHA-256, nunca el valor         |
-| `expires_at` | timestamptz | not null (12 h sin uso)                           |
-| `used_at`    | timestamptz | cuándo se rotó                                    |
-| `revoked_at` | timestamptz | cierre de sesión, reutilización o cuenta inactiva |
+| Columna      | Tipo        | Restricciones                                                           |
+| ------------ | ----------- | ----------------------------------------------------------------------- |
+| `id`         | uuid        | PK                                                                      |
+| `user_id`    | uuid        | not null, FK → `user.id` (cascade)                                      |
+| `family_id`  | uuid        | not null; las rotaciones de una misma sesión                            |
+| `client`     | varchar(10) | not null, default `web`; `web` o `mobile` (check)                       |
+| `token_hash` | char(64)    | not null, unique: SHA-256, nunca el valor                               |
+| `expires_at` | timestamptz | not null (12 h sin uso el panel, 7 días la app)                         |
+| `used_at`    | timestamptz | cuándo se rotó                                                          |
+| `revoked_at` | timestamptz | cierre de sesión, reutilización, cuenta inactiva o cambio de contraseña |
 
 Índices: `(family_id)`, `(user_id)`.
 
