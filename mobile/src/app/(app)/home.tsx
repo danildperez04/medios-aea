@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BrandLockup } from '@/components/BrandLockup';
@@ -18,6 +19,8 @@ const ROLE_LABEL = {
 export default function HomeScreen() {
   const { user } = useSession();
   const isDriver = user?.role === 'DRIVER';
+  // La API solo acepta solicitudes de técnicos y de la coordinación (RF-10).
+  const canRequest = user?.role === 'REQUESTER' || user?.role === 'ADMIN';
 
   // Al quedar sin token, el layout de la zona autenticada redirige al login.
   const onLogout = () => void logout();
@@ -40,6 +43,15 @@ export default function HomeScreen() {
               ? 'Aquí aparecerán los viajes que tengas asignados, con la hora de salida y el destino.'
               : 'Aquí aparecerán los medios que pidas y si la coordinación los aprobó.'}
           </Text>
+          {canRequest ? (
+            <Pressable
+              onPress={() => router.push('/new-request')}
+              style={({ pressed }) => [styles.primary, pressed && styles.primaryPressed]}
+              accessibilityRole="button"
+            >
+              <Text style={styles.primaryText}>Nueva solicitud</Text>
+            </Pressable>
+          ) : null}
         </View>
 
         <Pressable onPress={onLogout} style={styles.logout} accessibilityRole="button">
@@ -80,6 +92,16 @@ const styles = StyleSheet.create({
     color: colors.tintaSuave,
     marginTop: spacing.sm,
   },
+  primary: {
+    minHeight: touchTarget + 4,
+    backgroundColor: colors.naranja,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.lg,
+  },
+  primaryPressed: { backgroundColor: '#EF6E46' },
+  primaryText: { fontFamily: fonts.semibold, fontSize: type.body, color: colors.negroLavado },
   logout: {
     marginTop: 'auto',
     minHeight: touchTarget,
