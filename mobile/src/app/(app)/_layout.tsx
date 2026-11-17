@@ -6,6 +6,9 @@ import { fetchMe, logout } from '@/features/auth/api';
 import { ProfileUnavailable } from '@/features/auth/ProfileUnavailable';
 import { useSession } from '@/store/session';
 
+/** Cada cuánto se comprueba la sesión con la app abierta. */
+const SESSION_CHECK_MS = 5 * 60_000;
+
 /**
  * Zona autenticada. Sin token vuelve al login; con token pide el perfil para
  * saber el rol (técnico o conductor) y mostrar las pantallas que le tocan.
@@ -16,7 +19,15 @@ import { useSession } from '@/store/session';
  */
 export default function AppLayout() {
   const { token, user, setUser } = useSession();
-  const me = useQuery({ queryKey: ['auth', 'me'], queryFn: fetchMe, enabled: Boolean(token) });
+  const me = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: fetchMe,
+    enabled: Boolean(token),
+    // Mientras la app está abierta se comprueba la sesión cada pocos minutos, y al
+    // volver al primer plano (ver lib/app-focus.ts). Si la coordinación la cerró, la app
+    // vuelve al inicio de sesión aunque la persona no haga nada (HU-29).
+    refetchInterval: SESSION_CHECK_MS,
+  });
 
   useEffect(() => {
     if (me.data) setUser(me.data);

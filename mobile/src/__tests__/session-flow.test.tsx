@@ -1,5 +1,5 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import * as SecureStore from 'expo-secure-store';
 import AppLayout from '@/app/(app)/_layout';
 import HomeScreen from '@/app/(app)/home';
@@ -98,6 +98,29 @@ describe('sesión de la app (HU-16)', () => {
       await renderWithClient(<AppLayout />);
       expect(await screen.findByText('redirige a /login')).toBeTruthy();
       expect(SecureStore.deleteItemAsync).toHaveBeenCalled();
+    });
+
+    it('si la coordinación cerró sus sesiones, al volver a la app lleva al login', async () => {
+      useSession.setState({ token: 'guardado', refreshToken: 'refresh' });
+      (globalThis.fetch as jest.Mock).mockReturnValue(respond(200, user));
+      await renderWithClient(<AppLayout />);
+      expect(await screen.findByText('pantallas de la app')).toBeTruthy();
+
+      // Desde el panel se cierran sus sesiones: la API rechaza el token y la renovación.
+      (globalThis.fetch as jest.Mock).mockReturnValue(
+        respond(401, { message: 'Tu sesión se cerró. Inicia sesión de nuevo.' }),
+      );
+      // La persona deja la app en segundo plano y vuelve.
+      await act(async () => {
+        focusManager.setFocused(false);
+        focusManager.setFocused(true);
+      });
+
+      expect(await screen.findByText('redirige a /login')).toBeTruthy();
+      expect(useSession.getState()).toMatchObject({ token: null, refreshToken: null });
+      const paths = (globalThis.fetch as jest.Mock).mock.calls.map(([url]: [string]) => url);
+      expect(paths.some((url) => url.endsWith('/auth/mobile-session/refresh'))).toBe(true);
+      focusManager.setFocused(undefined);
     });
 
     it('sin señal no cierra la sesión: explica y deja reintentar', async () => {

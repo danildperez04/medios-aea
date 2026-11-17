@@ -11,6 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { clearCacheOnSessionEnd } from '@/features/auth/session-cache';
+import { syncFocusWithAppState } from '@/lib/app-focus';
 import { tokenStorage } from '@/lib/token-storage';
 import { useSession } from '@/store/session';
 
@@ -40,6 +41,7 @@ export default function RootLayout() {
   }, [markReady]);
 
   useEffect(() => clearCacheOnSessionEnd(queryClient), [queryClient]);
+  useEffect(() => syncFocusWithAppState(), []);
 
   // Si una fuente falla se sigue con la del sistema: nunca se bloquea el arranque.
   if (!fontsLoaded && !fontError) return null;
