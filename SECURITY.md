@@ -32,18 +32,21 @@ todos los lunes.
 Configuradas en `pnpm-workspace.yaml` (`auditConfig.ignoreGhsas`). Cada excepción debe
 tener motivo y fecha de revisión; si no se puede justificar, no se ignora.
 
-| Aviso               | Paquete              | Severidad | Vía                                          | Motivo                                                                                                                             | Revisar                                                                               |
-| ------------------- | -------------------- | --------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| GHSA-vfj7-8cjw-p6xm | braces               | Alta      | Herramientas de Expo (app móvil)             | Sin versión corregida; solo en la compilación del bundle                                                                           | Al actualizar el SDK de Expo, o 18/01/2027                                            |
-| GHSA-mrhx-c7xc-m3w5 | zod 3                | Alta      | `@expo/cli` (app móvil)                      | Parche solo para zod 4; la CLI pide `^3.25.76` y valida configuración local                                                        | Al actualizar el SDK de Expo, o 27/01/2027                                            |
-| GHSA-qr28-fpjm-wq7f | decode-uri-component | Alta      | `expo-router` → `query-string` 7 (app móvil) | Parche (0.5.1) solo ESM: rompe `query-string` 7. Un enlace mal formado podría congelar la app de quien lo abre; no afecta a la API | Al actualizar a Expo SDK 58 (`expo-router` 58 ya no usa `query-string`), o 29/01/2027 |
+| Aviso               | Paquete              | Severidad | Vía                                          | Motivo                                                                                                                                                                     | Revisar                                                                               |
+| ------------------- | -------------------- | --------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| GHSA-vfj7-8cjw-p6xm | braces               | Alta      | Herramientas de Expo (app móvil)             | Sin versión corregida; solo en la compilación del bundle                                                                                                                   | Al actualizar el SDK de Expo, o 18/01/2027                                            |
+| GHSA-mrhx-c7xc-m3w5 | zod 3                | Alta      | `@expo/cli` (app móvil)                      | Parche solo para zod 4; la CLI pide `^3.25.76` y valida configuración local                                                                                                | Al actualizar el SDK de Expo, o 27/01/2027                                            |
+| GHSA-qr28-fpjm-wq7f | decode-uri-component | Alta      | `expo-router` → `query-string` 7 (app móvil) | Parche (0.5.1) solo ESM: rompe `query-string` 7. Un enlace mal formado podría congelar la app de quien lo abre; no afecta a la API                                         | Al actualizar a Expo SDK 58 (`expo-router` 58 ya no usa `query-string`), o 29/01/2027 |
+| GHSA-fc5q-39xc-vjpf | picomatch ≤ 4.0.7    | Alta      | API: `typeorm` → `tinyglobby`. Móvil: Metro  | Sin versión corregida (4.0.7 es la última). El bloqueo exige que el atacante escriba el patrón de glob: TypeORM recibe clases, no patrones, y Metro solo corre al compilar | Cuando salga picomatch 4.0.8, o 17/02/2027                                            |
 
 El mismo paquete tiene además un aviso moderado (GHSA-vcc3-ghjq-m6fr) que no bloquea
 (`--audit-level high`) y no se ignora para que siga visible. El 29/10/2026 se publicó el
 alto (GHSA-qr28-fpjm-wq7f), sin corrección compatible: se ignora con la fila de arriba
 hasta actualizar a Expo SDK 58, que es la corrección real. También queda visible un aviso bajo de
 `deepmerge` 4.3.1 (GHSA-gcqx-w48m-w2h4), sin corrección, solo en las herramientas de
-compilación de Expo. `uuid` desapareció el 27/10/2026
+compilación de Expo. El 17/11/2026 empezó a bloquear el CI un aviso alto de `picomatch`
+(GHSA-fc5q-39xc-vjpf) sin corrección publicada. Es la primera excepción que llega a la
+imagen de la API; el motivo está en la tabla. `uuid` desapareció el 27/10/2026
 (`xcode` 4 ya no lo usa).
 
 ## 5. Medidas en la aplicación
