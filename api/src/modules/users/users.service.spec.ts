@@ -32,6 +32,7 @@ describe('UsersService', () => {
   let stored: Map<string, User>;
   let emailMatch: User | null;
   const hash = vi.fn(async (plain: string) => `hash(${plain})`);
+  const setPassword = vi.fn(async () => undefined);
 
   beforeEach(() => {
     stored = new Map([
@@ -54,7 +55,7 @@ describe('UsersService', () => {
         where: () => ({ getOne: async () => emailMatch }),
       }),
     };
-    service = new UsersService(repo as never, { hash } as unknown as AuthService);
+    service = new UsersService(repo as never, { hash, setPassword } as unknown as AuthService);
   });
 
   describe('create', () => {
@@ -134,8 +135,15 @@ describe('UsersService', () => {
     expect(stored.get(OTHER_ID)?.isActive).toBe(false);
   });
 
-  it('restablecer la contraseña guarda solo el hash', async () => {
+  it('restablecer la contraseña la guarda con el servicio que cierra las sesiones', async () => {
     await service.resetPassword(OTHER_ID, 'NuevaClave1');
-    expect(stored.get(OTHER_ID)?.passwordHash).toBe('hash(NuevaClave1)');
+    expect(setPassword).toHaveBeenCalledWith(OTHER_ID, 'NuevaClave1');
+  });
+
+  it('restablecer la contraseña de alguien que no existe responde 404', async () => {
+    await expect(service.resetPassword('no-existe', 'NuevaClave1')).rejects.toThrow(
+      'El usuario no existe.',
+    );
+    expect(setPassword).not.toHaveBeenCalledWith('no-existe', expect.anything());
   });
 });

@@ -13,16 +13,20 @@ import { useForm } from 'react-hook-form';
 import { ApiError } from '@/app/services/api';
 import { FormError, LoadingButton, TextField } from '@/design-system/ui';
 import { changePasswordSchema, type ChangePasswordInput } from '../schemas/auth.schema';
-import { useChangePassword } from '../services/auth.service';
+import { useChangePassword, useLeaveSession } from '../services/auth.service';
 
 export interface ChangePasswordDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
-/** Cambio de la propia contraseña (RF-05, HU-04). */
+/**
+ * Cambio de la propia contraseña (RF-05, HU-04). Al cambiarla, la API cierra todas las
+ * sesiones de la persona, también esta: el diálogo lo explica y lleva a iniciar sesión.
+ */
 export function ChangePasswordDialog({ open, onClose }: ChangePasswordDialogProps) {
   const change = useChangePassword();
+  const leaveSession = useLeaveSession();
   const {
     register,
     handleSubmit,
@@ -50,12 +54,21 @@ export function ChangePasswordDialog({ open, onClose }: ChangePasswordDialogProp
   });
 
   return (
-    <Dialog open={open} onClose={change.isPending ? undefined : onClose} maxWidth="xs" fullWidth>
+    <Dialog
+      open={open}
+      // Con la contraseña cambiada la sesión ya no sirve: la única salida es entrar de nuevo.
+      onClose={change.isPending ? undefined : change.isSuccess ? leaveSession : onClose}
+      maxWidth="xs"
+      fullWidth
+    >
       <form onSubmit={onSubmit} noValidate>
         <DialogTitle>Cambiar contraseña</DialogTitle>
         <DialogContent>
           {change.isSuccess ? (
-            <Alert severity="success">Tu contraseña se actualizó correctamente.</Alert>
+            <Alert severity="success">
+              Tu contraseña se actualizó. Por seguridad cerramos tus sesiones en todos tus
+              dispositivos: entra de nuevo con la contraseña nueva.
+            </Alert>
           ) : (
             <Stack spacing={2} sx={{ pt: 1 }}>
               <TextField
@@ -88,14 +101,20 @@ export function ChangePasswordDialog({ open, onClose }: ChangePasswordDialogProp
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose} disabled={change.isPending}>
-            {change.isSuccess ? 'Cerrar' : 'Cancelar'}
-          </Button>
-          {!change.isSuccess ? (
-            <LoadingButton type="submit" variant="contained" loading={change.isPending}>
-              Cambiar
-            </LoadingButton>
-          ) : null}
+          {change.isSuccess ? (
+            <Button variant="contained" onClick={leaveSession}>
+              Iniciar sesión
+            </Button>
+          ) : (
+            <>
+              <Button onClick={onClose} disabled={change.isPending}>
+                Cancelar
+              </Button>
+              <LoadingButton type="submit" variant="contained" loading={change.isPending}>
+                Cambiar
+              </LoadingButton>
+            </>
+          )}
         </DialogActions>
       </form>
     </Dialog>

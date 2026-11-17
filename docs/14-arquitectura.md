@@ -1,6 +1,6 @@
 # Arquitectura — Medios AeA
 
-**Versión:** 1.1.0
+**Versión:** 1.2.0
 **Fecha:** 16 de noviembre de 2026
 
 ---
@@ -123,8 +123,10 @@ de rutas dentro de `app/(app)/`; el layout `(app)` redirigirá según el rol.
 
 ## 5. Seguridad
 
-JWT de acceso de 8 h para la app (`/auth/login`) y de 15 min para el panel
-(`/auth/session`, con refresh token rotativo en cookie `HttpOnly`, ADR 0003), bcrypt,
+JWT de acceso de 15 min con refresh token rotativo (ADR 0003): en cookie `HttpOnly` para
+el panel (`/auth/session`, 12 h sin uso) y en SecureStore para la app
+(`/auth/mobile-session`, 7 días sin uso). Cambiar la contraseña cierra todas las sesiones
+de la persona. `/auth/login` entrega un token sin renovación para Swagger. Además: bcrypt,
 throttler en ambos inicios de sesión (por la dirección real del cliente:
 `TRUST_PROXY_HOPS`), helmet, CORS
 restringido a los orígenes de la web, validación estricta (`whitelist`,
@@ -136,3 +138,4 @@ restringido a los orígenes de la web, validación estricta (`whitelist`,
 | ------- | ----------- | ------------ | ------------------------------------------------------------- |
 | 1.0.0   | 16 oct 2026 | Danild Pérez | Creación inicial del documento                                |
 | 1.1.0   | 16 nov 2026 | Danild Pérez | Estructura real del panel y de la app; forma de la paginación |
+| 1.2.0   | 17 nov 2026 | Danild Pérez | Sesión renovable de la app (HU-28)                            |

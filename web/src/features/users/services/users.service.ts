@@ -73,3 +73,14 @@ export function useResetPassword() {
       (await api.patch<{ message: string }>(`/users/${id}/password`, { password })).data,
   });
 }
+
+/**
+ * Cierra todas las sesiones de una persona, en el panel y en la app, sin desactivar su
+ * cuenta (HU-29). No cambia la lista de usuarios: no hay nada que volver a pedir.
+ */
+export function useRevokeSessions() {
+  return useMutation({
+    mutationFn: async (id: string) =>
+      (await api.post<{ message: string }>(`/users/${id}/sessions/revoke`)).data,
+  });
+}

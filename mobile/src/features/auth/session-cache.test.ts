@@ -14,7 +14,7 @@ describe('clearCacheOnSessionEnd', () => {
   let stop: () => void;
 
   beforeEach(() => {
-    useSession.setState({ token: 't-1', user: null, ready: true });
+    useSession.setState({ token: 't-1', refreshToken: 'r-1', user: null, ready: true });
     client = new QueryClient();
     client.setQueryData(key, [{ id: 'r1' }]);
     stop = clearCacheOnSessionEnd(client);
