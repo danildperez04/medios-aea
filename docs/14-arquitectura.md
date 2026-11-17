@@ -111,9 +111,10 @@ por todas las peticiones) y repite la petición.
 ```
 mobile/src/
 ├── app/(auth)/login.tsx      inicio de sesión
-├── app/(app)/                zona autenticada: hoy, solo `home.tsx`
-├── features/<feature>/       llamadas a la API por funcionalidad (hoy, `auth`)
+├── app/(app)/                zona autenticada: `home.tsx` y `new-request.tsx`
+├── features/<feature>/       pantallas y llamadas a la API por funcionalidad (`auth`, `requests`)
 ├── lib/                      api.ts (cliente HTTP) · token-storage.ts (expo-secure-store) · config.ts · theme.ts
+│                             · managua.ts (fechas con la zona de Nicaragua)
 └── store/session.ts          sesión
 ```
 
