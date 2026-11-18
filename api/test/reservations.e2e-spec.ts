@@ -164,6 +164,36 @@ describe('Solicitudes (integracion)', () => {
       expect(list.body.data.map((r: { id: string }) => r.id)).toContain(mine.body.id);
     });
 
+    it('con mine=true la coordinacion recibe solo las suyas (HU-18)', async () => {
+      // La coordinación no tiene licencia en estas pruebas: propone a Ana.
+      const own = await create('admin', { ...body(), proposedDriverId: anaDriver.id }).expect(201);
+      const anas = await create('ana', body()).expect(201);
+      const list = await request(app.getHttpServer())
+        .get(`${api}/reservations`)
+        .query({ mine: true, limit: 100 })
+        .set(as('admin'))
+        .expect(200);
+      const ids = list.body.data.map((r: { id: string }) => r.id);
+      expect(ids).toContain(own.body.id);
+      expect(ids).not.toContain(anas.body.id);
+      expect(
+        list.body.data.every((r: { requester: { id: string } }) => r.requester.id === admin.id),
+      ).toBe(true);
+
+      // Para un técnico no cambia nada: ya solo veía las suyas, y mine=false no amplía.
+      const carlos = await request(app.getHttpServer())
+        .get(`${api}/reservations`)
+        .query({ mine: false, limit: 100 })
+        .set(as('carlos'))
+        .expect(200);
+      expect(carlos.body.data.map((r: { id: string }) => r.id)).not.toContain(anas.body.id);
+      await request(app.getHttpServer())
+        .get(`${api}/reservations`)
+        .query({ mine: 'quizas' })
+        .set(as('admin'))
+        .expect(400);
+    });
+
     it('la solicitud de otra persona responde 404, no 403', async () => {
       const anas = await create('ana', body()).expect(201);
       await request(app.getHttpServer())

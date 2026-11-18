@@ -32,8 +32,36 @@ export interface CreatedRequest {
   code: string;
 }
 
+export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED';
+
+/** Una solicitud como la devuelve la API (`ReservationView`). */
+export interface MyRequest {
+  id: string;
+  code: string;
+  status: RequestStatus;
+  purpose: string;
+  destination: string;
+  passengers: number;
+  startsAt: string;
+  endsAt: string;
+  project: { id: string; code: string; name: string };
+  proposedDriver: { id: string; fullName: string } | null;
+  /** Lo que asignó la coordinación al aprobar; null si no está aprobada. */
+  assignment: {
+    resource: { id: string; name: string; identifier: string };
+    driver: { id: string; fullName: string } | null;
+  } | null;
+  rejectionReason: string | null;
+  decidedAt: string | null;
+  createdAt: string;
+}
+
+/** Cuántas se piden: la persona casi nunca tiene más de unas pocas a la vez. */
+const MY_REQUESTS_LIMIT = 50;
+
 interface Paginated<T> {
   data: T[];
+  total: number;
 }
 
 /** Proyectos activos a los que se puede cargar un viaje. */
@@ -104,5 +132,41 @@ export function useCreateRequest() {
         },
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reservations'] }),
+  });
+}
+
+/**
+ * Mis solicitudes, de un estado o de todos (HU-18). `mine=true`: a la coordinación
+ * también le muestra solo las suyas.
+ */
+export function useMyRequests(status: RequestStatus | null) {
+  return useQuery({
+    queryKey: ['reservations', 'mine', status],
+    queryFn: () => {
+      const params = new URLSearchParams({ mine: 'true', limit: String(MY_REQUESTS_LIMIT) });
+      if (status) params.set('status', status);
+      return apiRequest<Paginated<MyRequest>>(`/reservations?${params.toString()}`);
+    },
+  });
+}
+
+/** Detalle de una solicitud propia. */
+export function useMyRequest(id: string) {
+  return useQuery({
+    queryKey: ['reservations', 'detail', id],
+    queryFn: () => apiRequest<MyRequest>(`/reservations/${id}`),
+  });
+}
+
+/** Cancela una solicitud pendiente o aprobada; libera el vehículo (RF-11, RN-13). */
+export function useCancelRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiRequest<MyRequest>(`/reservations/${id}/cancel`, { method: 'POST' }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['reservations', 'detail', updated.id], updated);
+      return queryClient.invalidateQueries({ queryKey: ['reservations', 'mine'] });
+    },
   });
 }

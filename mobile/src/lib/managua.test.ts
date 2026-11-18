@@ -6,6 +6,8 @@ import {
   managuaDateKey,
   managuaInstant,
   managuaIso,
+  managuaParts,
+  formatTripWindow,
   pickerValue,
 } from './managua';
 
@@ -34,5 +36,20 @@ describe('fechas de Nicaragua', () => {
     const value = pickerValue('2026-12-31', '18:45');
     expect(dateKeyFromPicker(value)).toBe('2026-12-31');
     expect(clockTimeFromPicker(value)).toBe('18:45');
+  });
+
+  it('lee en hora de Nicaragua los instantes que manda la API', () => {
+    expect(managuaParts('2026-11-18T14:00:00.000Z')).toEqual({ date: '2026-11-18', time: '08:00' });
+    // 02:00 UTC del 19 todavía es el 18 en Managua.
+    expect(managuaParts('2026-11-19T02:00:00.000Z')).toEqual({ date: '2026-11-18', time: '20:00' });
+  });
+
+  it('describe el horario de un viaje de un día o de varios', () => {
+    expect(formatTripWindow('2026-11-18T14:00:00Z', '2026-11-18T18:00:00Z')).toBe(
+      'miércoles 18 de noviembre, 8:00 a. m. a 12:00 p. m.',
+    );
+    expect(formatTripWindow('2026-11-18T14:00:00Z', '2026-11-19T23:00:00Z')).toBe(
+      'miércoles 18 de noviembre, 8:00 a. m., al jueves 19 de noviembre, 5:00 p. m.',
+    );
   });
 });

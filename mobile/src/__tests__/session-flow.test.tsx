@@ -147,7 +147,7 @@ describe('sesión de la app (HU-16)', () => {
     it('borra los tokens del teléfono y revoca el refresh token en el servidor', async () => {
       useSession.setState({ token: 'guardado', refreshToken: 'refresh', user });
       (globalThis.fetch as jest.Mock).mockReturnValue(respond(204, undefined));
-      await render(<HomeScreen />);
+      await renderWithClient(<HomeScreen />);
       await fireEvent.press(screen.getByRole('button', { name: 'Cerrar sesión' }));
 
       await waitFor(() => expect(logoutCalls()).toHaveLength(1));
@@ -159,7 +159,7 @@ describe('sesión de la app (HU-16)', () => {
     it('sin señal la sesión local se cierra igual', async () => {
       useSession.setState({ token: 'guardado', refreshToken: 'refresh', user });
       (globalThis.fetch as jest.Mock).mockRejectedValue(new TypeError('Network request failed'));
-      await render(<HomeScreen />);
+      await renderWithClient(<HomeScreen />);
       await fireEvent.press(screen.getByRole('button', { name: 'Cerrar sesión' }));
 
       await waitFor(() => expect(logoutCalls()).toHaveLength(1));
