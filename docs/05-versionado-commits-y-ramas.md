@@ -145,9 +145,16 @@ de una ruta que todavía no aparece en el menú.
 
 1. Todas las historias del sprint mergeadas en `develop`, CI en verde.
 2. Actualizar `docs/00-estado-del-proyecto.md`, el backlog y la matriz de trazabilidad.
-3. PR `develop → main` titulado `release: vX.Y.0`; después del merge, tag `vX.Y.0` en
-   `main` (§1).
-4. Si en el sprint hubo cambios de esquema, verificar las migraciones contra una copia
+3. PR `develop → main` titulado `chore(repo): merge sprint N into main` y mergeado con
+   **merge commit**, no con squash: release-please necesita ver cada `feat` y `fix` para
+   calcular la versión y escribir el CHANGELOG, y `main` y `develop` deben compartir la
+   historia.
+4. Revisar y mergear el PR de release que abre el workflow (§1.1). **La etiqueta
+   `vX.Y.Z` y el GitHub Release los crea release-please**: no se etiqueta a mano; una
+   etiqueta hecha antes choca con la suya.
+5. PR `main → develop` con merge commit (`chore(repo): merge main into develop`), para
+   traer el commit de release. Con squash, `develop` no reconoce los commits de `main`.
+6. Si en el sprint hubo cambios de esquema, verificar las migraciones contra una copia
    de la base antes de desplegar (`docs/11-guia-despliegue.md`).
 
 ### 3.6 Correcciones urgentes
