@@ -3,9 +3,13 @@
  * Configura el repositorio de GitHub de Medios AeA. Idempotente: lo que ya existe se
  * actualiza o se salta, así que se puede ejecutar varias veces.
  *
+ *   node scripts/github/setup.mjs --help              # ayuda, sin tocar GitHub
  *   node scripts/github/setup.mjs --dry-run           # muestra lo que haría, sin cambiar nada
  *   node scripts/github/setup.mjs                     # todo
  *   node scripts/github/setup.mjs --only labels,issues
+ *
+ * Una opción desconocida o un paso que no existe detienen el script antes de llamar a
+ * GitHub: sin esto, `--help` o un error de tipeo ejecutaban todo de verdad.
  *
  * Pasos: labels, milestones, issues, repo, protection, project.
  * Requisitos: `gh auth login` con los scopes repo y project
@@ -17,13 +21,80 @@
  */
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { parseArgs } from 'node:util';
 
-const args = process.argv.slice(2);
-const dryRun = args.includes('--dry-run');
-const onlyArg = args.find((a) => a.startsWith('--only'));
-const only = onlyArg
-  ? (onlyArg.split('=')[1] ?? args[args.indexOf(onlyArg) + 1] ?? '').split(',')
-  : null;
+const STEPS = ['labels', 'milestones', 'issues', 'repo', 'protection', 'project'];
+const USAGE = `Uso: node scripts/github/setup.mjs [--dry-run] [--only <pasos>]
+
+  --dry-run        muestra lo que haría, sin cambiar nada en GitHub
+  --only <pasos>   solo esos pasos, separados por coma: ${STEPS.join(', ')}
+  -h, --help       esta ayuda
+
+Sin opciones aplica todos los pasos. Ver scripts/github/README.md.`;
+
+/**
+ * Lee las opciones. Cualquier cosa que no se entienda termina con código 2 antes de
+ * tocar GitHub: el script cambia el repositorio, y ante la duda no debe hacer nada.
+ */
+function readOptions(argv) {
+  let parsed;
+  try {
+    parsed = parseArgs({
+      args: argv,
+      options: {
+        'dry-run': { type: 'boolean' },
+        only: { type: 'string' },
+        help: { type: 'boolean', short: 'h' },
+      },
+      strict: true,
+      allowPositionals: false,
+    });
+  } catch (error) {
+    fail(parseError(error));
+  }
+  const { values } = parsed;
+  if (values.help) {
+    console.log(USAGE);
+    process.exit(0);
+  }
+  let only = null;
+  if (values.only !== undefined) {
+    only = values.only
+      .split(',')
+      .map((name) => name.trim())
+      .filter(Boolean);
+    const unknown = only.filter((name) => !STEPS.includes(name));
+    if (only.length === 0) fail('--only necesita al menos un paso.');
+    if (unknown.length) fail(`Paso desconocido en --only: ${unknown.join(', ')}.`);
+  }
+  return { dryRun: values['dry-run'] === true, only };
+}
+
+/** Los errores de `parseArgs` vienen en inglés; el equipo trabaja en español. */
+function parseError(error) {
+  const quoted = /'([^']+)'/.exec(error.message)?.[1] ?? '';
+  switch (error.code) {
+    case 'ERR_PARSE_ARGS_UNKNOWN_OPTION':
+      return `Opción desconocida: ${quoted}.`;
+    case 'ERR_PARSE_ARGS_UNEXPECTED_POSITIONAL':
+      return `Argumento inesperado: ${quoted}. Los pasos van con --only.`;
+    case 'ERR_PARSE_ARGS_INVALID_OPTION_VALUE': {
+      const option = quoted.split(' ')[0];
+      return /does not take an argument/.test(error.message)
+        ? `${option} no lleva valor.`
+        : `${option} necesita un valor.`;
+    }
+    default:
+      return error.message;
+  }
+}
+
+function fail(message) {
+  console.error(`${message}\n\n${USAGE}`);
+  process.exit(2);
+}
+
+const { dryRun, only } = readOptions(process.argv.slice(2));
 const step = (name) => !only || only.includes(name);
 
 const config = JSON.parse(readFileSync(new URL('./backlog.json', import.meta.url), 'utf8'));
