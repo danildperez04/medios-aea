@@ -66,6 +66,11 @@ imagen de la API; el motivo está en la tabla. `uuid` desapareció el 27/10/2026
 - Cambiar o restablecer una contraseña cierra todas las sesiones de la persona: revoca
   sus refresh tokens y deja sin efecto, en la siguiente petición, los tokens de acceso
   ya emitidos (`session_version`).
+- Avisos push (HU-19): cada persona solo lee y marca sus avisos (lo ajeno responde 404) y
+  solo quita sus teléfonos. Un aviso muestra destino y horario en la pantalla bloqueada;
+  por eso cerrar sesión en la app, cerrar las sesiones desde el panel o cambiar la
+  contraseña olvidan los teléfonos de la persona. La API solo acepta tokens con el
+  formato de Expo y solo los envía a `https://exp.host`.
 - La coordinación puede cerrar las sesiones de una persona sin desactivar su cuenta
   (HU-29), por ejemplo si pierde el teléfono; queda en `audit_log` quién lo hizo.
 - Límite de intentos de inicio de sesión (10 por minuto e IP) y límite global. La IP es

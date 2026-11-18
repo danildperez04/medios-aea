@@ -156,7 +156,9 @@ user ─1:n─ notification · user_device · audit_log
 
 ### `notification`, `user_device`, `audit_log`
 
-- `notification(id, user_id, title, body, data jsonb, read_at)`
+- `notification(id, user_id, title, body, data jsonb, read_at, push_status, push_attempts)`:
+  bandeja de avisos y cola del envío push (HU-19). `push_status` es `PENDING`, `SENT`,
+  `SKIPPED` o `FAILED`; índices parciales para los pendientes y los no leídos.
 - `user_device(id, user_id, expo_push_token unique, platform, last_seen_at)`
 - `audit_log(id, actor_id, action audit_action, entity varchar, entity_id uuid, payload jsonb)`
 

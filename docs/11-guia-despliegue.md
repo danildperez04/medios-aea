@@ -31,18 +31,19 @@ La app móvil se distribuye como **APK** generado con EAS Build (§5).
 
 ### Variables de las imágenes
 
-| Imagen | Variable                                                                      | Uso                                                             |
-| ------ | ----------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| api    | `DATABASE_URL`                                                                | `postgres://usuario:clave@host:5432/base`. Si existe, manda.    |
-| api    | `DATABASE_HOST/PORT/NAME/USER/PASSWORD`                                       | Alternativa a la URL (la usa Docker Compose)                    |
-| api    | `JWT_SECRET`                                                                  | **Obligatoria**, ≥ 32 caracteres. `openssl rand -hex 32`        |
-| api    | `PORT`                                                                        | Puerto interno (3000 por defecto; los PaaS lo imponen)          |
-| api    | `SWAGGER_ENABLED`                                                             | `/api/docs`. Por defecto apagado en producción                  |
-| api    | `CORS_ORIGIN`, `JWT_EXPIRES_IN`, `BCRYPT_ROUNDS`, `LOG_LEVEL`, `DATABASE_SSL` | Ver `.env.production.example`                                   |
-| api    | `COOKIE_SECURE`                                                               | `false` mientras el panel vaya por HTTP; `true` con HTTPS       |
-| api    | `TRUST_PROXY_HOPS`                                                            | Proxies delante de la API: `1` solo nginx, `2` con Caddy o PaaS |
-| web    | `PORT`                                                                        | Puerto de nginx (8080 por defecto: corre sin privilegios)       |
-| web    | `API_UPSTREAM`                                                                | Dónde está la API (`http://api:3000` por defecto)               |
+| Imagen | Variable                                                                      | Uso                                                               |
+| ------ | ----------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| api    | `DATABASE_URL`                                                                | `postgres://usuario:clave@host:5432/base`. Si existe, manda.      |
+| api    | `DATABASE_HOST/PORT/NAME/USER/PASSWORD`                                       | Alternativa a la URL (la usa Docker Compose)                      |
+| api    | `JWT_SECRET`                                                                  | **Obligatoria**, ≥ 32 caracteres. `openssl rand -hex 32`          |
+| api    | `PORT`                                                                        | Puerto interno (3000 por defecto; los PaaS lo imponen)            |
+| api    | `SWAGGER_ENABLED`                                                             | `/api/docs`. Por defecto apagado en producción                    |
+| api    | `CORS_ORIGIN`, `JWT_EXPIRES_IN`, `BCRYPT_ROUNDS`, `LOG_LEVEL`, `DATABASE_SSL` | Ver `.env.production.example`                                     |
+| api    | `COOKIE_SECURE`                                                               | `false` mientras el panel vaya por HTTP; `true` con HTTPS         |
+| api    | `TRUST_PROXY_HOPS`                                                            | Proxies delante de la API: `1` solo nginx, `2` con Caddy o PaaS   |
+| api    | `PUSH_ENABLED`, `EXPO_ACCESS_TOKEN`                                           | Avisos push (HU-19). La API debe poder salir a `https://exp.host` |
+| web    | `PORT`                                                                        | Puerto de nginx (8080 por defecto: corre sin privilegios)         |
+| web    | `API_UPSTREAM`                                                                | Dónde está la API (`http://api:3000` por defecto)                 |
 
 **`TRUST_PROXY_HOPS` debe ser exacto.** La API cuenta el límite de intentos de inicio de
 sesión por la dirección de quien hace la petición, y la toma de `X-Forwarded-For` según
@@ -209,6 +210,13 @@ cd mobile
 npx eas-cli@latest login
 npx eas-cli@latest init          # vincula el proyecto a la cuenta (agrega el projectId)
 ```
+
+**Avisos push (HU-19).** Sin el `projectId` que agrega `eas init`, la app no pide el
+token push y solo funciona la bandeja de avisos. En Android, el push remoto **no
+funciona en Expo Go** desde el SDK 53: para probarlo hace falta un development build
+(`npx eas-cli@latest build -p android --profile development`) o el APK. Además, Android
+necesita las credenciales de Firebase (FCM) cargadas en EAS:
+`npx eas-cli@latest credentials`. Ver https://docs.expo.dev/push-notifications/push-notifications-setup/.
 
 ### 5.2 Compilar
 

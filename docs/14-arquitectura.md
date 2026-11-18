@@ -111,16 +111,22 @@ por todas las peticiones) y repite la petición.
 ```
 mobile/src/
 ├── app/(auth)/login.tsx      inicio de sesión
-├── app/(app)/                zona autenticada: `home.tsx` (mis solicitudes), `new-request.tsx` y `requests/[id].tsx`
-├── features/<feature>/       pantallas y llamadas a la API por funcionalidad (`auth`, `requests`)
+├── app/(app)/                zona autenticada: `home.tsx` (mis solicitudes), `new-request.tsx`, `requests/[id].tsx` y `notifications.tsx`
+├── features/<feature>/       pantallas y llamadas a la API por funcionalidad (`auth`, `requests`, `notifications`)
 ├── lib/                      api.ts (cliente HTTP) · token-storage.ts (expo-secure-store) · config.ts · theme.ts
-│                             · managua.ts (fechas con la zona de Nicaragua)
+│                             · managua.ts (fechas con la zona de Nicaragua) · push.ts
 └── store/session.ts          sesión
 ```
 
-Las pantallas de quien solicita (nueva solicitud, mis solicitudes, avisos) llegan en el
-Sprint 4 y las de quien conduce (mis viajes, salida y llegada) en el Sprint 5, como grupos
-de rutas dentro de `app/(app)/`; el layout `(app)` redirigirá según el rol.
+Las pantallas de quien solicita (nueva solicitud, mis solicitudes, avisos) están desde el
+Sprint 4; las de quien conduce (mis viajes, salida y llegada) llegan en el Sprint 5.
+
+**Avisos (HU-19).** Cada aviso se escribe en `notification` dentro de la transacción que
+lo origina y nace `PENDING`. `PushDispatcher` los envía a Expo después de confirmarse:
+un segundo después de cada aviso nuevo y cada `PUSH_INTERVAL_MS`, con `FOR UPDATE SKIP
+LOCKED` para que dos réplicas no envíen el mismo. Reintenta un error pasajero hasta 3
+veces, olvida los teléfonos donde ya no está la app y no envía avisos de más de una hora.
+Sin push, el aviso sigue en la bandeja (`GET /notifications`).
 
 ## 5. Seguridad
 
