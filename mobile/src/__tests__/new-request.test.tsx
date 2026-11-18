@@ -246,7 +246,14 @@ describe('inicio: acceso a nueva solicitud', () => {
     ['DRIVER', false],
   ] as const)('con rol %s el botón aparece: %s', async (role, visible) => {
     useSession.setState({ user: { ...ana, role } });
-    await render(<HomeScreen />);
+    globalThis.fetch = jest.fn();
+    fakeApi();
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    await render(
+      <QueryClientProvider client={client}>
+        <HomeScreen />
+      </QueryClientProvider>,
+    );
     const button = screen.queryByRole('button', { name: 'Nueva solicitud' });
     expect(Boolean(button)).toBe(visible);
     if (button) {
