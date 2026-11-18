@@ -71,3 +71,25 @@ export function pickerValue(date: DateKey, time: ClockTime = '12:00'): Date {
   const [hours, minutes] = time.split(':').map(Number);
   return new Date(year, month - 1, day, hours, minutes);
 }
+
+/** Día y hora de Nicaragua de un instante que manda la API. */
+export function managuaParts(iso: string): { date: DateKey; time: ClockTime } {
+  const local = new Date(new Date(iso).getTime() - OFFSET_MS);
+  return {
+    date: `${local.getUTCFullYear()}-${pad(local.getUTCMonth() + 1)}-${pad(local.getUTCDate())}`,
+    time: `${pad(local.getUTCHours())}:${pad(local.getUTCMinutes())}`,
+  };
+}
+
+/**
+ * "miércoles 18 de noviembre, 8:00 a. m. a 12:00 p. m."; si el viaje dura varios días,
+ * dice los dos.
+ */
+export function formatTripWindow(startsAt: string, endsAt: string): string {
+  const start = managuaParts(startsAt);
+  const end = managuaParts(endsAt);
+  if (start.date === end.date) {
+    return `${formatDateKey(start.date)}, ${formatClockTime(start.time)} a ${formatClockTime(end.time)}`;
+  }
+  return `${formatDateKey(start.date)}, ${formatClockTime(start.time)}, al ${formatDateKey(end.date)}, ${formatClockTime(end.time)}`;
+}

@@ -217,8 +217,9 @@ export class ReservationsService {
     const limit = filters.limit ?? 20;
     const query = this.baseQuery();
 
-    // Un técnico solo ve sus solicitudes, sin importar los filtros que mande.
-    if (actor.role !== UserRole.ADMIN) {
+    // Un técnico solo ve sus solicitudes, sin importar los filtros que mande. La
+    // coordinación ve todas, salvo que pida solo las suyas (la app, HU-18).
+    if (actor.role !== UserRole.ADMIN || filters.mine) {
       query.andWhere('request.requesterId = :me', { me: actor.id });
     }
     if (filters.status) query.andWhere('request.status = :status', { status: filters.status });
