@@ -63,12 +63,12 @@ referencia de producto: qué se construye y con qué criterios.
 
 ## Sprint 5 — Bitácora y reportes
 
-| HU    | RF           | Historia                                                   | Criterios de aceptación                                                                | Estado    |
-| ----- | ------------ | ---------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------- |
-| HU-20 | RF-21        | Como conductor, quiero ver mis viajes de hoy y próximos    | Solo asignaciones activas propias, tenga el rol que tenga (RN-16)                      | PENDIENTE |
-| HU-21 | RF-22, RF-23 | Como conductor, quiero registrar salida y llegada          | km llegada ≥ km salida; actualiza km del vehículo; solicitud → `COMPLETED`             | PENDIENTE |
-| HU-22 | RF-24, RF-25 | Como ADMIN, quiero reportes de uso por proyecto y vehículo | Filtro por rango; km, horas, viajes, cancelaciones; exporta CSV                        | PENDIENTE |
-| HU-23 | RF-26        | Como ADMIN, quiero un dashboard                            | Pendientes, viajes de hoy, vehículos en mantenimiento, licencias que vencen en 30 días | PENDIENTE |
+| HU    | RF           | Historia                                                          | Criterios de aceptación                                                                | Estado    |
+| ----- | ------------ | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------- |
+| HU-20 | RF-21        | Como persona que conduce, quiero ver mis viajes de hoy y próximos | Solo asignaciones activas propias, tenga el rol que tenga (RN-16)                      | TERMINADO |
+| HU-21 | RF-22, RF-23 | Como persona que conduce, quiero registrar salida y llegada       | km llegada ≥ km salida; actualiza km del vehículo; solicitud → `COMPLETED`             | PENDIENTE |
+| HU-22 | RF-24, RF-25 | Como ADMIN, quiero reportes de uso por proyecto y vehículo        | Filtro por rango; km, horas, viajes, cancelaciones; exporta CSV                        | PENDIENTE |
+| HU-23 | RF-26        | Como ADMIN, quiero un dashboard                                   | Pendientes, viajes de hoy, vehículos en mantenimiento, licencias que vencen en 30 días | PENDIENTE |
 
 ## Sprint 6 — Despliegue y UAT
 
