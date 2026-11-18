@@ -7,6 +7,7 @@ import { BadRequestException, ForbiddenException, UnauthorizedException } from '
 import { AuthService } from './auth.service.js';
 import { User } from '#modules/users/entities/user.entity.js';
 import { RefreshToken } from './entities/refresh-token.entity.js';
+import { UserDevice } from '#modules/notifications/entities/user-device.entity.js';
 import { UserRole } from '#common/enums/domain.enums.js';
 
 /**
@@ -50,6 +51,7 @@ describe('AuthService', () => {
   let findOneBy: ReturnType<typeof vi.fn>;
   let update: ReturnType<typeof vi.fn>;
   let increment: ReturnType<typeof vi.fn>;
+  let remove: ReturnType<typeof vi.fn>;
   let signAsync: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
@@ -58,10 +60,12 @@ describe('AuthService', () => {
     signAsync = vi.fn().mockResolvedValue('token-fake');
 
     increment = vi.fn().mockResolvedValue({ affected: 1 });
+    remove = vi.fn().mockResolvedValue({ affected: 1 });
     // La transacción se ejecuta sobre el mismo doble: basta con ver qué se escribió.
     const manager = {
       update,
       increment,
+      delete: remove,
       transaction: (work: (m: unknown) => Promise<unknown>) => work(manager),
     };
     const userRepository = {
@@ -206,6 +210,8 @@ describe('AuthService', () => {
         { revokedAt: expect.any(Date) },
       );
       expect(increment).toHaveBeenCalledWith(User, { id: ADMIN_ID }, 'sessionVersion', 1);
+      // Y olvida sus teléfonos: no le llegan más avisos push (HU-19).
+      expect(remove).toHaveBeenCalledWith(UserDevice, { userId: ADMIN_ID });
     });
 
     it('rechaza el cambio cuando la contraseña actual no coincide', async () => {

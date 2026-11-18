@@ -14,6 +14,7 @@ import { User } from '#modules/users/entities/user.entity.js';
 import type { AuthenticatedUser } from '#common/decorators/current-user.decorator.js';
 import type { JwtPayload, LoginCredentials } from './auth.types.js';
 import { RefreshToken } from './entities/refresh-token.entity.js';
+import { UserDevice } from '#modules/notifications/entities/user-device.entity.js';
 
 /**
  * Hash señuelo, para que el login tarde lo mismo exista o no el usuario
@@ -146,11 +147,13 @@ export class AuthService {
   /**
    * Cierra todas las sesiones de una persona, en el panel y en la app: revoca sus
    * refresh tokens y sube `session_version`, con lo que los tokens de acceso ya
-   * emitidos se rechazan en la siguiente petición.
+   * emitidos se rechazan en la siguiente petición. También olvida sus teléfonos: un
+   * teléfono perdido no debe seguir mostrando avisos con destinos y horarios (HU-19).
    */
   async revokeSessions(userId: string, manager: EntityManager = this.users.manager): Promise<void> {
     await manager.update(RefreshToken, { userId, revokedAt: IsNull() }, { revokedAt: new Date() });
     await manager.increment(User, { id: userId }, 'sessionVersion', 1);
+    await manager.delete(UserDevice, { userId });
   }
 
   /** Genera un hash bcrypt con las rondas configuradas (RNF-01). */

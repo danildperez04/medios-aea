@@ -150,6 +150,16 @@ export const configValidationSchema = Joi.object({
     then: Joi.boolean().default(true),
     otherwise: Joi.boolean().default(false),
   }),
+  // Notificaciones push (HU-19). Sin red hacia Expo, los avisos siguen en la bandeja.
+  PUSH_ENABLED: Joi.boolean().when('NODE_ENV', {
+    is: 'test',
+    then: Joi.boolean().default(false),
+    otherwise: Joi.boolean().default(true),
+  }),
+  // Cada cuánto se revisan los avisos pendientes de enviar, además del envío inmediato.
+  PUSH_INTERVAL_MS: Joi.number().integer().min(1_000).max(600_000).default(15_000),
+  // Solo si en la cuenta de Expo se activa "Enhanced Security for Push Notifications".
+  EXPO_ACCESS_TOKEN: Joi.string().optional(),
   BCRYPT_ROUNDS: Joi.number().integer().min(4).max(15).default(12),
   // Proxies de confianza delante de la API (ver config/trust-proxy.ts). En producción
   // siempre está nginx (1); con un proxy de HTTPS delante de nginx son 2.
