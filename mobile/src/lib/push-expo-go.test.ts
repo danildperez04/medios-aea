@@ -1,7 +1,14 @@
 import { Platform } from 'react-native';
 import { configurePush, notificationsModule, registerForPush } from './push';
 
-jest.mock('expo', () => ({ isRunningInExpoGo: () => true }));
+// Solo se finge Expo Go: el resto de `expo` (p. ej. `requireNativeModule`) lo usan otros
+// paquetes, como expo-secure-store.
+jest.mock('expo', () => ({ ...jest.requireActual('expo'), isRunningInExpoGo: () => true }));
+jest.mock('expo-secure-store', () => ({
+  getItemAsync: jest.fn(async () => null),
+  setItemAsync: jest.fn(async () => undefined),
+  deleteItemAsync: jest.fn(async () => undefined),
+}));
 // Si push.ts cargara el paquete, la fábrica marcaría la carga.
 const mockLoaded = jest.fn();
 jest.mock('expo-notifications', () => {

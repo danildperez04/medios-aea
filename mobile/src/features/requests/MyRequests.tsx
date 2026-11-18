@@ -85,7 +85,9 @@ export function MyRequests({ header, footer }: Props) {
         </View>
       }
       ListEmptyComponent={
-        requests.isLoading || requests.error ? null : <Text style={styles.empty}>{emptyText}</Text>
+        requests.isLoading || requests.error ? undefined : (
+          <Text style={styles.empty}>{emptyText}</Text>
+        )
       }
       ListFooterComponent={<View style={styles.footer}>{footer}</View>}
       renderItem={({ item }) => <RequestRow request={item} />}

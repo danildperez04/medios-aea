@@ -89,7 +89,7 @@ export function InboxScreen() {
           </View>
         }
         ListEmptyComponent={
-          notices.isLoading || notices.error ? null : (
+          notices.isLoading || notices.error ? undefined : (
             <Text style={styles.empty}>
               Aquí te avisaremos cuando la coordinación apruebe, rechace o cambie tus solicitudes.
             </Text>

@@ -233,7 +233,7 @@ export function NewRequestForm({ onCreated, now = () => new Date() }: Props) {
 
       <Pressable
         style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-        onPress={onSubmit}
+        onPress={() => void onSubmit()}
         disabled={create.isPending}
         accessibilityRole="button"
         accessibilityLabel="Enviar solicitud"
