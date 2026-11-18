@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BrandLockup } from '@/components/BrandLockup';
 import { logout } from '@/features/auth/api';
+import { NoticesButton } from '@/features/notifications/NoticesButton';
 import { MyRequests } from '@/features/requests/MyRequests';
 import { colors, fonts, spacing, touchTarget, type } from '@/lib/theme';
 import { useSession } from '@/store/session';
@@ -40,6 +41,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <BrandLockup />
+        <NoticesButton />
       </View>
       {canRequest ? (
         <MyRequests
@@ -78,6 +80,9 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.blanco },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,

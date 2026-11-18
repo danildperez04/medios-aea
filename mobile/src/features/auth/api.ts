@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { z } from 'zod';
 import { apiRequest } from '@/lib/api';
+import { currentPushToken, forgetPushToken } from '@/lib/push';
 import { useSession, type SessionUser } from '@/store/session';
 
 export const loginSchema = z.object({
@@ -46,6 +47,9 @@ export function fetchMe(): Promise<SessionUser> {
  */
 export async function logout(): Promise<void> {
   const { refreshToken, clearSession } = useSession.getState();
+  // Con el token push, la API deja de enviar avisos de esta persona a este teléfono.
+  const pushToken = currentPushToken();
+  forgetPushToken();
   await clearSession();
   if (!refreshToken) return;
 
@@ -54,7 +58,7 @@ export async function logout(): Promise<void> {
   try {
     await apiRequest('/auth/mobile-session/logout', {
       method: 'POST',
-      body: { refreshToken },
+      body: pushToken ? { refreshToken, pushToken } : { refreshToken },
       auth: false,
       signal: controller.signal,
     });
