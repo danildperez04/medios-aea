@@ -306,6 +306,20 @@
       "body": "**Por qué:** el 16/11/2026 la prueba \"pide los libres del horario y registra la reserva aprobada\" falló una vez al correr `pnpm test` con los tres workspaces en paralelo (casi 10 s el archivo) y pasó en las cuatro repeticiones siguientes (1,7 s sola). No se capturó el mensaje; apunta al tiempo límite de 5 s.\n\n**Qué hacer:** reproducir con carga, y aligerar la prueba (menos tecleo simulado) o subir su tiempo límite de forma justificada.\n\n## Hecha cuando\n\n- [ ] 20 ejecuciones seguidas de `pnpm test` sin fallos\n- [ ] Causa anotada en el PR",
       "labels": ["tipo:deuda", "área:web", "prioridad:could"],
       "milestone": "Sprint 3"
+    },
+    {
+      "key": "T-VEHICLE-NOW",
+      "title": "Tarea: mostrar en Vehículos si cada uno está en viaje ahora",
+      "body": "**Por qué:** la columna \"Estado\" de Vehículos es administrativa (`AVAILABLE`, `MAINTENANCE`, `INACTIVE`) y solo cambia a mano. \"Disponible\" se lee como \"libre ahora\" aunque el vehículo esté en un viaje, porque la ocupación depende del horario (RN-01, RN-07) y solo se ve en la Agenda.\n\n**Qué hacer:** junto con HU-21, que es cuando se registra la salida real:\n\n- Renombrar en el panel el estado `AVAILABLE` a \"En servicio\" (la API no cambia).\n- Agregar en la tabla una columna \"Ahora\", calculada de la asignación activa y la bitácora: \"En viaje hasta 12:00 p. m.\", \"Reservado desde 2:00 p. m.\" o \"Libre\".\n\n## Hecha cuando\n\n- [ ] `GET /vehicles` devuelve la ocupación actual de cada vehículo, calculada en el servidor con la hora de Managua\n- [ ] Un viaje con salida registrada y sin llegada se muestra como \"En viaje\" aunque haya pasado su hora de fin\n- [ ] Prueba e2e y prueba de la vista\n- [ ] `docs/16-sistema-de-diseno.md` con las etiquetas nuevas",
+      "labels": ["tipo:tarea", "área:web", "área:api", "prioridad:should"],
+      "milestone": "Sprint 5"
+    },
+    {
+      "key": "T-MAINTENANCE-SOURCE",
+      "title": "Tarea: dejar una sola forma de marcar mantenimiento antes del dashboard",
+      "body": "**Por qué:** hoy hay dos formas que no se conectan. El estado `MAINTENANCE` del vehículo es manual y sin fechas; el bloqueo por mantenimiento (HU-07) tiene rango de fechas. Un bloqueo de hoy no cambia el estado, así que el dato \"vehículos en mantenimiento\" de HU-23 saldría distinto según de dónde se lea.\n\n**Qué hacer:** decidir y documentar en un ADR. Propuesta: el estado `MAINTENANCE` queda solo para \"fuera de servicio sin fecha de regreso\" (en el panel, \"Fuera de servicio\"), y todo mantenimiento con fechas va como bloqueo. El dashboard cuenta los dos: estado `MAINTENANCE` o bloqueo vigente hoy.\n\n## Hecha cuando\n\n- [ ] ADR con la decisión\n- [ ] El panel explica la diferencia donde se marca cada uno\n- [ ] Una sola consulta en la API responde qué vehículos están en mantenimiento hoy, con prueba e2e\n- [ ] HU-23 la usa",
+      "labels": ["tipo:tarea", "área:web", "área:api", "área:docs", "prioridad:should"],
+      "milestone": "Sprint 5"
     }
   ]
 }
