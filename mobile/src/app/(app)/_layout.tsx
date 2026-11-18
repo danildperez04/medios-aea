@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { fetchMe, logout } from '@/features/auth/api';
 import { ProfileUnavailable } from '@/features/auth/ProfileUnavailable';
+import { usePushNotifications } from '@/features/notifications/usePushNotifications';
 import { useSession } from '@/store/session';
 
 /** Cada cuánto se comprueba la sesión con la app abierta. */
@@ -32,6 +33,8 @@ export default function AppLayout() {
   useEffect(() => {
     if (me.data) setUser(me.data);
   }, [me.data, setUser]);
+
+  usePushNotifications(token ? user : null);
 
   if (!token) return <Redirect href="/login" />;
   if (!user) {

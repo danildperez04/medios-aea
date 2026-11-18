@@ -4,6 +4,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { DataSource, IsNull, type EntityManager } from 'typeorm';
 import { UserRole } from '#common/enums/domain.enums.js';
+import { UserDevice } from '#modules/notifications/entities/user-device.entity.js';
 import { User } from '#modules/users/entities/user.entity.js';
 import { AuthService, type LoginResult } from './auth.service.js';
 import type { LoginCredentials } from './auth.types.js';
@@ -123,12 +124,24 @@ export class SessionService {
   }
 
   /** Cierra la sesión: revoca la familia del token. Sin token no hay nada que revocar. */
-  async end(raw: string | undefined, client: SessionClient = 'web'): Promise<void> {
+  async end(
+    raw: string | undefined,
+    client: SessionClient = 'web',
+    pushToken?: string,
+  ): Promise<void> {
     if (!raw) return;
     const token = await this.dataSource
       .getRepository(RefreshToken)
       .findOneBy({ tokenHash: hashRefreshToken(raw), client });
-    if (token) await this.revokeFamily(this.dataSource.manager, token.familyId);
+    if (!token) return;
+    await this.revokeFamily(this.dataSource.manager, token.familyId);
+    // Quien sale deja de recibir avisos en este teléfono. Solo si el registro es suyo:
+    // un refresh token no sirve para callar el teléfono de otra persona.
+    if (pushToken) {
+      await this.dataSource
+        .getRepository(UserDevice)
+        .delete({ userId: token.userId, expoPushToken: pushToken });
+    }
   }
 
   private async issue(

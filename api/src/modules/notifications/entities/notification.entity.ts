@@ -9,7 +9,13 @@ import {
 } from 'typeorm';
 import { User } from '#modules/users/entities/user.entity.js';
 
-/** Notificación in-app (RF-19). La versión push se envía aparte por Expo. */
+/** Estado del envío push de un aviso (HU-19). */
+export type PushStatus = 'PENDING' | 'SENT' | 'SKIPPED' | 'FAILED';
+
+/**
+ * Notificación in-app (RF-19). También es la cola del envío push (RF-20): nace
+ * `PENDING` y `PushDispatcher` la envía a los teléfonos de la persona.
+ */
 @Entity('notification')
 export class Notification {
   @PrimaryGeneratedColumn('uuid')
@@ -30,6 +36,12 @@ export class Notification {
 
   @Column({ type: 'jsonb', nullable: true })
   data: Record<string, unknown> | null;
+
+  @Column({ name: 'push_status', type: 'varchar', length: 10, default: 'PENDING' })
+  pushStatus: PushStatus;
+
+  @Column({ name: 'push_attempts', type: 'smallint', default: 0 })
+  pushAttempts: number;
 
   @Column({ name: 'read_at', type: 'timestamptz', nullable: true })
   readAt: Date | null;

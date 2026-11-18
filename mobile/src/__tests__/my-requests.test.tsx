@@ -92,7 +92,9 @@ describe('mis solicitudes (HU-18)', () => {
     expect(within(trip).getByText('Hilux blanca · M 123-456')).toBeTruthy();
 
     // Solo las suyas, también si es de la coordinación.
-    expect(paths()[0]).toContain('/reservations?mine=true');
+    expect(paths().find((url) => url.includes('/reservations'))).toContain(
+      '/reservations?mine=true',
+    );
   });
 
   it('filtra por estado', async () => {

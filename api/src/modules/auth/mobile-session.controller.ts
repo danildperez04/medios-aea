@@ -3,7 +3,7 @@ import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '#common/decorators/public.decorator.js';
 import { LoginDto } from './dto/login.dto.js';
-import { RefreshTokenDto } from './dto/refresh-token.dto.js';
+import { MobileLogoutDto, RefreshTokenDto } from './dto/refresh-token.dto.js';
 import { SessionService, type SessionResult } from './session.service.js';
 
 /**
@@ -41,8 +41,10 @@ export class MobileSessionController {
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Cerrar la sesión de la app: revoca el refresh token' })
-  async logout(@Body() dto: RefreshTokenDto): Promise<void> {
-    await this.sessions.end(dto.refreshToken, 'mobile');
+  @ApiOperation({
+    summary: 'Cerrar la sesión de la app: revoca el refresh token y deja de avisar a este teléfono',
+  })
+  async logout(@Body() dto: MobileLogoutDto): Promise<void> {
+    await this.sessions.end(dto.refreshToken, 'mobile', dto.pushToken);
   }
 }
