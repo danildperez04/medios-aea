@@ -33,7 +33,12 @@ export function InboxScreen() {
   const open = (notice: Notice) => {
     if (!notice.readAt) markRead.mutate(notice.id);
     // Un aviso sin solicitud asociada solo se marca como leído.
-    if (notice.data?.reservationId) openNotice(notice.data.reservationId, role);
+    if (notice.data?.reservationId) {
+      openNotice(
+        { reservationId: notice.data.reservationId, audience: notice.data.audience },
+        role,
+      );
+    }
   };
 
   return (

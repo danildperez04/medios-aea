@@ -5,7 +5,7 @@ export interface Notice {
   id: string;
   title: string;
   body: string;
-  data: { kind?: string; reservationId?: string } | null;
+  data: { kind?: string; reservationId?: string; audience?: string } | null;
   readAt: string | null;
   createdAt: string;
 }

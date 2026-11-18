@@ -42,7 +42,7 @@ export function usePushNotifications(user: SessionUser | null): void {
           .then(refresh)
           .catch(() => undefined);
       }
-      openNotice(target.reservationId, role);
+      openNotice(target, role);
     };
 
     const received = Notifications.addNotificationReceivedListener(refresh);

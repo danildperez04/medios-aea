@@ -81,6 +81,8 @@ export async function registerForPush(): Promise<PushRegistration> {
 export interface PushTarget {
   notificationId: string | null;
   reservationId: string | null;
+  /** `DRIVER` o `FORMER_DRIVER` si el aviso no es para quien pidió (HU-20). */
+  audience: string | null;
 }
 
 export function pushTarget(response: Notifications.NotificationResponse): PushTarget {
@@ -89,5 +91,6 @@ export function pushTarget(response: Notifications.NotificationResponse): PushTa
   return {
     notificationId: text(data?.notificationId),
     reservationId: text(data?.reservationId),
+    audience: text(data?.audience),
   };
 }

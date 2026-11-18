@@ -1,10 +1,12 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BrandLockup } from '@/components/BrandLockup';
 import { logout } from '@/features/auth/api';
 import { NoticesButton } from '@/features/notifications/NoticesButton';
 import { MyRequests } from '@/features/requests/MyRequests';
+import { MyTrips } from '@/features/trips/MyTrips';
 import { colors, fonts, spacing, touchTarget, type } from '@/lib/theme';
 import { useSession } from '@/store/session';
 
@@ -15,12 +17,13 @@ const ROLE_LABEL = {
 } as const;
 
 /**
- * Inicio. Para quien pide medios (técnicos y coordinación), "Mis solicitudes" (HU-18).
- * Para el conductor serán "Mis viajes" (Sprint 5); mientras tanto se explica qué
- * aparecerá aquí.
+ * Inicio. "Mis viajes" para quien tenga viajes asignados, sea cual sea su rol (HU-20,
+ * RN-16), y "Mis solicitudes" para quien puede pedir medios: técnicos y coordinación
+ * (HU-18). Un chofer de planta solo ve sus viajes.
  */
 export default function HomeScreen() {
   const { user } = useSession();
+  const queryClient = useQueryClient();
   // La API solo acepta solicitudes de técnicos y de la coordinación (RF-10).
   const canRequest = user?.role === 'REQUESTER' || user?.role === 'ADMIN';
 
@@ -55,23 +58,26 @@ export default function HomeScreen() {
               >
                 <Text style={styles.primaryText}>Nueva solicitud</Text>
               </Pressable>
+              {/* Solo aparece si conduce algún viaje: muchos técnicos manejan (ADR 0004). */}
+              <MyTrips showEmpty={false} />
             </View>
           }
           footer={logoutButton}
         />
       ) : (
-        <View style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          refreshControl={
+            <RefreshControl
+              refreshing={false}
+              onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['trips'] })}
+            />
+          }
+        >
           {greeting}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle} accessibilityRole="header">
-              Mis viajes
-            </Text>
-            <Text style={styles.sectionBody}>
-              Aquí aparecerán los viajes que tengas asignados, con la hora de salida y el destino.
-            </Text>
-          </View>
+          <MyTrips showEmpty />
           <View style={styles.bottom}>{logoutButton}</View>
-        </View>
+        </ScrollView>
       )}
     </SafeAreaView>
   );
@@ -88,27 +94,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.linea,
   },
-  container: { flex: 1, padding: spacing.lg },
+  container: { flexGrow: 1, padding: spacing.lg },
   greeting: { fontFamily: fonts.medium, fontSize: type.display, color: colors.negroLavado },
   role: {
     fontFamily: fonts.regular,
     fontSize: type.small,
     color: colors.tintaSuave,
     marginTop: spacing.xs,
-  },
-  section: {
-    marginTop: spacing.lg,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.negroLavado,
-  },
-  sectionTitle: { fontFamily: fonts.semibold, fontSize: 20, color: colors.negroLavado },
-  sectionBody: {
-    fontFamily: fonts.regular,
-    fontSize: type.body,
-    lineHeight: 25,
-    color: colors.tintaSuave,
-    marginTop: spacing.sm,
   },
   primary: {
     minHeight: touchTarget + 4,
@@ -120,7 +112,7 @@ const styles = StyleSheet.create({
   },
   primaryPressed: { backgroundColor: '#EF6E46' },
   primaryText: { fontFamily: fonts.semibold, fontSize: type.body, color: colors.negroLavado },
-  bottom: { marginTop: 'auto' },
+  bottom: { marginTop: 'auto', paddingTop: spacing.xl },
   logout: {
     minHeight: touchTarget,
     alignItems: 'center',
