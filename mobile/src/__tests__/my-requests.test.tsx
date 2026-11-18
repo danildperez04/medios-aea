@@ -132,7 +132,8 @@ describe('mis solicitudes (HU-18)', () => {
       Promise.reject(new TypeError('Network request failed')),
     ) as unknown as typeof fetch;
     await renderWith(<HomeScreen />);
-    expect(await screen.findByText(/No hay conexión con el servidor/)).toBeTruthy();
+    // Lo dicen las dos secciones del inicio: mis viajes y mis solicitudes.
+    expect(await screen.findAllByText(/No hay conexión con el servidor/)).toHaveLength(2);
   });
 
   it('tocar una abre su detalle', async () => {

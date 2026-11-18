@@ -96,7 +96,7 @@ beforeEach(() => {
 describe('mis viajes (HU-20)', () => {
   it('separa los de hoy (incluido uno en curso) de los próximos', async () => {
     fakeApi(withTrips([inProgress, today, trip()]));
-    await renderWith(<MyTrips showEmpty now={NOW} />);
+    await renderWith(<MyTrips now={NOW} />);
 
     const somoto = await screen.findByRole('button', { name: 'Viaje a Somoto, SOL-2026-00030' });
     expect(within(somoto).getByText('En curso')).toBeTruthy();
@@ -118,7 +118,7 @@ describe('mis viajes (HU-20)', () => {
 
   it('tocar un viaje abre su detalle', async () => {
     fakeApi(withTrips([trip()]));
-    await renderWith(<MyTrips showEmpty now={NOW} />);
+    await renderWith(<MyTrips now={NOW} />);
     await fireEvent.press(await screen.findByRole('button', { name: /Viaje a El Rosario/ }));
     expect(router.push).toHaveBeenCalledWith('/trips/r1');
   });
@@ -131,11 +131,22 @@ describe('mis viajes (HU-20)', () => {
     expect(screen.getByRole('button', { name: 'Nueva solicitud' })).toBeTruthy();
   });
 
-  it('a un técnico sin viajes no se le muestra la sección', async () => {
+  it('un técnico sin viajes ve la sección con el aviso de que no tiene', async () => {
     fakeApi(withTrips([]));
     await renderWith(<HomeScreen />);
     await screen.findByText('Mis solicitudes');
-    expect(screen.queryByText('Mis viajes')).toBeNull();
+    expect(screen.getByText('Mis viajes')).toBeTruthy();
+    expect(await screen.findByText(/No tienes viajes asignados como conductor/)).toBeTruthy();
+  });
+
+  it('si los viajes no cargan, el técnico ve el motivo en lugar de una sección escondida', async () => {
+    fakeApi((path) =>
+      path.startsWith('/trips/mine')
+        ? { status: 500, body: { message: 'Ocurrió un error inesperado. Intenta de nuevo.' } }
+        : withTrips([])(path),
+    );
+    await renderWith(<HomeScreen />);
+    expect(await screen.findByText('Ocurrió un error inesperado. Intenta de nuevo.')).toBeTruthy();
   });
 
   it('un chofer de planta ve solo sus viajes, y si no tiene, lo dice', async () => {
@@ -152,7 +163,7 @@ describe('mis viajes (HU-20)', () => {
     globalThis.fetch = jest.fn(() =>
       Promise.reject(new TypeError('Network request failed')),
     ) as unknown as typeof fetch;
-    await renderWith(<MyTrips showEmpty now={NOW} />);
+    await renderWith(<MyTrips now={NOW} />);
     expect(await screen.findByText(/No hay conexión con el servidor/)).toBeTruthy();
   });
 });

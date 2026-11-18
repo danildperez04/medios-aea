@@ -58,8 +58,8 @@ export default function HomeScreen() {
               >
                 <Text style={styles.primaryText}>Nueva solicitud</Text>
               </Pressable>
-              {/* Solo aparece si conduce algún viaje: muchos técnicos manejan (ADR 0004). */}
-              <MyTrips showEmpty={false} />
+              {/* Muchos técnicos también conducen (ADR 0004). */}
+              <MyTrips />
             </View>
           }
           footer={logoutButton}
@@ -75,7 +75,7 @@ export default function HomeScreen() {
           }
         >
           {greeting}
-          <MyTrips showEmpty />
+          <MyTrips />
           <View style={styles.bottom}>{logoutButton}</View>
         </ScrollView>
       )}

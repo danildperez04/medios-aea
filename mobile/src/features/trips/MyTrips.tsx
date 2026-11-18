@@ -5,11 +5,6 @@ import { colors, fonts, spacing, touchTarget, type } from '@/lib/theme';
 import { useMyTrips, type Trip } from './api';
 
 interface Props {
-  /**
-   * Si no hay viajes: un chofer de planta ve el aviso de que no tiene; a quien también
-   * pide medios no se le muestra la sección.
-   */
-  showEmpty: boolean;
   /** Hora actual; solo las pruebas la fijan. */
   now?: Date;
 }
@@ -20,13 +15,13 @@ export function isToday(trip: Trip, now: Date = new Date()): boolean {
 }
 
 /** "Mis viajes": los que la persona conduce, de hoy y próximos (HU-20, RN-16). */
-export function MyTrips({ showEmpty, now = new Date() }: Props) {
+/**
+ * Se muestra siempre, también vacía: muchos técnicos conducen (ADR 0004) y deben saber
+ * dónde aparecerán sus viajes; si la carga falla, se dice en lugar de esconderla.
+ */
+export function MyTrips({ now = new Date() }: Props) {
   const trips = useMyTrips();
   const rows = trips.data ?? [];
-
-  // A quien también pide medios no se le muestra la sección vacía, ni el error si no se
-  // pudo cargar: "Mis solicitudes", debajo, ya avisa si no hay conexión.
-  if (!showEmpty && rows.length === 0) return null;
 
   const today = rows.filter((trip) => isToday(trip, now));
   const upcoming = rows.filter((trip) => !isToday(trip, now));
@@ -44,7 +39,8 @@ export function MyTrips({ showEmpty, now = new Date() }: Props) {
       ) : null}
       {!trips.isLoading && !trips.error && rows.length === 0 ? (
         <Text style={styles.empty}>
-          No tienes viajes asignados. Cuando la coordinación te asigne uno, aparecerá aquí.
+          No tienes viajes asignados como conductor. Cuando la coordinación te asigne uno, aparecerá
+          aquí.
         </Text>
       ) : null}
       {today.length ? <Group label="Hoy" trips={today} /> : null}
