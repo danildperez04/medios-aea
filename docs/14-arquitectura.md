@@ -111,15 +111,18 @@ por todas las peticiones) y repite la petición.
 ```
 mobile/src/
 ├── app/(auth)/login.tsx      inicio de sesión
-├── app/(app)/                zona autenticada: `home.tsx` (mis solicitudes), `new-request.tsx`, `requests/[id].tsx` y `notifications.tsx`
-├── features/<feature>/       pantallas y llamadas a la API por funcionalidad (`auth`, `requests`, `notifications`)
+├── app/(app)/                zona autenticada: `home.tsx` (mis solicitudes), `new-request.tsx`, `requests/[id].tsx`, `trips/[id].tsx` y `notifications.tsx`
+├── features/<feature>/       pantallas y llamadas a la API por funcionalidad (`auth`, `requests`, `trips`, `notifications`)
 ├── lib/                      api.ts (cliente HTTP) · token-storage.ts (expo-secure-store) · config.ts · theme.ts
 │                             · managua.ts (fechas con la zona de Nicaragua) · push.ts
 └── store/session.ts          sesión
 ```
 
 Las pantallas de quien solicita (nueva solicitud, mis solicitudes, avisos) están desde el
-Sprint 4; las de quien conduce (mis viajes, salida y llegada) llegan en el Sprint 5.
+Sprint 4. "Mis viajes" (HU-20) depende de estar asignado como conductor, no del rol (RN-16,
+ADR 0004): un técnico o la coordinación lo ven sobre sus solicitudes cuando conducen
+algún viaje, y un chofer de planta solo ve sus viajes. Los avisos para quien conduce
+llevan `audience: DRIVER` y abren el viaje. La salida y la llegada llegan con HU-21.
 
 **Avisos (HU-19).** Cada aviso se escribe en `notification` dentro de la transacción que
 lo origina y nace `PENDING`. `PushDispatcher` los envía a Expo después de confirmarse:

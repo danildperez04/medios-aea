@@ -56,7 +56,13 @@ type Handler = (path: string, method: string) => { status: number; body?: unknow
 
 function fakeApi(handler: Handler) {
   globalThis.fetch = jest.fn((url: string, init: { method: string }) => {
-    const reply = handler(url.replace(/^.*\/api\/v1/, ''), init.method);
+    const path = url.replace(/^.*\/api\/v1/, '');
+    // Esta prueba es de solicitudes: sin viajes asignados ni avisos.
+    const reply = path.startsWith('/trips/')
+      ? { status: 200, body: [] as unknown }
+      : path.startsWith('/notifications')
+        ? { status: 200, body: { count: 0 } as unknown }
+        : handler(path, init.method);
     return Promise.resolve({
       ok: reply.status < 300,
       status: reply.status,
@@ -126,7 +132,8 @@ describe('mis solicitudes (HU-18)', () => {
       Promise.reject(new TypeError('Network request failed')),
     ) as unknown as typeof fetch;
     await renderWith(<HomeScreen />);
-    expect(await screen.findByText(/No hay conexión con el servidor/)).toBeTruthy();
+    // Lo dicen las dos secciones del inicio: mis viajes y mis solicitudes.
+    expect(await screen.findAllByText(/No hay conexión con el servidor/)).toHaveLength(2);
   });
 
   it('tocar una abre su detalle', async () => {

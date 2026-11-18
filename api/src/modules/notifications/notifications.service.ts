@@ -5,6 +5,12 @@ import { User } from '#modules/users/entities/user.entity.js';
 import { Notification } from './entities/notification.entity.js';
 import { PushDispatcher } from './push-dispatcher.service.js';
 
+/**
+ * A quién va un aviso sobre una solicitud, cuando no es a quien la pidió: la app abre
+ * el viaje para quien conduce y la bandeja para quien dejó de conducir (HU-20).
+ */
+export type NoticeAudience = 'DRIVER' | 'FORMER_DRIVER';
+
 export interface NotificationContent {
   title: string;
   body: string;
