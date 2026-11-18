@@ -213,7 +213,8 @@ npx eas-cli@latest init          # vincula el proyecto a la cuenta (agrega el pr
 
 **Avisos push (HU-19).** Sin el `projectId` que agrega `eas init`, la app no pide el
 token push y solo funciona la bandeja de avisos. En Android, el push remoto **no
-funciona en Expo Go** desde el SDK 53: para probarlo hace falta un development build
+funciona en Expo Go** desde el SDK 53, y Expo Go solo abre la versión del SDK
+que tenga instalada (hoy, el 58): para probarlo hace falta un development build
 (`npx eas-cli@latest build -p android --profile development`) o el APK. Además, Android
 necesita las credenciales de Firebase (FCM) cargadas en EAS:
 `npx eas-cli@latest credentials`. Ver https://docs.expo.dev/push-notifications/push-notifications-setup/.
