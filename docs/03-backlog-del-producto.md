@@ -55,7 +55,7 @@ referencia de producto: qué se construye y con qué criterios.
 | HU    | RF            | Historia                                                              | Criterios de aceptación                                                          | Estado    |
 | ----- | ------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------- |
 | HU-16 | RF-18         | Como técnico, quiero iniciar sesión en la app                         | Token en `expo-secure-store`; sesión persiste; logout limpia                     | TERMINADO |
-| HU-17 | RF-18, RF-09  | Como técnico, quiero solicitar desde el celular viendo disponibilidad | Formulario con fecha/hora; indicador de vehículos libres antes de enviar         | PENDIENTE |
+| HU-17 | RF-18, RF-09  | Como técnico, quiero solicitar desde el celular viendo disponibilidad | Formulario con fecha/hora; indicador de vehículos libres antes de enviar         | TERMINADO |
 | HU-18 | RF-18         | Como técnico, quiero ver y cancelar mis solicitudes                   | Lista por estado; detalle con vehículo y conductor asignado                      | PENDIENTE |
 | HU-19 | RF-19, RF-20  | Como técnico, quiero recibir notificaciones                           | Push al aprobar/rechazar/reasignar; bandeja in-app con leídas/no leídas          | PENDIENTE |
 | HU-28 | RF-18, RNF-01 | Como técnico o conductor, quiero que mi sesión en la app se mantenga  | Renovación automática; rota; 7 días sin uso; sin señal no cierra; antes de HU-21 | TERMINADO |
