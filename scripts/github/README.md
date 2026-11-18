@@ -9,7 +9,12 @@ gh auth refresh -s project       # permiso para crear el tablero
 pnpm github:setup --dry-run      # revisar qué haría
 pnpm github:setup                # aplicar todo
 pnpm github:setup --only issues  # o pasos sueltos
+pnpm github:setup --help         # opciones, sin tocar GitHub
 ```
+
+Una opción desconocida o un paso que no existe en `--only` detienen el script con
+código 2 antes de llamar a GitHub. Sin opciones aplica todos los pasos: para probar,
+usar siempre `--dry-run`.
 
 | Paso         | Qué hace                                                                                                                                                         |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |

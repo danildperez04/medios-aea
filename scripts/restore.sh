@@ -10,9 +10,33 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+usage() {
+  echo "Uso: $0 <archivo.sql.gz>"
+  echo "Sobrescribe la base de producción con el respaldo. RESTORE_CONFIRM=s evita la pregunta."
+}
+
+# Un solo argumento, que sea un archivo: una opción (--help, un tipeo) nunca se toma
+# como nombre de respaldo, y tampoco se ignoran argumentos de más.
+case "${1:-}" in
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  -*)
+    echo "ERROR: opción desconocida: $1" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+if [ "$#" -gt 1 ]; then
+  echo "ERROR: $0 recibe un solo archivo (recibió $# argumentos)." >&2
+  usage >&2
+  exit 2
+fi
+
 BACKUP_FILE="${1:-}"
 if [ -z "$BACKUP_FILE" ] || [ ! -f "$BACKUP_FILE" ]; then
-  echo "Uso: $0 <archivo.sql.gz>" >&2
+  usage >&2
   echo "Respaldos disponibles:" >&2
   ls -1 backups/medios_aea_*.sql.gz 2>/dev/null >&2 || echo "  (ninguno)" >&2
   exit 1

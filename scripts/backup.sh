@@ -7,6 +7,23 @@
 #   0 2 * * * /opt/medios-aea/scripts/backup.sh >> /opt/medios-aea/backups/backup.log 2>&1
 
 set -euo pipefail
+
+# No recibe argumentos: lo que llegue (un --help, un error de tipeo) se rechaza antes
+# de tocar la base, en lugar de ignorarlo y hacer el respaldo igual.
+if [ "$#" -gt 0 ]; then
+  case "$1" in
+    -h | --help)
+      echo "Uso: $0"
+      echo "Respalda la base de producción en backups/. Variables: BACKUP_DIR, RETENTION_DAYS."
+      exit 0
+      ;;
+    *)
+      echo "ERROR: $0 no recibe argumentos (recibió: $*). Usa --help." >&2
+      exit 2
+      ;;
+  esac
+fi
+
 cd "$(dirname "$0")/.."
 
 BACKUP_DIR="${BACKUP_DIR:-$(pwd)/backups}"
