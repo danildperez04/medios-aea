@@ -1,6 +1,6 @@
 # Arquitectura — Medios AeA
 
-**Versión:** 1.2.0
+**Versión:** 1.3.0
 **Fecha:** 16 de noviembre de 2026
 
 ---
@@ -144,8 +144,9 @@ restringido a los orígenes de la web, validación estricta (`whitelist`,
 
 ## Historial
 
-| Versión | Fecha       | Autor        | Cambio                                                        |
-| ------- | ----------- | ------------ | ------------------------------------------------------------- |
-| 1.0.0   | 16 oct 2026 | Danild Pérez | Creación inicial del documento                                |
-| 1.1.0   | 16 nov 2026 | Danild Pérez | Estructura real del panel y de la app; forma de la paginación |
-| 1.2.0   | 17 nov 2026 | Danild Pérez | Sesión renovable de la app (HU-28)                            |
+| Versión | Fecha       | Autor        | Cambio                                                                  |
+| ------- | ----------- | ------------ | ----------------------------------------------------------------------- |
+| 1.0.0   | 16 oct 2026 | Danild Pérez | Creación inicial del documento                                          |
+| 1.1.0   | 16 nov 2026 | Danild Pérez | Estructura real del panel y de la app; forma de la paginación           |
+| 1.2.0   | 17 nov 2026 | Danild Pérez | Sesión renovable de la app (HU-28)                                      |
+| 1.3.0   | 18 nov 2026 | Danild Pérez | Pantallas de solicitudes y avisos de la app; envío push (HU-17 a HU-19) |

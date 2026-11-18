@@ -1,20 +1,23 @@
 # Estado del Proyecto — Medios AeA
 
-**Última actualización:** 16 de noviembre de 2026
-**Versión publicada:** `0.3.0` (etiqueta `v0.3.0`; ver `CHANGELOG.md`)
+**Última actualización:** 18 de noviembre de 2026
+**Versión publicada:** `0.4.0` (etiqueta `v0.4.0`; ver `CHANGELOG.md`)
 
 ## Resumen
 
-| Bloque                                                        | Estado                                  | Versión           |
-| ------------------------------------------------------------- | --------------------------------------- | ----------------- |
-| Sprint 0 — Documentación y andamiaje                          | TERMINADO                               | `v0.1.0`          |
-| Sprint 1 — Acceso y catálogos base                            | TERMINADO                               | `v0.2.0`          |
-| Sprint 2 — Flota y disponibilidad (+ despliegue, DTO, diseño) | TERMINADO                               | `v0.3.0`          |
-| Sprint 3 — Solicitudes y aprobación                           | HISTORIAS TERMINADAS (falta el release) | `0.5.0` al cerrar |
-| Revisión de DevOps, calidad, seguridad y proceso              | TERMINADO (PR #8–#13)                   | `v0.4.0`          |
+| Bloque                                                        | Estado                                             | Versión           |
+| ------------------------------------------------------------- | -------------------------------------------------- | ----------------- |
+| Sprint 0 — Documentación y andamiaje                          | TERMINADO                                          | `v0.1.0`          |
+| Sprint 1 — Acceso y catálogos base                            | TERMINADO                                          | `v0.2.0`          |
+| Sprint 2 — Flota y disponibilidad (+ despliegue, DTO, diseño) | TERMINADO                                          | `v0.3.0`          |
+| Revisión de DevOps, calidad, seguridad y proceso              | TERMINADO (PR #8–#13)                              | `v0.4.0`          |
+| Sprint 3 — Solicitudes y aprobación                           | TERMINADO                                          | `v0.4.0`          |
+| Sprint 4 — App móvil del solicitante y sesiones               | HISTORIAS TERMINADAS (faltan #73 y probar el push) | `0.5.0` al cerrar |
 
-La `v0.4.0` sale a mitad del Sprint 3: reúne la revisión de DevOps y las historias ya
-terminadas (HU-09, HU-10 y HU-26). El resto del sprint llega en la `0.5.0`.
+La `v0.4.0` (16/11/2026) reúne la revisión de DevOps y todo el Sprint 3. Se publicó sin
+imágenes de Docker: el escaneo del release encontró una vulnerabilidad crítica corregida
+en un paquete de Alpine. #116 aplica los parches del sistema al construir; las imágenes
+salen con la `0.5.0` (PR de release #118).
 
 ---
 
@@ -141,7 +144,7 @@ vencer; sin scroll horizontal a 1366 px ni a 390 px. Se corrigieron en el camino
 texto oculto con `width: 1` (100% en MUI) que desbordaba la página, bloques de varios
 días mal ubicados en la agenda, y la petición fallida de la fuente Bogart.
 
-## Sprint 3 — Solicitudes y aprobación sin choques · HISTORIAS TERMINADAS
+## Sprint 3 — Solicitudes y aprobación sin choques · TERMINADO
 
 Primera historia con el flujo de una rama por historia (`docs/05` §3).
 
@@ -244,14 +247,74 @@ Hecha el 18/10/2026 sobre todo el repositorio. PR independientes desde `develop`
 | 4   | `docs/process-and-review`  | Plantillas de issues, `CONTRIBUTING.md`, guía de revisión, ADR, proceso con GitHub Issues/Projects                                                                                                                          |
 | 5   | `chore/github-setup`       | Script de configuración de GitHub (etiquetas, milestones, issues, protección de ramas, tablero)                                                                                                                             |
 
+## Sprint 4 — App móvil del solicitante y sesiones · HISTORIAS TERMINADAS
+
+| Historia                              | PR   | Estado    |
+| ------------------------------------- | ---- | --------- |
+| HU-16 Iniciar sesión en la app        | #121 | TERMINADO |
+| HU-28 Sesión renovable de la app      | #122 | TERMINADO |
+| HU-29 Cerrar sesiones desde el panel  | #122 | TERMINADO |
+| HU-17 Solicitar viendo disponibilidad | #124 | TERMINADO |
+| HU-18 Ver y cancelar mis solicitudes  | #127 | TERMINADO |
+| HU-19 Avisos: bandeja y push          | #130 | TERMINADO |
+
+HU-16: la sesión guardada se conserva si al abrir no hay señal (pantalla para reintentar)
+y la caché se vacía al cerrar sesión, para que la siguiente persona del teléfono no vea
+datos de la anterior.
+
+HU-28 (ADR 0003, ampliación): `/auth/mobile-session` entrega un token de acceso de 15
+minutos y un refresh token que rota, guardados en SecureStore. La app renueva sola y
+repite la petición; varias peticiones comparten una renovación. Vence a los 7 días sin
+uso; sin señal no se cierra. La app comprueba la sesión al volver al primer plano y cada 5
+minutos. Cambiar o restablecer una contraseña cierra todas las sesiones de la persona
+(`user.session_version` dentro del token: efecto inmediato).
+
+HU-29: `POST /users/:id/sessions/revoke` (ADMIN) cierra las sesiones de una persona en el
+panel y en la app sin desactivarla, con registro en `audit_log`. En el panel, acción
+"Cerrar sesiones" en Usuarios.
+
+HU-17: formulario de nueva solicitud en la app con proyecto, propósito, destino, personas,
+día, salida, regreso y quién conduce; antes de enviar muestra cuántos vehículos están
+libres. Las fechas van con la hora de Nicaragua.
+
+HU-18: el inicio de técnicos y coordinación es "Mis solicitudes", filtrable por estado,
+con detalle (vehículo y conductor asignados, motivo del rechazo) y cancelación con
+confirmación. `GET /reservations?mine=true` devuelve solo las propias también a la
+coordinación.
+
+HU-19: bandeja de avisos (`GET /notifications`, no leídos, marcar leído) y envío push por
+Expo. La tabla `notification` hace de cola: `PushDispatcher` envía los pendientes después
+de confirmarse, reintenta y olvida los teléfonos donde ya no está la app. Cerrar sesión,
+cerrar las sesiones desde el panel o cambiar la contraseña olvidan los teléfonos. Falta
+probar el push en un teléfono (tarea `T-PUSH-SETUP` del backlog: `eas init`,
+credenciales de FCM y un development build).
+
+### Correcciones y tareas del sprint
+
+| PR   | Qué cambia                                                                                                             |
+| ---- | ---------------------------------------------------------------------------------------------------------------------- |
+| #116 | Las imágenes aplican los parches de Alpine al construirse: el escaneo bloqueaba la publicación de la `v0.4.0`          |
+| #120 | La app explica una respuesta que no es JSON (un 502 del proxy, el portal de una red wifi) en lugar de fallar al leerla |
+| #123 | Excepción documentada de `picomatch` (GHSA-fc5q-39xc-vjpf, sin versión corregida) en `SECURITY.md` §4                  |
+| #129 | `setup.mjs`, `backup.sh` y `restore.sh` se detienen ante una opción desconocida en vez de ejecutarse                   |
+| #128 | Backlog: ocupación actual en Vehículos (#125) y una sola forma de marcar mantenimiento (#126), para el Sprint 5        |
+
+### Verificación
+
+| Workspace | Lint | Typecheck | Pruebas                 |
+| --------- | ---- | --------- | ----------------------- |
+| api       | ✓    | ✓         | 184 unitarias · 173 e2e |
+| web       | ✓    | ✓         | 89                      |
+| mobile    | ✓    | ✓         | 86                      |
+
 ## Siguiente
 
-**Para cerrar el Sprint 3** (`docs/05` §3.5): atender los PR de Dependabot acumulados
-(#98), hacer públicos los paquetes de GHCR tras el release (#33) y el PR
-`develop → main` con su etiqueta.
+**Para cerrar el Sprint 4** (`docs/05` §3.5): actualizar a Expo SDK 58 (#73), probar el
+push en un teléfono (`T-PUSH-SETUP`; su issue se crea con `pnpm github:setup --only issues`), mergear el PR de release `0.5.0` (#118) y hacer públicos los
+paquetes de GHCR cuando salgan las imágenes (#33).
 
-**Sprint 4 — app móvil del solicitante y sesiones:** HU-16 a HU-19 (iniciar sesión,
-solicitar viendo disponibilidad, ver y cancelar solicitudes, notificaciones), HU-28
-(sesión de la app, 7 días) y HU-29 (cerrar sesiones desde el panel), según la ampliación
-del ADR 0003. Tareas técnicas del sprint: actualizar a Expo SDK 58 (#73) y que la app
-entienda una respuesta que no es JSON (#96).
+**Sprint 5 — bitácora y reportes:** HU-20 y HU-21 (los viajes de quien conduce, tenga el
+rol que tenga: ADR 0004, RN-16), HU-22 (reportes) y HU-23 (dashboard). Tareas previas:
+dividir `reservations.service.ts` (#95) antes de la bitácora, la ocupación actual en
+Vehículos (#125, con HU-21) y una sola forma de marcar mantenimiento (#126, antes de
+HU-23).
