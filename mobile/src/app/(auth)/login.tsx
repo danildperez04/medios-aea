@@ -90,7 +90,7 @@ export default function LoginScreen() {
                   secureTextEntry
                   autoComplete="password"
                   accessibilityLabel="Contraseña"
-                  onSubmitEditing={onSubmit}
+                  onSubmitEditing={() => void onSubmit()}
                 />
               )}
             />
@@ -104,7 +104,7 @@ export default function LoginScreen() {
 
             <Pressable
               style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-              onPress={onSubmit}
+              onPress={() => void onSubmit()}
               disabled={login.isPending}
               accessibilityRole="button"
             >

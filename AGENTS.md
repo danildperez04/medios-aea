@@ -15,7 +15,7 @@ conductores registran cada viaje. Monorepo pnpm con tres workspaces:
 | -------- | ----------------------------- | -------------------------------------------------- |
 | `api`    | API REST                      | NestJS 12 + TypeORM 1 + PostgreSQL 16 (ESM)        |
 | `web`    | Panel de la coordinación      | React 19 + Vite 8 + MUI + TanStack Query           |
-| `mobile` | App de técnicos y conductores | Expo SDK 57 + expo-router (ver `mobile/AGENTS.md`) |
+| `mobile` | App de técnicos y conductores | Expo SDK 58 + expo-router (ver `mobile/AGENTS.md`) |
 
 | Dato                                               | Valor                                                                |
 | -------------------------------------------------- | -------------------------------------------------------------------- |

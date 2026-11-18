@@ -171,7 +171,7 @@ describe('mis viajes (HU-20)', () => {
 describe('detalle de un viaje (HU-20)', () => {
   it('muestra el vehículo, las personas y quién lo pidió, con su teléfono', async () => {
     fakeApi(() => ({ status: 200, body: trip() }));
-    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
     await renderWith(<TripDetailScreen reservationId="r1" />);
 
     expect(await screen.findByText('Viaje SOL-2026-00042')).toBeTruthy();

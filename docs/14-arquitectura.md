@@ -23,7 +23,7 @@
 | -------- | ----------- | ------------------------------------------------------------------------------- |
 | `api`    | API REST    | NestJS 12, TypeORM 1, PostgreSQL 16, Passport-JWT, Swagger                      |
 | `web`    | Panel admin | React 19, Vite, TypeScript, TanStack Query, React Router, RHF + zod             |
-| `mobile` | App móvil   | Expo SDK 57, expo-router, TanStack Query, expo-secure-store, expo-notifications |
+| `mobile` | App móvil   | Expo SDK 58, expo-router, TanStack Query, expo-secure-store, expo-notifications |
 
 Monorepo **pnpm workspaces**. Docker Compose levanta PostgreSQL en desarrollo y todo el
 stack en producción.

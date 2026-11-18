@@ -40,6 +40,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   web: { favicon: './assets/favicon.png' },
   plugins: [
     'expo-router',
+    'expo-font',
+    'expo-status-bar',
     'expo-secure-store',
     '@react-native-community/datetimepicker',
     ['expo-notifications', { color: '#1F5F7A' }],
