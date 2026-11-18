@@ -1,8 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
-import * as Notifications from 'expo-notifications';
+import type * as NotificationsModule from 'expo-notifications';
 import { useEffect } from 'react';
 import { apiRequest } from '@/lib/api';
-import { pushTarget, registerForPush } from '@/lib/push';
+import { notificationsModule, pushTarget, registerForPush } from '@/lib/push';
 import type { SessionUser } from '@/store/session';
 import { openNotice } from './open';
 
@@ -26,12 +26,14 @@ export function usePushNotifications(user: SessionUser | null): void {
   }, [userId]);
 
   useEffect(() => {
-    if (!userId) return;
+    const Notifications = notificationsModule();
+    // Sin el módulo (Expo Go en Android) no hay push que escuchar: queda la bandeja.
+    if (!userId || !Notifications) return;
     const refresh = () => {
       void queryClient.invalidateQueries({ queryKey: ['notifications'] });
       void queryClient.invalidateQueries({ queryKey: ['reservations'] });
     };
-    const open = (response: Notifications.NotificationResponse) => {
+    const open = (response: NotificationsModule.NotificationResponse) => {
       const id = response.notification.request.identifier;
       if (opened.has(id)) return;
       opened.add(id);
@@ -42,7 +44,7 @@ export function usePushNotifications(user: SessionUser | null): void {
           .then(refresh)
           .catch(() => undefined);
       }
-      openNotice(target.reservationId, role);
+      openNotice(target, role);
     };
 
     const received = Notifications.addNotificationReceivedListener(refresh);

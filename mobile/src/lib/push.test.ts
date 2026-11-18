@@ -71,14 +71,26 @@ describe('pushTarget', () => {
     expect(pushTarget(response({ notificationId: 'n1', reservationId: 'r1' }))).toEqual({
       notificationId: 'n1',
       reservationId: 'r1',
+      audience: null,
     });
+  });
+
+  it('distingue los avisos para quien conduce', () => {
+    expect(pushTarget(response({ reservationId: 'r1', audience: 'DRIVER' })).audience).toBe(
+      'DRIVER',
+    );
   });
 
   it('ignora datos que no son texto', () => {
     expect(pushTarget(response({ notificationId: 3, reservationId: '' }))).toEqual({
       notificationId: null,
       reservationId: null,
+      audience: null,
     });
-    expect(pushTarget(response(null))).toEqual({ notificationId: null, reservationId: null });
+    expect(pushTarget(response(null))).toEqual({
+      notificationId: null,
+      reservationId: null,
+      audience: null,
+    });
   });
 });
