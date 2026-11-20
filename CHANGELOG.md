@@ -4,6 +4,54 @@ Todas las versiones de Medios AeA. A partir de la `0.4.0` este archivo lo mantie
 release-please con los Conventional Commits (`docs/05-versionado-commits-y-ramas.md` §1).
 Las versiones `0.1.0` a `0.3.0` se reconstruyeron a mano al adoptar release-please.
 
+## [0.5.0](https://github.com/danildperez04/medios-aea/compare/v0.4.0...v0.5.0) (2026-11-20)
+
+Sprint 4 — app móvil del solicitante y sesiones, y los viajes de quien conduce.
+
+### Funcionalidades
+
+- **mobile:** inicio de sesión que se conserva al abrir sin señal y vacía los datos al
+  salir (HU-16).
+- **auth:** sesión renovable de la app: token de acceso de 15 minutos y refresh token que
+  rota, guardados en SecureStore; vence a los 7 días sin uso y sin señal no se cierra
+  (HU-28).
+- **auth:** cambiar o restablecer una contraseña cierra todas las sesiones de la persona
+  de inmediato.
+- **users:** la coordinación cierra las sesiones de una persona en el panel y en la app sin
+  desactivarla, con registro en la auditoría (HU-29).
+- **mobile:** nueva solicitud desde el teléfono con los vehículos libres a la vista antes
+  de enviar (HU-17).
+- **mobile:** mis solicitudes por estado, con detalle del vehículo y el conductor
+  asignados, y cancelación (HU-18).
+- **notifications:** bandeja de avisos con leídos y no leídos, y envío push por Expo con
+  reintentos (HU-19).
+- **trips:** "Mis viajes" de hoy y próximos para quien esté asignado como conductor,
+  tenga el rol que tenga (HU-20).
+
+### Correcciones
+
+- **docker:** las imágenes aplican los parches de Alpine al construirse; el escaneo había
+  bloqueado la publicación de la `0.4.0`.
+- **mobile:** una respuesta que no es JSON (un 502 del proxy, el portal de una red wifi)
+  se explica en español en lugar de fallar.
+- **mobile:** la app vuelve al inicio de sesión cuando la coordinación cierra sus
+  sesiones.
+- **mobile:** la app ya no falla al abrir en Expo Go para Android por el módulo de
+  notificaciones.
+- **repo:** los scripts de GitHub, respaldo y restauración se detienen ante una opción
+  desconocida en vez de ejecutarse.
+
+### Mantenimiento
+
+- **mobile:** Expo SDK 58, React Native 0.88 y React 19.3.
+- **deps:** sin excepciones de auditoría: las cuatro que había dejaron de aplicar.
+
+### Documentación
+
+- Estado del proyecto al Sprint 4, ADR 0003 ampliado (sesión de la app y cierre de
+  sesiones), guía de despliegue con lo necesario para el push y cierre de sprint con
+  merge commit.
+
 ## [0.4.0](https://github.com/danildperez04/medios-aea/compare/v0.3.0...v0.4.0) (2026-11-16)
 
 
