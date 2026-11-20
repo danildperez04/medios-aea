@@ -6,32 +6,51 @@ Las versiones `0.1.0` a `0.3.0` se reconstruyeron a mano al adoptar release-plea
 
 ## [0.5.0](https://github.com/danildperez04/medios-aea/compare/v0.4.0...v0.5.0) (2026-11-20)
 
+Sprint 4 — app móvil del solicitante y sesiones, y los viajes de quien conduce.
 
 ### Funcionalidades
 
-* **auth:** add mobile sessions and session closing ([#122](https://github.com/danildperez04/medios-aea/issues/122)) ([1e8fb81](https://github.com/danildperez04/medios-aea/commit/1e8fb816781cfe47520b717e02a615b2261598c3))
-* **auth:** hu-16-mobile-login ([#121](https://github.com/danildperez04/medios-aea/issues/121)) ([f1230b7](https://github.com/danildperez04/medios-aea/commit/f1230b795f87ad16fc24c44534fa2b60129fe3d4))
-* **docker:** publish grc ([#117](https://github.com/danildperez04/medios-aea/issues/117)) ([2cf52b2](https://github.com/danildperez04/medios-aea/commit/2cf52b23581cbe6ace5b51306eba0880893eac7f))
-* **mobile:** add expo notifications ([#130](https://github.com/danildperez04/medios-aea/issues/130)) ([d18706c](https://github.com/danildperez04/medios-aea/commit/d18706c8789007cd49b676ce34c0042cef514755))
-* **mobile:** add mobile request ([#124](https://github.com/danildperez04/medios-aea/issues/124)) ([244691c](https://github.com/danildperez04/medios-aea/commit/244691cb15d2bbe1961d53b6c5eb053aa3663505))
-* **repo:** merge main into develop ([#115](https://github.com/danildperez04/medios-aea/issues/115)) ([9934c8d](https://github.com/danildperez04/medios-aea/commit/9934c8dc30cf254b4d69ca323543fc78c4f2d417))
-* **repo:** merge main into develop ([#119](https://github.com/danildperez04/medios-aea/issues/119)) ([715a757](https://github.com/danildperez04/medios-aea/commit/715a7578a6bcef8d7c61308f7da1366cb6fb3b2a))
-* **reservations:** add mobile reservations ([#127](https://github.com/danildperez04/medios-aea/issues/127)) ([bcfa398](https://github.com/danildperez04/medios-aea/commit/bcfa398ca06118ff8bd8c552ce51915fe32fd54b))
-* **trips:** add trips module ([#132](https://github.com/danildperez04/medios-aea/issues/132)) ([b1ff9a9](https://github.com/danildperez04/medios-aea/commit/b1ff9a92acc50af507150b72cd64b4e8a741a98f))
-
+- **mobile:** inicio de sesión que se conserva al abrir sin señal y vacía los datos al
+  salir (HU-16).
+- **auth:** sesión renovable de la app: token de acceso de 15 minutos y refresh token que
+  rota, guardados en SecureStore; vence a los 7 días sin uso y sin señal no se cierra
+  (HU-28).
+- **auth:** cambiar o restablecer una contraseña cierra todas las sesiones de la persona
+  de inmediato.
+- **users:** la coordinación cierra las sesiones de una persona en el panel y en la app sin
+  desactivarla, con registro en la auditoría (HU-29).
+- **mobile:** nueva solicitud desde el teléfono con los vehículos libres a la vista antes
+  de enviar (HU-17).
+- **mobile:** mis solicitudes por estado, con detalle del vehículo y el conductor
+  asignados, y cancelación (HU-18).
+- **notifications:** bandeja de avisos con leídos y no leídos, y envío push por Expo con
+  reintentos (HU-19).
+- **trips:** "Mis viajes" de hoy y próximos para quien esté asignado como conductor,
+  tenga el rol que tenga (HU-20).
 
 ### Correcciones
 
-* **docker:** apply os security updates when building the images ([#116](https://github.com/danildperez04/medios-aea/issues/116)) ([338ad17](https://github.com/danildperez04/medios-aea/commit/338ad17ee55e6a80b6aa0fbcaff89b1d25276cc4))
-* **mobile:** explain a non-json response instead of failing to parse it ([#120](https://github.com/danildperez04/medios-aea/issues/120)) ([3ed274c](https://github.com/danildperez04/medios-aea/commit/3ed274c1a5a4320eb63da0b38f327d7b32417b81)), closes [#96](https://github.com/danildperez04/medios-aea/issues/96)
-* **repo:** stop the scripts on an unknown option instead of running ([#129](https://github.com/danildperez04/medios-aea/issues/129)) ([49614c3](https://github.com/danildperez04/medios-aea/commit/49614c3b4979ff8870fa359a3e41691c5f024fe7))
+- **docker:** las imágenes aplican los parches de Alpine al construirse; el escaneo había
+  bloqueado la publicación de la `0.4.0`.
+- **mobile:** una respuesta que no es JSON (un 502 del proxy, el portal de una red wifi)
+  se explica en español en lugar de fallar.
+- **mobile:** la app vuelve al inicio de sesión cuando la coordinación cierra sus
+  sesiones.
+- **mobile:** la app ya no falla al abrir en Expo Go para Android por el módulo de
+  notificaciones.
+- **repo:** los scripts de GitHub, respaldo y restauración se detienen ante una opción
+  desconocida en vez de ejecutarse.
 
+### Mantenimiento
+
+- **mobile:** Expo SDK 58, React Native 0.88 y React 19.3.
+- **deps:** sin excepciones de auditoría: las cuatro que había dejaron de aplicar.
 
 ### Documentación
 
-* **docs:** bring the project status up to sprint 4 ([#133](https://github.com/danildperez04/medios-aea/issues/133)) ([9c8d365](https://github.com/danildperez04/medios-aea/commit/9c8d3653dac6cd442576d993e46bd0895d717bae))
-* **repo:** add the push setup task to the backlog ([#131](https://github.com/danildperez04/medios-aea/issues/131)) ([2dc9561](https://github.com/danildperez04/medios-aea/commit/2dc9561d5121e000b94360f9587d0fdf9559e994))
-* **repo:** add the vehicle status follow-ups to the backlog ([#128](https://github.com/danildperez04/medios-aea/issues/128)) ([8117ceb](https://github.com/danildperez04/medios-aea/commit/8117cebe895fe2e401401f33a62eb55a04a882d4))
+- Estado del proyecto al Sprint 4, ADR 0003 ampliado (sesión de la app y cierre de
+  sesiones), guía de despliegue con lo necesario para el push y cierre de sprint con
+  merge commit.
 
 ## [0.4.0](https://github.com/danildperez04/medios-aea/compare/v0.3.0...v0.4.0) (2026-11-16)
 
