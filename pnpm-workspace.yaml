@@ -16,11 +16,5 @@ allowBuilds:
 minimumReleaseAge: 0
 minimumReleaseAgeStrict: false
 
-# Excepciones de auditoría (pnpm audit). Cada una con motivo y fecha de revisión en
-# SECURITY.md §4. Solo vulnerabilidades de herramientas de compilación del móvil sin
-# versión corregida; se reevalúan al actualizar el SDK de Expo.
-auditConfig:
-  ignoreGhsas:
-    - GHSA-vfj7-8cjw-p6xm # braces — vía herramientas de Expo, sin parche
-    - GHSA-mrhx-c7xc-m3w5 # zod 3 — solo en @expo/cli; el parche existe solo para zod 4
-    - GHSA-qr28-fpjm-wq7f # decode-uri-component — vía expo-router; el parche es solo ESM; se va con Expo SDK 58
+# Excepciones de auditoría (pnpm audit): hoy ninguna. Si hiciera falta una, va en
+# `auditConfig.ignoreGhsas` con su motivo y su fecha de revisión en SECURITY.md §4.

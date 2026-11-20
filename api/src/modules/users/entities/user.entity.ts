@@ -36,6 +36,13 @@ export class User {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
+  /**
+   * Va dentro de cada token de acceso. Se sube al cambiar la contraseña o al cerrar las
+   * sesiones de la persona: los tokens emitidos antes dejan de valer (ADR 0003).
+   */
+  @Column({ name: 'session_version', type: 'integer', default: 0 })
+  sessionVersion: number;
+
   @Column({ name: 'last_login_at', type: 'timestamptz', nullable: true })
   lastLoginAt: Date | null;
 

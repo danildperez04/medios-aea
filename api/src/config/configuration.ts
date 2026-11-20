@@ -134,18 +134,32 @@ export const configValidationSchema = Joi.object({
   DATABASE_SSL: Joi.boolean().default(false),
   JWT_SECRET: Joi.string().min(32).required(),
   JWT_EXPIRES_IN: Joi.string().default('8h'),
-  // Sesión del panel web (ADR 0003): token de acceso corto en memoria y refresh token
+  // Sesiones (ADR 0003). `WEB_ACCESS_TOKEN_TTL` es la duración del token de acceso del
+  // panel y de la app. Panel: token de acceso solo en memoria y refresh token
   // en cookie HttpOnly que vence tras estas horas sin uso.
   WEB_ACCESS_TOKEN_TTL: Joi.string()
     .pattern(/^\d+[smhd]$/)
     .default('15m'),
   REFRESH_TOKEN_TTL_HOURS: Joi.number().integer().min(1).max(720).default(12),
+  // Sesión de la app móvil (HU-28): mismo token de acceso corto; su refresh token va en
+  // SecureStore y vence tras estos días sin uso.
+  MOBILE_REFRESH_TOKEN_TTL_DAYS: Joi.number().integer().min(1).max(90).default(7),
   // `Secure` en la cookie: siempre en producción (HTTPS detrás de nginx).
   COOKIE_SECURE: Joi.boolean().when('NODE_ENV', {
     is: 'production',
     then: Joi.boolean().default(true),
     otherwise: Joi.boolean().default(false),
   }),
+  // Notificaciones push (HU-19). Sin red hacia Expo, los avisos siguen en la bandeja.
+  PUSH_ENABLED: Joi.boolean().when('NODE_ENV', {
+    is: 'test',
+    then: Joi.boolean().default(false),
+    otherwise: Joi.boolean().default(true),
+  }),
+  // Cada cuánto se revisan los avisos pendientes de enviar, además del envío inmediato.
+  PUSH_INTERVAL_MS: Joi.number().integer().min(1_000).max(600_000).default(15_000),
+  // Solo si en la cuenta de Expo se activa "Enhanced Security for Push Notifications".
+  EXPO_ACCESS_TOKEN: Joi.string().optional(),
   BCRYPT_ROUNDS: Joi.number().integer().min(4).max(15).default(12),
   // Proxies de confianza delante de la API (ver config/trust-proxy.ts). En producción
   // siempre está nginx (1); con un proxy de HTTPS delante de nginx son 2.

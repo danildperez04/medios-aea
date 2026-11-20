@@ -39,9 +39,12 @@ export function useCurrentUser() {
   });
 }
 
-/** Cambia la contraseña del usuario actual (RF-05). */
+/**
+ * Cambia la contraseña del usuario actual (RF-05). La API cierra todas sus sesiones,
+ * también esta (ADR 0003): no se vuelve a pedir nada con el token anterior, y el
+ * diálogo lleva a iniciar sesión con `useLeaveSession`.
+ */
 export function useChangePassword() {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: ChangePasswordInput): Promise<{ message: string }> => {
       const { data } = await api.patch<{ message: string }>('/auth/password', {
@@ -50,8 +53,20 @@ export function useChangePassword() {
       });
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['auth'] }),
   });
+}
+
+/**
+ * Sale de una sesión que la API ya cerró: borra el token en memoria y los datos en
+ * caché, sin llamar a la API. El guard de rutas lleva al inicio de sesión.
+ */
+export function useLeaveSession() {
+  const queryClient = useQueryClient();
+  const clearSession = useAuthStore((state) => state.clearSession);
+  return () => {
+    queryClient.clear();
+    clearSession();
+  };
 }
 
 /** Cierra la sesión: la API revoca el refresh token y borra la cookie. */

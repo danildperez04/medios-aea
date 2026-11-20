@@ -14,7 +14,7 @@ base de datos.
 | -------- | ---------------------------------- | ----------------------------------- |
 | `api`    | API REST                           | NestJS 12 + TypeORM + PostgreSQL 16 |
 | `web`    | Panel de la coordinación logística | React 19 + Vite 8 + MUI             |
-| `mobile` | App de técnicos y conductores      | Expo SDK 57 + expo-router           |
+| `mobile` | App de técnicos y conductores      | Expo SDK 58 + expo-router           |
 
 ## Puesta en marcha
 

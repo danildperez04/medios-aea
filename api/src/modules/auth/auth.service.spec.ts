@@ -6,6 +6,8 @@ import { JwtService } from '@nestjs/jwt';
 import { BadRequestException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { User } from '#modules/users/entities/user.entity.js';
+import { RefreshToken } from './entities/refresh-token.entity.js';
+import { UserDevice } from '#modules/notifications/entities/user-device.entity.js';
 import { UserRole } from '#common/enums/domain.enums.js';
 
 /**
@@ -48,6 +50,8 @@ describe('AuthService', () => {
   let service: AuthService;
   let findOneBy: ReturnType<typeof vi.fn>;
   let update: ReturnType<typeof vi.fn>;
+  let increment: ReturnType<typeof vi.fn>;
+  let remove: ReturnType<typeof vi.fn>;
   let signAsync: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
@@ -55,9 +59,19 @@ describe('AuthService', () => {
     update = vi.fn().mockResolvedValue({ affected: 1 });
     signAsync = vi.fn().mockResolvedValue('token-fake');
 
+    increment = vi.fn().mockResolvedValue({ affected: 1 });
+    remove = vi.fn().mockResolvedValue({ affected: 1 });
+    // La transacción se ejecuta sobre el mismo doble: basta con ver qué se escribió.
+    const manager = {
+      update,
+      increment,
+      delete: remove,
+      transaction: (work: (m: unknown) => Promise<unknown>) => work(manager),
+    };
     const userRepository = {
       findOneBy,
       update,
+      manager,
       createQueryBuilder: vi.fn(() => ({
         addSelect: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
@@ -181,7 +195,23 @@ describe('AuthService', () => {
       await service.changePassword(ADMIN_ID, 'ClaveCorrecta123', 'ClaveNueva456');
 
       expect(hashSpy).toHaveBeenCalledWith('ClaveNueva456');
-      expect(update).toHaveBeenCalledWith(ADMIN_ID, { passwordHash: 'hash-nuevo' });
+      expect(update).toHaveBeenCalledWith(User, ADMIN_ID, { passwordHash: 'hash-nuevo' });
+    });
+
+    it('cierra las sesiones abiertas: revoca los refresh tokens y sube la versión', async () => {
+      findOneBy.mockResolvedValue(buildUser());
+      vi.spyOn(service, 'hash').mockResolvedValue('hash-nuevo');
+
+      await service.changePassword(ADMIN_ID, 'ClaveCorrecta123', 'ClaveNueva456');
+
+      expect(update).toHaveBeenCalledWith(
+        RefreshToken,
+        expect.objectContaining({ userId: ADMIN_ID }),
+        { revokedAt: expect.any(Date) },
+      );
+      expect(increment).toHaveBeenCalledWith(User, { id: ADMIN_ID }, 'sessionVersion', 1);
+      // Y olvida sus teléfonos: no le llegan más avisos push (HU-19).
+      expect(remove).toHaveBeenCalledWith(UserDevice, { userId: ADMIN_ID });
     });
 
     it('rechaza el cambio cuando la contraseña actual no coincide', async () => {
@@ -191,6 +221,7 @@ describe('AuthService', () => {
         service.changePassword(ADMIN_ID, 'NoEsLaMia123', 'ClaveNueva456'),
       ).rejects.toBeInstanceOf(BadRequestException);
       expect(update).not.toHaveBeenCalled();
+      expect(increment).not.toHaveBeenCalled();
     });
   });
 

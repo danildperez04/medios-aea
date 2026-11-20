@@ -29,22 +29,22 @@ todos los lunes.
 
 ## 4. Excepciones vigentes de auditoría
 
-Configuradas en `pnpm-workspace.yaml` (`auditConfig.ignoreGhsas`). Cada excepción debe
-tener motivo y fecha de revisión; si no se puede justificar, no se ignora.
+**Ninguna** desde el 18/11/2026. Si hiciera falta una, se configura en
+`pnpm-workspace.yaml` (`auditConfig.ignoreGhsas`) y se anota aquí con su motivo y su
+fecha de revisión; si no se puede justificar, no se ignora.
 
-| Aviso               | Paquete              | Severidad | Vía                                          | Motivo                                                                                                                             | Revisar                                                                               |
-| ------------------- | -------------------- | --------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| GHSA-vfj7-8cjw-p6xm | braces               | Alta      | Herramientas de Expo (app móvil)             | Sin versión corregida; solo en la compilación del bundle                                                                           | Al actualizar el SDK de Expo, o 18/01/2027                                            |
-| GHSA-mrhx-c7xc-m3w5 | zod 3                | Alta      | `@expo/cli` (app móvil)                      | Parche solo para zod 4; la CLI pide `^3.25.76` y valida configuración local                                                        | Al actualizar el SDK de Expo, o 27/01/2027                                            |
-| GHSA-qr28-fpjm-wq7f | decode-uri-component | Alta      | `expo-router` → `query-string` 7 (app móvil) | Parche (0.5.1) solo ESM: rompe `query-string` 7. Un enlace mal formado podría congelar la app de quien lo abre; no afecta a la API | Al actualizar a Expo SDK 58 (`expo-router` 58 ya no usa `query-string`), o 29/01/2027 |
+Las cuatro que hubo se quitaron con la actualización a Expo SDK 58 (#73):
 
-El mismo paquete tiene además un aviso moderado (GHSA-vcc3-ghjq-m6fr) que no bloquea
-(`--audit-level high`) y no se ignora para que siga visible. El 29/10/2026 se publicó el
-alto (GHSA-qr28-fpjm-wq7f), sin corrección compatible: se ignora con la fila de arriba
-hasta actualizar a Expo SDK 58, que es la corrección real. También queda visible un aviso bajo de
-`deepmerge` 4.3.1 (GHSA-gcqx-w48m-w2h4), sin corrección, solo en las herramientas de
-compilación de Expo. `uuid` desapareció el 27/10/2026
-(`xcode` 4 ya no lo usa).
+| Aviso               | Paquete              | Por qué ya no hace falta                                     |
+| ------------------- | -------------------- | ------------------------------------------------------------ |
+| GHSA-qr28-fpjm-wq7f | decode-uri-component | `expo-router` 58 ya no usa `query-string`: el paquete se fue |
+| GHSA-mrhx-c7xc-m3w5 | zod 3                | Solo queda zod 4.6.7, fuera del rango afectado               |
+| GHSA-vfj7-8cjw-p6xm | braces               | GitHub retiró el aviso el 23/10/2026                         |
+| GHSA-fc5q-39xc-vjpf | picomatch            | GitHub retiró el aviso el 18/11/2026                         |
+
+Quedan visibles, sin bloquear (`--audit-level high`), avisos moderados y bajos de las
+herramientas de compilación de la app móvil: `node-forge` (cuatro), `glob` y `minimatch`.
+No llegan a la API ni al panel. Se revisan en #32.
 
 ## 5. Medidas en la aplicación
 
@@ -56,7 +56,20 @@ compilación de Expo. `uuid` desapareció el 27/10/2026
   limitada a `/api/v1/auth/session` y `Secure` con HTTPS. La base guarda solo su SHA-256;
   rota en cada uso, vence a las 12 h sin uso y, si vuelve un token ya rotado, se revoca
   toda la sesión. Refrescar y salir exigen el encabezado `X-Medios-Client` (CSRF). Solo
-  la coordinación abre sesión en el panel. La app móvil sigue con su token en SecureStore.
+  la coordinación abre sesión en el panel.
+- Sesión de la app móvil (HU-28): el mismo mecanismo, con los dos tokens en SecureStore
+  (Keychain o Keystore) y el refresh token en el cuerpo de la petición. Vence a los 7
+  días sin uso y un token solo sirve en las rutas de su cliente (panel o app).
+- Cambiar o restablecer una contraseña cierra todas las sesiones de la persona: revoca
+  sus refresh tokens y deja sin efecto, en la siguiente petición, los tokens de acceso
+  ya emitidos (`session_version`).
+- Avisos push (HU-19): cada persona solo lee y marca sus avisos (lo ajeno responde 404) y
+  solo quita sus teléfonos. Un aviso muestra destino y horario en la pantalla bloqueada;
+  por eso cerrar sesión en la app, cerrar las sesiones desde el panel o cambiar la
+  contraseña olvidan los teléfonos de la persona. La API solo acepta tokens con el
+  formato de Expo y solo los envía a `https://exp.host`.
+- La coordinación puede cerrar las sesiones de una persona sin desactivar su cuenta
+  (HU-29), por ejemplo si pierde el teléfono; queda en `audit_log` quién lo hizo.
 - Límite de intentos de inicio de sesión (10 por minuto e IP) y límite global. La IP es
   la de quien hace la petición, no la del proxy (`TRUST_PROXY_HOPS`, `docs/11` §1).
 - `helmet` en la API; CORS restringido a la web.
@@ -69,8 +82,7 @@ compilación de Expo. `uuid` desapareció el 27/10/2026
 - Contenedores sin root: la API corre como `node` y el panel como `nginx` (uid 101).
 - Solo el contenedor web publica un puerto; la API y PostgreSQL quedan en la red interna.
 
-Pendiente: limpiar los refresh tokens vencidos y revocar las sesiones al cambiar la
-contraseña (ADR 0003, consecuencias).
+Pendiente: limpiar los refresh tokens vencidos (ADR 0003, consecuencias).
 
 ## 6. Manejo de secretos
 

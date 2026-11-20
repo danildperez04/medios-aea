@@ -1,5 +1,5 @@
-import { Button, IconButton, MenuItem, Stack, Tooltip } from '@mui/material';
-import { KeyRound, Pencil, Plus, UserCheck, UserX, Users } from 'lucide-react';
+import { Alert, Button, IconButton, MenuItem, Stack, Tooltip } from '@mui/material';
+import { KeyRound, LogOut, Pencil, Plus, UserCheck, UserX, Users } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '@/app/services/api';
 import { useAuthStore, type UserRole } from '@/app/stores/auth.store';
@@ -18,11 +18,12 @@ import { formatDateTime } from '@/shared/lib/format';
 import { ResetPasswordDialog } from '../components/ResetPasswordDialog';
 import { UserFormDialog } from '../components/UserFormDialog';
 import { ROLE_LABELS } from '../schemas/user.schema';
-import { useUpdateUser, useUsers, type User } from '../services/users.service';
+import { useRevokeSessions, useUpdateUser, useUsers, type User } from '../services/users.service';
+import { useLeaveSession } from '@/features/auth/services/auth.service';
 
 type StatusFilter = 'active' | 'inactive' | 'all';
 
-/** Gestión de usuarios (HU-02). */
+/** Gestión de usuarios (HU-02) y cierre de las sesiones de una persona (HU-29). */
 export function UsersView() {
   const currentUserId = useAuthStore((state) => state.user?.id);
   const [page, setPage] = useState(1);
@@ -36,6 +37,8 @@ export function UsersView() {
   const [formOpen, setFormOpen] = useState(false);
   const [toggleUser, setToggleUser] = useState<User | null>(null);
   const [passwordUser, setPasswordUser] = useState<User | null>(null);
+  const [sessionsUser, setSessionsUser] = useState<User | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const users = useUsers({
     page,
@@ -45,10 +48,25 @@ export function UsersView() {
     isActive: status === 'all' ? undefined : status === 'active',
   });
   const update = useUpdateUser();
+  const revoke = useRevokeSessions();
+  const leaveSession = useLeaveSession();
 
   const openForm = (user: User | null) => {
     setFormUser(user);
     setFormOpen(true);
+  };
+
+  const confirmRevoke = async () => {
+    if (!sessionsUser) return;
+    try {
+      const { message } = await revoke.mutateAsync(sessionsUser.id);
+      // Cerró las suyas: esta sesión ya no sirve y toca entrar de nuevo.
+      if (sessionsUser.id === currentUserId) return leaveSession();
+      setNotice(message);
+      setSessionsUser(null);
+    } catch {
+      // Se muestra en el diálogo.
+    }
   };
 
   const confirmToggle = async () => {
@@ -95,6 +113,21 @@ export function UsersView() {
               <KeyRound size={16} />
             </IconButton>
           </Tooltip>
+          {u.isActive ? (
+            <Tooltip title="Cerrar sesiones">
+              <IconButton
+                size="small"
+                onClick={() => {
+                  revoke.reset();
+                  setNotice(null);
+                  setSessionsUser(u);
+                }}
+                aria-label={`Cerrar sesiones de ${u.fullName}`}
+              >
+                <LogOut size={16} />
+              </IconButton>
+            </Tooltip>
+          ) : null}
           {u.id !== currentUserId ? (
             <Tooltip title={u.isActive ? 'Desactivar' : 'Reactivar'}>
               <IconButton
@@ -170,6 +203,11 @@ export function UsersView() {
       </Stack>
 
       <FormError message={users.error instanceof ApiError ? users.error.message : null} />
+      {notice ? (
+        <Alert severity="success" onClose={() => setNotice(null)} sx={{ mb: 2 }}>
+          {notice}
+        </Alert>
+      ) : null}
 
       <DataTable
         columns={columns}
@@ -201,6 +239,21 @@ export function UsersView() {
 
       <UserFormDialog open={formOpen} user={formUser} onClose={() => setFormOpen(false)} />
       <ResetPasswordDialog user={passwordUser} onClose={() => setPasswordUser(null)} />
+      <ConfirmDialog
+        open={sessionsUser !== null}
+        title="Cerrar sesiones"
+        message={
+          sessionsUser?.id === currentUserId
+            ? 'Se cerrarán de inmediato todas tus sesiones, en el panel y en la app, también esta. Tendrás que iniciar sesión de nuevo.'
+            : `Se cerrarán de inmediato las sesiones de ${sessionsUser?.fullName ?? ''} en el panel y en la app. Su cuenta sigue activa: podrá entrar de nuevo con su contraseña.`
+        }
+        confirmLabel="Cerrar sesiones"
+        destructive
+        loading={revoke.isPending}
+        error={revoke.error instanceof ApiError ? revoke.error.message : null}
+        onConfirm={confirmRevoke}
+        onClose={() => setSessionsUser(null)}
+      />
       <ConfirmDialog
         open={toggleUser !== null}
         title={toggleUser?.isActive ? 'Desactivar usuario' : 'Reactivar usuario'}

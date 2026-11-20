@@ -54,21 +54,21 @@ referencia de producto: qué se construye y con qué criterios.
 
 | HU    | RF            | Historia                                                              | Criterios de aceptación                                                          | Estado    |
 | ----- | ------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------- |
-| HU-16 | RF-18         | Como técnico, quiero iniciar sesión en la app                         | Token en `expo-secure-store`; sesión persiste; logout limpia                     | PENDIENTE |
-| HU-17 | RF-18, RF-09  | Como técnico, quiero solicitar desde el celular viendo disponibilidad | Formulario con fecha/hora; indicador de vehículos libres antes de enviar         | PENDIENTE |
-| HU-18 | RF-18         | Como técnico, quiero ver y cancelar mis solicitudes                   | Lista por estado; detalle con vehículo y conductor asignado                      | PENDIENTE |
-| HU-19 | RF-19, RF-20  | Como técnico, quiero recibir notificaciones                           | Push al aprobar/rechazar/reasignar; bandeja in-app con leídas/no leídas          | PENDIENTE |
-| HU-28 | RF-18, RNF-01 | Como técnico o conductor, quiero que mi sesión en la app se mantenga  | Renovación automática; rota; 7 días sin uso; sin señal no cierra; antes de HU-21 | PENDIENTE |
-| HU-29 | RF-29         | Como ADMIN, quiero cerrar las sesiones de una persona desde el panel  | Sin desactivar la cuenta; panel y app; auditoría                                 | PENDIENTE |
+| HU-16 | RF-18         | Como técnico, quiero iniciar sesión en la app                         | Token en `expo-secure-store`; sesión persiste; logout limpia                     | TERMINADO |
+| HU-17 | RF-18, RF-09  | Como técnico, quiero solicitar desde el celular viendo disponibilidad | Formulario con fecha/hora; indicador de vehículos libres antes de enviar         | TERMINADO |
+| HU-18 | RF-18         | Como técnico, quiero ver y cancelar mis solicitudes                   | Lista por estado; detalle con vehículo y conductor asignado                      | TERMINADO |
+| HU-19 | RF-19, RF-20  | Como técnico, quiero recibir notificaciones                           | Push al aprobar/rechazar/reasignar; bandeja in-app con leídas/no leídas          | TERMINADO |
+| HU-28 | RF-18, RNF-01 | Como técnico o conductor, quiero que mi sesión en la app se mantenga  | Renovación automática; rota; 7 días sin uso; sin señal no cierra; antes de HU-21 | TERMINADO |
+| HU-29 | RF-29         | Como ADMIN, quiero cerrar las sesiones de una persona desde el panel  | Sin desactivar la cuenta; panel y app; auditoría                                 | TERMINADO |
 
 ## Sprint 5 — Bitácora y reportes
 
-| HU    | RF           | Historia                                                   | Criterios de aceptación                                                                | Estado    |
-| ----- | ------------ | ---------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------- |
-| HU-20 | RF-21        | Como conductor, quiero ver mis viajes de hoy y próximos    | Solo asignaciones activas propias, tenga el rol que tenga (RN-16)                      | PENDIENTE |
-| HU-21 | RF-22, RF-23 | Como conductor, quiero registrar salida y llegada          | km llegada ≥ km salida; actualiza km del vehículo; solicitud → `COMPLETED`             | PENDIENTE |
-| HU-22 | RF-24, RF-25 | Como ADMIN, quiero reportes de uso por proyecto y vehículo | Filtro por rango; km, horas, viajes, cancelaciones; exporta CSV                        | PENDIENTE |
-| HU-23 | RF-26        | Como ADMIN, quiero un dashboard                            | Pendientes, viajes de hoy, vehículos en mantenimiento, licencias que vencen en 30 días | PENDIENTE |
+| HU    | RF           | Historia                                                          | Criterios de aceptación                                                                | Estado    |
+| ----- | ------------ | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------- |
+| HU-20 | RF-21        | Como persona que conduce, quiero ver mis viajes de hoy y próximos | Solo asignaciones activas propias, tenga el rol que tenga (RN-16)                      | TERMINADO |
+| HU-21 | RF-22, RF-23 | Como persona que conduce, quiero registrar salida y llegada       | km llegada ≥ km salida; actualiza km del vehículo; solicitud → `COMPLETED`             | PENDIENTE |
+| HU-22 | RF-24, RF-25 | Como ADMIN, quiero reportes de uso por proyecto y vehículo        | Filtro por rango; km, horas, viajes, cancelaciones; exporta CSV                        | PENDIENTE |
+| HU-23 | RF-26        | Como ADMIN, quiero un dashboard                                   | Pendientes, viajes de hoy, vehículos en mantenimiento, licencias que vencen en 30 días | PENDIENTE |
 
 ## Sprint 6 — Despliegue y UAT
 

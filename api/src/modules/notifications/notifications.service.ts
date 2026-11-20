@@ -1,8 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import type { EntityManager } from 'typeorm';
 import { UserRole } from '#common/enums/domain.enums.js';
 import { User } from '#modules/users/entities/user.entity.js';
 import { Notification } from './entities/notification.entity.js';
+import { PushDispatcher } from './push-dispatcher.service.js';
+
+/**
+ * A quién va un aviso sobre una solicitud, cuando no es a quien la pidió: la app abre
+ * el viaje para quien conduce y la bandeja para quien dejó de conducir (HU-20).
+ */
+export type NoticeAudience = 'DRIVER' | 'FORMER_DRIVER';
 
 export interface NotificationContent {
   title: string;
@@ -12,11 +19,13 @@ export interface NotificationContent {
 
 /**
  * Notificaciones in-app (RF-19). Se escriben dentro de la transacción de la
- * operación que las origina: si la operación falla, el aviso no queda huérfano.
- * La lectura (bandeja) y el envío push llegan con HU-19.
+ * operación que las origina: si la operación falla, el aviso no queda huérfano. Nacen
+ * pendientes de envío push, que hace `PushDispatcher` después de confirmarse (HU-19).
  */
 @Injectable()
 export class NotificationsService {
+  constructor(@Inject(PushDispatcher) private readonly push: PushDispatcher) {}
+
   async notifyUsers(
     manager: EntityManager,
     userIds: string[],
@@ -33,6 +42,7 @@ export class NotificationsService {
         }),
       ),
     );
+    this.push.kick();
   }
 
   /** Avisa a todas las personas activas con un rol, p. ej. la coordinación. */

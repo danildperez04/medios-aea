@@ -9,8 +9,11 @@ import {
 } from 'typeorm';
 import { User } from '#modules/users/entities/user.entity.js';
 
+/** Cliente dueño de una sesión: el panel web o la app móvil. */
+export type SessionClient = 'web' | 'mobile';
+
 /**
- * Refresh token de la sesión del panel web (ADR 0003). Solo se guarda su SHA-256.
+ * Refresh token de una sesión del panel web o de la app móvil (ADR 0003). Solo se guarda su SHA-256.
  * Las rotaciones de una sesión comparten `familyId`; un token usado de nuevo fuera
  * del margen de gracia revoca la familia entera (alguien lo copió).
  */
@@ -28,6 +31,10 @@ export class RefreshToken {
 
   @Column({ name: 'family_id', type: 'uuid' })
   familyId: string;
+
+  /** Un token solo sirve en las rutas de su cliente. */
+  @Column({ type: 'varchar', length: 10, default: 'web' })
+  client: SessionClient;
 
   @Column({ name: 'token_hash', type: 'char', length: 64, unique: true })
   tokenHash: string;

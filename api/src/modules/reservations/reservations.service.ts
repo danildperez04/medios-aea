@@ -27,7 +27,10 @@ import {
 } from '#modules/availability/availability.rules.js';
 import { Blackout } from '#modules/blackouts/entities/blackout.entity.js';
 import { Driver } from '#modules/drivers/entities/driver.entity.js';
-import { NotificationsService } from '#modules/notifications/notifications.service.js';
+import {
+  NotificationsService,
+  type NoticeAudience,
+} from '#modules/notifications/notifications.service.js';
 import { Project } from '#modules/projects/entities/project.entity.js';
 import { Resource } from '#modules/resources/entities/resource.entity.js';
 import { Vehicle } from '#modules/resources/entities/vehicle.entity.js';
@@ -217,8 +220,9 @@ export class ReservationsService {
     const limit = filters.limit ?? 20;
     const query = this.baseQuery();
 
-    // Un técnico solo ve sus solicitudes, sin importar los filtros que mande.
-    if (actor.role !== UserRole.ADMIN) {
+    // Un técnico solo ve sus solicitudes, sin importar los filtros que mande. La
+    // coordinación ve todas, salvo que pida solo las suyas (la app, HU-18).
+    if (actor.role !== UserRole.ADMIN || filters.mine) {
       query.andWhere('request.requesterId = :me', { me: actor.id });
     }
     if (filters.status) query.andWhere('request.status = :status', { status: filters.status });
@@ -632,9 +636,14 @@ export class ReservationsService {
       userId: string | undefined,
       title: string,
       body: string,
+      audience?: NoticeAudience,
     ): Promise<void> => {
       if (userId && userId !== actor.id) {
-        await this.notifications.notifyUsers(manager, [userId], { title, body, data });
+        await this.notifications.notifyUsers(manager, [userId], {
+          title,
+          body,
+          data: audience ? { ...data, audience } : data,
+        });
       }
     };
 
@@ -651,6 +660,7 @@ export class ReservationsService {
         driver.userId,
         `Tienes un viaje asignado: ${request.code}`,
         `${request.destination} (${when}) en ${resource.name}.`,
+        'DRIVER',
       );
     }
     if (driverChanged && request.proposedDriverId) {
@@ -660,6 +670,7 @@ export class ReservationsService {
           proposed.userId,
           `Ya no conduces el viaje ${request.code}`,
           `La coordinación asignó a ${driver?.user.fullName ?? 'otra persona'} para ${request.destination} (${when}).`,
+          'FORMER_DRIVER',
         );
       }
     }
@@ -686,10 +697,15 @@ export class ReservationsService {
       userId: string | undefined,
       title: string,
       body: string,
+      audience?: NoticeAudience,
     ): Promise<void> => {
       if (!userId || sent.has(userId)) return;
       sent.add(userId);
-      await this.notifications.notifyUsers(manager, [userId], { title, body, data });
+      await this.notifications.notifyUsers(manager, [userId], {
+        title,
+        body,
+        data: audience ? { ...data, audience } : data,
+      });
     };
 
     const who =
@@ -708,17 +724,20 @@ export class ReservationsService {
         driver?.userId,
         `Tienes un viaje asignado: ${request.code}`,
         `${request.destination} (${when}) en ${resource.name}.`,
+        'DRIVER',
       );
       await notify(
         previous.driver?.userId,
         `Ya no conduces el viaje ${request.code}`,
         `La coordinación asignó a ${driver?.user.fullName ?? 'otra persona'} para ${request.destination} (${when}).`,
+        'FORMER_DRIVER',
       );
     } else {
       await notify(
         driver?.userId,
         `Cambió el medio del viaje ${request.code}`,
         `${request.destination} (${when}): ahora va en ${resource.name}.`,
+        'DRIVER',
       );
     }
   }
