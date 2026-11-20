@@ -199,14 +199,14 @@ Verificación: 136 unitarias, 101 e2e y 43 web en verde; revisada en el navegado
 HU-13: `POST /reservations/:id/reassign` (ADMIN) cambia el medio, quien conduce o ambos
 de una aprobada mientras el viaje no inicie. En una transacción la asignación vigente
 pasa a `active = false` y se crea otra (RN-10), con las mismas validaciones que al
-aprobar (`checkAssignable`), sin contar la asignación propia como choque. Avisa a quien
+aprobar (`AssignmentChecker`), sin contar la asignación propia como choque. Avisa a quien
 pidió, a quien conduce y a quien dejó de conducir; auditoría con el antes y el después.
 En la web, el diálogo de aprobación en modo "reasignar". Verificación: 137 unitarias,
 107 e2e y 45 web en verde; revisada en el navegador a 1366 y 390 px.
 
 HU-27: `POST /reservations/book` (ADMIN) registra una reserva ya aprobada en un paso, sin
 pasar por la bandeja. Valida lo mismo que crear (horario, proyecto activo, persona
-activa) y que aprobar (`checkAssignable`: choques, bloqueos, mantenimiento, capacidad y
+activa) y que aprobar (`AssignmentChecker`: choques, bloqueos, mantenimiento, capacidad y
 licencia); quien conduce queda como propuesto. Avisa a quien viaja y a quien conduce, no
 a la coordinación, y queda en `audit_log` como aprobación con `direct: true`. En la web,
 botón "Nueva reserva" en Solicitudes con un formulario que solo ofrece medios y
@@ -314,7 +314,7 @@ push en un teléfono (`T-PUSH-SETUP`; su issue se crea con `pnpm github:setup --
 paquetes de GHCR cuando salgan las imágenes (#33).
 
 **Sprint 5 — bitácora y reportes:** HU-20 y HU-21 (los viajes de quien conduce, tenga el
-rol que tenga: ADR 0004, RN-16), HU-22 (reportes) y HU-23 (dashboard). Tareas previas:
-dividir `reservations.service.ts` (#95) antes de la bitácora, la ocupación actual en
-Vehículos (#125, con HU-21) y una sola forma de marcar mantenimiento (#126, antes de
-HU-23).
+rol que tenga: ADR 0004, RN-16), HU-22 (reportes) y HU-23 (dashboard). `reservations.service.ts` ya está dividido (#95):
+`AssignmentChecker`, que valida choques y bloquea medio y conductor, queda listo para la
+bitácora. Tareas previas: la ocupación actual en Vehículos (#125, con HU-21) y una sola
+forma de marcar mantenimiento (#126, antes de HU-23).
